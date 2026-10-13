@@ -7,18 +7,21 @@ export function EmptyState({
   action,
   compact = false,
   icon,
+  className,
 }: {
   title: string;
   description?: ReactNode;
   action?: ReactNode;
   compact?: boolean;
   icon?: ReactNode;
+  className?: string;
 }) {
   return (
     <div
       className={cn(
         "flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-center",
         compact ? "px-4 py-6" : "px-6 py-12",
+        className,
       )}
     >
       {icon && <div className="text-muted-foreground">{icon}</div>}

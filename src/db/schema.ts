@@ -583,6 +583,11 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
   availabilityPosts: many(availabilityPosts),
 }));
 
+export const savedEventsRelations = relations(savedEvents, ({ one }) => ({
+  event: one(events, { fields: [savedEvents.eventId], references: [events.id] }),
+  user: one(profiles, { fields: [savedEvents.userId], references: [profiles.id] }),
+}));
+
 export const registrationsRelations = relations(registrations, ({ one }) => ({
   event: one(events, { fields: [registrations.eventId], references: [events.id] }),
   user: one(profiles, { fields: [registrations.userId], references: [profiles.id] }),
