@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { after } from "next/server";
 import { and, count, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { CurrentUser } from "@/lib/auth";
+import { sendClosingReminders } from "@/lib/reminders";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { UserMenu } from "@/components/layout/user-menu";
@@ -15,6 +17,8 @@ const NAV = [
 export async function SiteHeader({ user }: { user: CurrentUser | null }) {
   let unread = 0;
   if (user) {
+    // Lazily create "closing in 24 h" reminders for this user (idempotent, cheap).
+    after(() => sendClosingReminders({ userId: user.id }).catch((e) => console.error("reminders", e)));
     const [row] = await db
       .select({ n: count() })
       .from(schema.notifications)
