@@ -116,7 +116,7 @@ async function rejectRemaining(
  * lock vacancy → validate → add member (+registration) → mark accepted → decrement slots →
  * auto-close a full vacancy (rejecting the rest) → notify everyone affected.
  */
-export async function acceptApplication(database: DB, input: { applicationId: string; actorId: string }) {
+export async function acceptApplication(database: DB | Tx, input: { applicationId: string; actorId: string }) {
   return database.transaction(async (tx) => {
     const app = await tx.query.applications.findFirst({
       where: eq(schema.applications.id, input.applicationId),
