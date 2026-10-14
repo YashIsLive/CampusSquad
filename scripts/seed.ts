@@ -130,14 +130,7 @@ async function createAuthUser(email: string, fullName: string) {
 
 async function reset() {
   console.log("Resetting app data…");
-  // Remove seed auth users (cascades to their profiles and everything they own).
-  for (let page = 1; ; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) throw error;
-    const seedUsers = data.users.filter((u) => u.email?.endsWith(SEED_DOMAIN_SUFFIX));
-    for (const u of seedUsers) await admin.auth.admin.deleteUser(u.id);
-    if (data.users.length < 200) break;
-  }
+  // Clear app data first so no foreign key blocks deleting seed accounts.
   await db.execute(sql`
     TRUNCATE public.announcements, public.notifications, public.endorsements, public.team_tasks,
       public.messages, public.invites, public.availability_posts, public.applications,
@@ -146,6 +139,18 @@ async function reset() {
       public.events, public.org_followers, public.org_members, public.organizations,
       public.user_skills, public.skills
     CASCADE`);
+  // Collect first, then delete: deleting while paging shifts pages and skips users.
+  const seedIds: string[] = [];
+  for (let page = 1; ; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) throw error;
+    seedIds.push(...data.users.filter((u) => u.email?.endsWith(SEED_DOMAIN_SUFFIX)).map((u) => u.id));
+    if (data.users.length < 200) break;
+  }
+  for (const id of seedIds) {
+    const { error } = await admin.auth.admin.deleteUser(id);
+    if (error) throw new Error(`deleteUser ${id}: ${error.message}`);
+  }
   // Real (non-seed) users keep their profiles but lose their college link before colleges are rebuilt.
   await db.execute(sql`UPDATE public.profiles SET college_id = NULL, college_verified = false`);
   await db.execute(sql`DELETE FROM public.colleges`);

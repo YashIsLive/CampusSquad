@@ -152,7 +152,7 @@ export const organizations = pgTable("organizations", {
   description: text("description"),
   logoUrl: text("logo_url"),
   verified: boolean("verified").notNull().default(false),
-  createdBy: uuid("created_by").references(() => profiles.id),
+  createdBy: uuid("created_by").references(() => profiles.id, { onDelete: "set null" }),
   createdAt: createdAt(),
 });
 
@@ -222,7 +222,7 @@ export const events = pgTable(
     search: tsvector("search").generatedAlwaysAs(
       sql`to_tsvector('english'::regconfig, coalesce(title, '') || ' ' || coalesce(description, ''))`,
     ),
-    createdBy: uuid("created_by").references(() => profiles.id),
+    createdBy: uuid("created_by").references(() => profiles.id, { onDelete: "set null" }),
     createdAt: createdAt(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
