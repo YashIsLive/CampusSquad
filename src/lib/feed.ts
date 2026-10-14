@@ -90,7 +90,7 @@ export async function getFeed(user: CurrentUser | null, filters: FeedFilters, no
     .innerJoin(schema.organizations, eq(schema.organizations.id, e.orgId))
     .where(and(...conditions.filter((c): c is SQL => Boolean(c))))
     // Open registrations first (soonest deadline first), then closed-but-upcoming events.
-    .orderBy(sql`(${e.regDeadline} < ${now} or not ${e.registrationsOpen})`, asc(e.regDeadline))
+    .orderBy(sql`(${e.regDeadline} < ${now.toISOString()}::timestamptz or not ${e.registrationsOpen})`, asc(e.regDeadline))
     .limit(60);
 
   const events = rows.map((r) => ({ ...r.event, org: r.org }));

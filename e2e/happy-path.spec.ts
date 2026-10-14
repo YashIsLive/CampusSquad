@@ -20,10 +20,11 @@ test("solo student applies to a role and the leader accepts", async ({ browser }
   const aarav = await signInAs(browser, "aarav");
   await aarav.page.goto("/?scope=india");
   await aarav.page.getByRole("searchbox", { name: /search events/i }).fill("COEP AI Hackathon");
+  await aarav.page.waitForURL(/q=COEP/);
   await aarav.page.getByRole("link", { name: "COEP AI Hackathon 2026" }).first().click();
   await expect(aarav.page.getByRole("heading", { level: 1, name: "COEP AI Hackathon 2026" })).toBeVisible();
 
-  await aarav.page.getByRole("link", { name: /^Teams/ }).click();
+  await aarav.page.getByRole("navigation", { name: "Event sections" }).getByRole("link", { name: /^Teams/ }).click();
   const role = aarav.page.getByRole("listitem").filter({ has: aarav.page.getByRole("heading", { name: "ML / optimisation" }) });
   await expect(role).toBeVisible();
   await role.getByRole("button", { name: "Apply" }).click();

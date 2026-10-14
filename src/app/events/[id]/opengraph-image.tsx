@@ -31,8 +31,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
               {EVENT_TYPE_LABEL[event.type]}
             </span>
             <span style={{ background: "rgba(255,255,255,0.18)", padding: "8px 20px", borderRadius: 999, fontSize: 28 }}>
-              {MODE_LABEL[event.mode]}
-              {event.city && event.mode !== "online" ? ` · ${event.city}` : ""}
+              {`${MODE_LABEL[event.mode]}${event.city && event.mode !== "online" ? ` · ${event.city}` : ""}`}
             </span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -40,8 +39,8 @@ export default async function Image({ params }: { params: Promise<{ id: string }
             <div style={{ fontSize: 32, opacity: 0.85 }}>{event.org.name}</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 30 }}>
-            <div>{formatDate(event.startsAt)}</div>
-            <div style={{ color: "#fde68a" }}>Register by {formatDateTime(event.regDeadline)}</div>
+            <div style={{ display: "flex" }}>{formatDate(event.startsAt)}</div>
+            <div style={{ display: "flex", color: "#fde68a" }}>{`Register by ${formatDateTime(event.regDeadline)}`}</div>
           </div>
         </div>
         {event.posterUrl && (

@@ -22,6 +22,8 @@ export function FeedFilters() {
   const [open, setOpen] = useState(activeCount > 0);
 
   const update = (patch: Record<string, string | null>) => {
+    // A debounced update can fire after the user has already navigated away (e.g. clicked a card).
+    if (window.location.pathname !== pathname) return;
     const next = new URLSearchParams(params.toString());
     for (const [k, v] of Object.entries(patch)) {
       if (v) next.set(k, v);

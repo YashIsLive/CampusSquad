@@ -22,6 +22,16 @@ afterAll(async () => {
 
 class Rollback extends Error {}
 
+/** Drizzle wraps driver errors ("Failed query: …") and keeps the Postgres error in `cause`. */
+async function expectDbError(promise: Promise<unknown>, pattern: RegExp) {
+  const err = await promise.then(
+    () => null,
+    (e: unknown) => e as { message?: string; cause?: { message?: string } },
+  );
+  expect(err, "expected the query to fail").not.toBeNull();
+  expect(`${err?.message ?? ""} ${err?.cause?.message ?? ""}`).toMatch(pattern);
+}
+
 /** Run `fn` in a transaction that is always rolled back. */
 async function inRollback(fn: (tx: Tx) => Promise<void>) {
   await expect(
@@ -161,9 +171,10 @@ describe.skipIf(!db)("acceptApplication (transaction)", () => {
       // team_max 2 with the leader already in → one more fits, a second doesn't.
       const f = await fixture(tx, { teamMax: 2, slots: 2 });
       await acceptApplication(tx, { applicationId: f.app1.id, actorId: f.leader });
-      await expect(
+      await expectDbError(
         tx.transaction((sp) => sp.insert(schema.teamMembers).values({ teamId: f.team.id, userId: f.a2, eventId: f.event.id })),
-      ).rejects.toThrow(/CS:TEAM_FULL/);
+        /CS:TEAM_FULL/,
+      );
     });
   });
 
@@ -172,7 +183,7 @@ describe.skipIf(!db)("acceptApplication (transaction)", () => {
       const f = await fixture(tx, { allowCross: true });
       await tx.update(schema.events).set({ allowCrossCollege: false }).where(eq(schema.events.id, f.event.id));
       // a2 is from a different college than the leader.
-      await expect(acceptApplication(tx, { applicationId: f.app2.id, actorId: f.leader })).rejects.toThrow(/CS:CROSS_COLLEGE_NOT_ALLOWED/);
+      await expectDbError(acceptApplication(tx, { applicationId: f.app2.id, actorId: f.leader }), /CS:CROSS_COLLEGE_NOT_ALLOWED/);
     });
   });
 
