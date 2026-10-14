@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signInWithGoogle } from "@/app/actions/auth";
 import { getCurrentUser } from "@/lib/auth";
+import { isGoogleEnabled } from "@/lib/auth-providers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MagicLinkForm } from "./magic-link-form";
@@ -19,6 +20,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const next = typeof sp.next === "string" ? sp.next : "/";
   const error = typeof sp.error === "string" ? sp.error : null;
   if (await getCurrentUser()) redirect(next);
+  const google = await isGoogleEnabled();
   const demo = process.env.E2E_TEST_LOGIN === "1" && process.env.NODE_ENV !== "production";
 
   return (
@@ -36,14 +38,18 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
               {error}
             </p>
           )}
-          <form action={signInWithGoogle.bind(null, next)}>
-            <Button type="submit" variant="outline" className="h-10 w-full">
-              Continue with Google
-            </Button>
-          </form>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-          </div>
+          {google && (
+            <>
+              <form action={signInWithGoogle.bind(null, next)}>
+                <Button type="submit" variant="outline" className="h-10 w-full">
+                  Continue with Google
+                </Button>
+              </form>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+              </div>
+            </>
+          )}
           <MagicLinkForm next={next} />
         </CardContent>
       </Card>
