@@ -114,6 +114,20 @@ const USERS: SeedUser[] = [
 
 // ---------------- helpers ----------------
 
+/** Auth deletes from --reset can lag briefly, so retry a few times before giving up. */
+async function createAuthUser(email: string, fullName: string) {
+  for (let attempt = 1; ; attempt++) {
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    });
+    if (!error) return data.user.id;
+    if (attempt >= 4) throw new Error(`createUser ${email}: ${error.message}`);
+    await new Promise((r) => setTimeout(r, 1000 * attempt));
+  }
+}
+
 async function reset() {
   console.log("Resetting app data…");
   // Remove seed auth users (cascades to their profiles and everything they own).
@@ -174,13 +188,7 @@ async function main() {
   const userIds: Record<string, string> = {};
   for (const u of USERS) {
     const email = `${u.handle}@${u.college}${SEED_DOMAIN_SUFFIX}`;
-    const { data, error } = await admin.auth.admin.createUser({
-      email,
-      email_confirm: true,
-      user_metadata: { full_name: u.name },
-    });
-    if (error) throw new Error(`createUser ${email}: ${error.message}`);
-    const id = data.user.id;
+    const id = await createAuthUser(email, u.name);
     userIds[u.handle] = id;
     await db
       .update(s.profiles)
