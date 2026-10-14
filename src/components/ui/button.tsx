@@ -1,4 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
+import { mergeProps } from "@base-ui/react/merge-props"
+import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
@@ -39,24 +41,25 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
+type ButtonProps = ButtonPrimitive.Props & VariantProps<typeof buttonVariants>
+
+function Button({ className, variant = "default", size = "default", render, ...props }: ButtonProps) {
+  const classes = cn(buttonVariants({ variant, size, className }))
+  // Rendered as another element (usually a <Link>/<a>): style it like a button but keep its own
+  // semantics. Base UI's Button would add role="button", turning links into fake buttons.
+  if (render) return <ButtonStyled render={render} className={classes} {...props} />
+  return <ButtonPrimitive data-slot="button" className={classes} {...props} />
+}
+
+function ButtonStyled({
   render,
-  nativeButton,
-  ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
-  return (
-    <ButtonPrimitive
-      data-slot="button"
-      render={render}
-      // Buttons rendered as links (<Link>, <a>) aren't native <button>s.
-      nativeButton={nativeButton ?? !render}
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+  className,
+  children,
+}: Pick<ButtonProps, "render" | "children"> & { className: string }) {
+  return useRender({
+    render: render as useRender.RenderProp,
+    props: mergeProps<"a">({ className, children: children as React.ReactNode }, { "data-slot": "button" } as object),
+  })
 }
 
 export { Button, buttonVariants }
