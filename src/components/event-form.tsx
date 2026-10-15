@@ -109,7 +109,7 @@ export function EventForm({
                   }
                   className={cn(
                     "rounded-full border px-3 py-1 text-sm",
-                    on ? "border-primary bg-primary/10 text-primary" : "hover:bg-muted",
+                    on ? "border-ink bg-signal-soft text-signal-ink" : "hover:bg-muted",
                   )}
                 >
                   {d.label}
@@ -207,7 +207,7 @@ export function EventForm({
         </Field>
       </FormSection>
 
-      <div className="sticky bottom-16 flex justify-end gap-2 rounded-xl border bg-background/95 p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
+      <div className="sticky bottom-16 flex justify-end gap-2 rounded-lg border border-rule bg-card bg-background/95 p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
         {!isPublished && (
           <Button type="button" variant="outline" size="lg" disabled={pending} onClick={() => submit(false)}>
             Save draft

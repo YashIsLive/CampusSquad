@@ -4,7 +4,8 @@ import { after } from "next/server";
 import { notFound } from "next/navigation";
 import { and, desc, eq, sql } from "drizzle-orm";
 import ReactMarkdown from "react-markdown";
-import { BadgeCheck, CalendarDays, Clock, IndianRupee, MapPin, Settings, Trophy, Users } from "lucide-react";
+import { BadgeCheck, CalendarDays, CalendarPlus, Clock, IndianRupee, MapPin, Settings, Trophy, Users } from "lucide-react";
+import { ViewTransition } from "react";
 import { db, schema } from "@/db";
 import { getCurrentUser, isOrgAdmin } from "@/lib/auth";
 import { getEventWithOrg } from "@/lib/queries";
@@ -22,6 +23,10 @@ import { googleCalendarUrl } from "@/lib/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
+import { EventArt } from "@/components/event-art";
+import { posterVT, titleVT } from "@/components/event-card";
+import { DateBlock, Stamp } from "@/components/noticeboard";
+import { Breadcrumbs, TabNav } from "@/components/nav-bits";
 import { cn } from "@/lib/utils";
 import { RegisterPanel } from "./register-panel";
 import { SaveEventButton } from "./save-button";
@@ -99,151 +104,210 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
   const closed = now > event.regDeadline || !event.registrationsOpen || event.status !== "published";
   const isTeamEvent = event.teamMax > 1;
 
+  const closingSoon = !closed && event.regDeadline.getTime() - now.getTime() < 48 * 3600e3;
+  const tabHref = (key: string) => (key === "overview" ? `/events/${event.id}` : `/events/${event.id}?tab=${key}`);
+
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 lg:flex-row lg:items-start">
-      <div className="flex min-w-0 flex-1 flex-col gap-6">
-        {event.status !== "published" && (
-          <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
-            This event is <strong>{event.status}</strong>
-            {event.status === "draft" ? " — only organizers can see it." : "."}
-          </p>
-        )}
+    <>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-5 motion-safe:animate-page-in sm:py-8">
+      <Breadcrumbs
+        items={[
+          { href: "/", label: "Explore" },
+          { href: `/orgs/${event.org.slug}`, label: event.org.name },
+          { label: event.title },
+        ]}
+      />
 
-        <header className="flex flex-col gap-4 sm:flex-row">
-          {event.posterUrl && (
-            // eslint-disable-next-line @next/next/no-img-element -- user-uploaded poster
-            <img src={event.posterUrl} alt={`${event.title} poster`} className="w-full rounded-xl border object-cover sm:w-48" />
-          )}
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-1.5">
-              <Badge>{EVENT_TYPE_LABEL[event.type]}</Badge>
-              <Badge variant="secondary">{MODE_LABEL[event.mode]}</Badge>
-              {event.beginnerFriendly && <Badge variant="secondary">Beginner-friendly</Badge>}
-              {event.domainTags.map((d) => (
-                <Badge key={d} variant="outline">
-                  {domainLabel(d)}
-                </Badge>
-              ))}
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{event.title}</h1>
-            <Link href={`/orgs/${event.org.slug}`} className="flex items-center gap-1 text-sm text-muted-foreground hover:underline">
-              {event.org.name}
-              {event.org.verified && <BadgeCheck className="size-4 text-primary" aria-label="Verified" />}
-              {event.org.college && <span>· {event.org.college.name}</span>}
-            </Link>
-          </div>
-        </header>
+      {event.status !== "published" && (
+        <p role="status" className="rounded-md border border-ink/30 bg-marker/40 px-3 py-2 text-sm">
+          This event is <strong>{event.status}</strong>
+          {event.status === "draft" ? " — only organizers can see it." : "."}
+        </p>
+      )}
 
-        <dl className="grid gap-3 rounded-xl border p-4 text-sm sm:grid-cols-2">
-          <Fact icon={CalendarDays} label="When">
-            {formatDateTime(event.startsAt)} – {formatDateTime(event.endsAt)}
-          </Fact>
-          <Fact icon={Clock} label="Register by">
-            {formatDateTime(event.regDeadline)}{" "}
-            <span className={cn("text-muted-foreground", !closed && event.regDeadline.getTime() - now.getTime() < 48 * 3600e3 && "text-destructive")}>
-              ({relative(event.regDeadline, now)})
-            </span>
-          </Fact>
-          <Fact icon={MapPin} label="Where">
-            {event.mode === "online" ? "Online" : event.venue}
-            {event.mode === "hybrid" && " / online"}
-          </Fact>
-          <Fact icon={Users} label="Team size">
-            {isTeamEvent ? `${event.teamMin}–${event.teamMax} members` : "Solo"} · {SCOPE_LABEL[event.eligibilityScope]}
-            {isTeamEvent && (event.allowCrossCollege ? " · cross-college OK" : " · same-college teams")}
-          </Fact>
-          <Fact icon={IndianRupee} label="Fee">
-            {event.isFree ? "Free" : event.feeText}
-          </Fact>
-          {event.prizeText && (
-            <Fact icon={Trophy} label="Prizes">
-              {event.prizeText}
-            </Fact>
-          )}
-        </dl>
-
-        <nav className="flex gap-1 border-b" aria-label="Event sections">
-          {TABS.map((t) => (
-            <Link
-              key={t.key}
-              href={t.key === "overview" ? `/events/${event.id}` : `/events/${event.id}?tab=${t.key}`}
-              scroll={false}
-              className={cn(
-                "-mb-px border-b-2 px-3 py-2 text-sm",
-                tab === t.key ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-              )}
-              aria-current={tab === t.key ? "page" : undefined}
+      <div className="grid gap-8 lg:grid-cols-[1fr_20rem] lg:items-start">
+        <div className="flex min-w-0 flex-col gap-6">
+          <ViewTransition name={posterVT(event.id)} share="morph" default="none">
+            <EventArt
+              id={event.id}
+              type={event.type}
+              posterUrl={event.posterUrl}
+              className="aspect-[16/9] rounded-lg border border-ink/10 sm:aspect-[21/9]"
             >
-              {t.label}
-              {t.key === "teams" && stats.openRoles > 0 && (
-                <span className="ml-1.5 rounded-full bg-primary/10 px-1.5 text-xs text-primary">{stats.openRoles} open</span>
+              <span className="label-mono absolute top-3 left-3 rounded-sm bg-paper px-2 py-1 text-ink">{EVENT_TYPE_LABEL[event.type]}</span>
+              {closingSoon && (
+                <span className="absolute right-3 bottom-3 rounded-sm bg-paper px-1.5 py-1">
+                  <Stamp>Closing soon</Stamp>
+                </span>
               )}
-            </Link>
-          ))}
-        </nav>
+            </EventArt>
+          </ViewTransition>
 
-        {tab === "overview" && (
-          <div className="flex flex-col gap-6">
-            <p className="text-sm leading-relaxed whitespace-pre-line">{event.description}</p>
-            {event.rulesMd && (
-              <div className="prose-sm max-w-none rounded-xl border p-4 text-sm [&_h1]:text-lg [&_h1]:font-semibold [&_h2]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_p]:my-2">
-                <ReactMarkdown>{event.rulesMd}</ReactMarkdown>
+          <header className="flex gap-4">
+            <DateBlock date={event.startsAt} size="lg" className="hidden sm:flex" />
+            <div className="flex min-w-0 flex-col gap-2">
+              <h1 className="text-3xl leading-tight font-extrabold sm:text-[2.6rem]">
+                <ViewTransition name={titleVT(event.id)} share="morph" default="none">
+                  <span>{event.title}</span>
+                </ViewTransition>
+              </h1>
+              <Link
+                href={`/orgs/${event.org.slug}`}
+                className="flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+              >
+                by <span className="font-medium text-foreground underline decoration-rule decoration-2 underline-offset-4">{event.org.name}</span>
+                {event.org.verified && <BadgeCheck className="size-4 text-ok" aria-label="Verified organization" />}
+                {event.org.college && <span className="hidden sm:inline">· {event.org.college.name}</span>}
+              </Link>
+              {event.domainTags.length > 0 && (
+                <ul aria-label="Domains" className="flex flex-wrap gap-1.5 pt-1">
+                  {event.domainTags.map((d) => (
+                    <li key={d}>
+                      <Badge variant="outline">{domainLabel(d)}</Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </header>
+
+          <dl className="grid overflow-hidden rounded-lg border border-rule bg-card sm:grid-cols-2">
+            <Fact icon={CalendarDays} label="When">
+              {formatDateTime(event.startsAt)} → {formatDateTime(event.endsAt)}
+            </Fact>
+            <Fact icon={Clock} label="Register by">
+              {formatDateTime(event.regDeadline)}{" "}
+              <span className={cn("label-mono", closingSoon ? "font-semibold text-signal-ink" : "text-muted-foreground")}>
+                {closed ? "closed" : relative(event.regDeadline, now)}
+              </span>
+            </Fact>
+            <Fact icon={MapPin} label="Where">
+              {event.mode === "online" ? "Online" : event.venue}
+              {event.mode === "hybrid" && " + online"}
+              {event.mode !== "online" && event.city && <span className="text-muted-foreground"> · {event.city}</span>}
+            </Fact>
+            <Fact icon={Users} label="Who">
+              {isTeamEvent ? `Teams of ${event.teamMin}–${event.teamMax}` : "Solo"} · {SCOPE_LABEL[event.eligibilityScope]}
+              {isTeamEvent && <span className="text-muted-foreground">{event.allowCrossCollege ? " · mixed colleges OK" : " · same-college teams"}</span>}
+            </Fact>
+            <Fact icon={IndianRupee} label="Fee">
+              {event.isFree ? "Free" : event.feeText}
+              {event.beginnerFriendly && <span className="text-muted-foreground"> · beginner-friendly</span>}
+            </Fact>
+            {event.prizeText && (
+              <Fact icon={Trophy} label="Prizes">
+                {event.prizeText}
+              </Fact>
+            )}
+          </dl>
+
+          <TabNav
+            label="Event sections"
+            id="event"
+            tabs={TABS.map((t) => ({
+              href: tabHref(t.key),
+              label: t.label,
+              active: tab === t.key,
+              badge:
+                t.key === "teams" && stats.openRoles > 0 ? (
+                  <span className="label-mono rounded-sm bg-signal-soft px-1.5 text-signal-ink">{stats.openRoles} open</span>
+                ) : undefined,
+            }))}
+          />
+
+          <div key={tab} className="motion-safe:animate-rise">
+            {tab === "overview" && (
+              <div className="flex flex-col gap-6">
+                <p className="max-w-[68ch] text-[0.975rem] leading-relaxed whitespace-pre-line">{event.description}</p>
+                {event.rulesMd && (
+                  <section aria-labelledby="rules" className="rounded-lg border border-rule bg-card p-5">
+                    <h2 id="rules" className="label-mono mb-2 text-muted-foreground">
+                      Rules &amp; details
+                    </h2>
+                    <div className="max-w-[68ch] text-sm leading-relaxed [&_h1]:font-display [&_h1]:text-lg [&_h1]:font-bold [&_h2]:font-display [&_h2]:text-base [&_h2]:font-bold [&_li]:ml-5 [&_li]:list-disc [&_li]:py-0.5 [&_p]:my-2">
+                      <ReactMarkdown>{event.rulesMd}</ReactMarkdown>
+                    </div>
+                  </section>
+                )}
               </div>
             )}
+            {tab === "teams" &&
+              (isTeamEvent ? (
+                <TeamsTab event={event} user={user} filters={sp} />
+              ) : (
+                <EmptyState art="ticket" title="This one's solo" description="Everyone participates individually — no teams needed." />
+              ))}
+            {tab === "updates" && <UpdatesTab eventId={event.id} />}
           </div>
-        )}
-        {tab === "teams" &&
-          (isTeamEvent ? (
-            <TeamsTab event={event} user={user} filters={sp} />
-          ) : (
-            <EmptyState title="Solo event" description="Everyone participates individually — no teams needed." />
-          ))}
-        {tab === "updates" && <UpdatesTab eventId={event.id} />}
-      </div>
-
-      <aside className="flex w-full flex-col gap-3 lg:sticky lg:top-20 lg:w-80">
-        <RegisterPanel
-          eventId={event.id}
-          signedIn={Boolean(user)}
-          isTeamEvent={isTeamEvent}
-          registered={Boolean(registration)}
-          checkinCode={registration?.checkinCode ?? null}
-          checkedIn={registration?.status === "checked_in"}
-          team={membership ? { id: membership.team.id, name: membership.team.name, isLeader: membership.team.leaderId === user?.id } : null}
-          blockedReason={closed ? (check && !check.ok ? check.reason : "Registrations are closed.") : check && !check.ok ? check.reason : null}
-          externalUrl={event.externalUrl}
-          started={now >= event.startsAt}
-        />
-        <div className="flex gap-2">
-          {user && <SaveEventButton eventId={event.id} initialSaved={Boolean(saved)} />}
-          <Button
-            variant="outline"
-            className="flex-1"
-            render={<a href={googleCalendarUrl(event)} target="_blank" rel="noreferrer" />}
-          >
-            Add to Google Calendar
-          </Button>
         </div>
-        <p className="px-1 text-xs text-muted-foreground">
-          {stats.registrations} registered · {stats.teams} teams
-        </p>
-        {admin && (
-          <Button variant="secondary" render={<Link href={`/events/${event.id}/manage`} />}>
-            <Settings /> Manage event
-          </Button>
-        )}
-      </aside>
+
+        <aside aria-label="Registration" className="flex flex-col gap-3 lg:sticky lg:top-20">
+          <RegisterPanel
+            eventId={event.id}
+            signedIn={Boolean(user)}
+            isTeamEvent={isTeamEvent}
+            registered={Boolean(registration)}
+            checkinCode={registration?.checkinCode ?? null}
+            checkedIn={registration?.status === "checked_in"}
+            team={membership ? { id: membership.team.id, name: membership.team.name, isLeader: membership.team.leaderId === user?.id } : null}
+            blockedReason={closed ? (check && !check.ok ? check.reason : "Registrations are closed.") : check && !check.ok ? check.reason : null}
+            externalUrl={event.externalUrl}
+            started={now >= event.startsAt}
+            stub={{
+              date: formatDateTime(event.startsAt),
+              who: isTeamEvent ? `Team of ${event.teamMin}–${event.teamMax}` : "Admit one",
+              registered: stats.registrations,
+              teams: stats.teams,
+            }}
+          />
+          <div className="flex gap-2">
+            {user && <SaveEventButton eventId={event.id} initialSaved={Boolean(saved)} />}
+            <Button variant="outline" className="flex-1" render={<a href={googleCalendarUrl(event)} target="_blank" rel="noreferrer" />}>
+              <CalendarPlus /> Add to calendar
+            </Button>
+          </div>
+          {admin && (
+            <Button variant="ink" render={<Link href={`/events/${event.id}/manage`} />}>
+              <Settings /> Manage event
+            </Button>
+          )}
+        </aside>
+      </div>
     </div>
+
+      {/* Below lg the ticket sits under the content, so keep the next step one tap away.
+          Kept outside the animated container: a transform there would anchor `fixed` to it. */}
+      <div
+        className={cn(
+          "fixed inset-x-0 z-30 flex items-center justify-between gap-3 border-t border-rule bg-paper/95 px-4 py-2.5 backdrop-blur-sm lg:hidden",
+          user ? "bottom-[calc(4rem+env(safe-area-inset-bottom))] sm:bottom-0" : "bottom-0 pb-[calc(0.625rem+env(safe-area-inset-bottom))]",
+        )}
+      >
+        <p className="label-mono min-w-0 truncate">
+          {registration ? (
+            <span className="text-ok">You&apos;re registered</span>
+          ) : closed ? (
+            <span className="text-muted-foreground">Registrations closed</span>
+          ) : (
+            <span className={closingSoon ? "font-semibold text-signal-ink" : ""}>Closes {relative(event.regDeadline, now)}</span>
+          )}
+        </p>
+        <Button size="sm" variant={registration || closed ? "outline" : "default"} render={<a href="#ticket-heading" />}>
+          {registration ? "View ticket" : closed ? "Details" : "Register"}
+        </Button>
+      </div>
+      <div aria-hidden="true" className="h-14 lg:hidden" />
+    </>
   );
 }
 
 function Fact({ icon: Icon, label, children }: { icon: typeof Clock; label: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-2.5">
-      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-      <div>
-        <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd>{children}</dd>
+    <div className="flex gap-3 border-b border-dashed border-rule p-4 sm:border-r sm:even:border-r-0">
+      <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+      <div className="min-w-0">
+        <dt className="label-mono text-muted-foreground">{label}</dt>
+        <dd className="mt-0.5 text-sm">{children}</dd>
       </div>
     </div>
   );
@@ -260,7 +324,7 @@ async function UpdatesTab({ eventId }: { eventId: string }) {
   return (
     <ul className="flex flex-col gap-3">
       {rows.map((a) => (
-        <li key={a.id} className="rounded-xl border p-4">
+        <li key={a.id} className="rounded-lg border border-rule bg-card p-4">
           <p className="text-xs text-muted-foreground">{formatDateTime(a.createdAt)}</p>
           <p className="mt-1 text-sm whitespace-pre-line">{a.body}</p>
         </li>

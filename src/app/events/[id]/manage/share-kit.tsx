@@ -52,9 +52,9 @@ export function ShareKit({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <section className="flex flex-col gap-3 rounded-xl border p-4">
+      <section className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-4">
         <div>
-          <h2 className="font-medium">Tracked links</h2>
+          <h2 className="text-xl font-bold">Tracked links</h2>
           <p className="text-sm text-muted-foreground">
             One link per channel. Clicks and registrations are counted separately, so you can see which WhatsApp group actually worked.
           </p>
@@ -125,9 +125,9 @@ export function ShareKit({
         )}
       </section>
 
-      <section className="flex flex-col gap-3 rounded-xl border p-4">
+      <section className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-4">
         <div>
-          <h2 className="font-medium">WhatsApp caption</h2>
+          <h2 className="text-xl font-bold">WhatsApp caption</h2>
           <p className="text-sm text-muted-foreground">Pre-written, uses your first tracked link. Edit freely.</p>
         </div>
         <Textarea rows={10} value={caption} onChange={(e) => setCaption(e.target.value)} className="font-mono text-xs" />

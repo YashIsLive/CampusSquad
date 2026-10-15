@@ -20,7 +20,7 @@ export function CollegeReview({
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-xl border p-4"
+      className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-4"
       onSubmit={(e) => {
         e.preventDefault();
         startTransition(async () => {

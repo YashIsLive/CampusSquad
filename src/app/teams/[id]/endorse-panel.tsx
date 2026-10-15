@@ -18,8 +18,8 @@ export function EndorsePanel({ eventId, teamId, teammates }: { eventId: string; 
   if (teammates.length === 0) return null;
 
   return (
-    <section className="rounded-xl border bg-muted/30 p-4">
-      <h2 className="font-medium">Endorse your teammates</h2>
+    <section className="rounded-lg border border-rule bg-secondary/60 p-4">
+      <h2 className="text-xl font-bold">Endorse your teammates</h2>
       <p className="mb-3 text-sm text-muted-foreground">The event is over. Vouch for a skill each teammate showed — it appears on their profile.</p>
       <ul className="flex flex-col gap-2">
         {teammates.map((t) => (

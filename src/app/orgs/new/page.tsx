@@ -12,7 +12,7 @@ export default async function NewOrgPage() {
 
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-6 sm:py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Create an organization</h1>
+      <h1 className="text-3xl font-extrabold sm:text-4xl">Create an organization</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         A club, department or community that hosts events. You&apos;ll be its owner and can add admins.
       </p>

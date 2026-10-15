@@ -70,9 +70,9 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
           )}
         </div>
         <div className="flex-1">
-          <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight">
+          <h1 className="flex flex-wrap items-center gap-2 text-3xl font-extrabold sm:text-4xl">
             {org.name}
-            {org.verified && <BadgeCheck className="size-5 text-primary" aria-label="Verified organization" />}
+            {org.verified && <BadgeCheck className="size-5 text-signal-ink" aria-label="Verified organization" />}
           </h1>
           <p className="text-sm text-muted-foreground">
             {[org.type[0].toUpperCase() + org.type.slice(1), org.college?.name, `${followers?.n ?? 0} followers`]
@@ -88,7 +88,7 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
       </section>
 
       <section>
-        <h2 className="mb-3 font-medium">Upcoming events</h2>
+        <h2 className="mb-3 text-xl font-bold">Upcoming events</h2>
         {upcoming.length === 0 ? (
           <EmptyState compact title="No upcoming events" description="Follow to hear about the next one." />
         ) : (
@@ -102,7 +102,7 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
 
       {past.length > 0 && (
         <section>
-          <h2 className="mb-3 font-medium">Past events</h2>
+          <h2 className="mb-3 text-xl font-bold">Past events</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {past.map((e) => (
               <EventCard key={e.id} event={e} showStatus={isAdmin} />
@@ -112,7 +112,7 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
       )}
 
       <section>
-        <h2 className="mb-3 font-medium">Team</h2>
+        <h2 className="mb-3 text-xl font-bold">Team</h2>
         {isAdmin && myRole === "owner" ? (
           <OrgAdmins
             orgId={org.id}
@@ -122,7 +122,7 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
           <ul className="flex flex-wrap gap-3">
             {org.members.map((m) => (
               <li key={m.userId}>
-                <Link href={`/u/${m.user.username}`} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-muted">
+                <Link href={`/u/${m.user.username}`} className="flex items-center gap-2 rounded-lg border border-rule bg-card px-3 py-2 text-sm hover:bg-muted">
                   <UserAvatar name={m.user.name} src={m.user.avatarUrl} className="size-6" />
                   {m.user.name} <span className="text-muted-foreground">· {m.role}</span>
                 </Link>

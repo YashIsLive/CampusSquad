@@ -36,7 +36,7 @@ export function NativeSelect({ className, ...props }: ComponentProps<"select">) 
   return (
     <select
       className={cn(
-        "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30",
+        "h-10 w-full rounded-md border border-input bg-card px-3 text-sm outline-none focus-visible:border-ink focus-visible:ring-3 focus-visible:ring-ink/15 disabled:opacity-50 sm:h-9",
         className,
       )}
       {...props}
@@ -46,9 +46,9 @@ export function NativeSelect({ className, ...props }: ComponentProps<"select">) 
 
 export function FormSection({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-4 rounded-xl border p-4 sm:p-5">
+    <section className="flex flex-col gap-4 rounded-lg border border-rule bg-card p-4 sm:p-5">
       <div>
-        <h2 className="font-medium">{title}</h2>
+        <h2 className="text-lg font-bold">{title}</h2>
         {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </div>
       {children}

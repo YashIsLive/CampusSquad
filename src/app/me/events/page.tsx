@@ -44,7 +44,7 @@ export default async function MyEventsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">My events</h1>
+      <h1 className="text-3xl font-extrabold sm:text-4xl">My events</h1>
 
       {hosting.length > 0 && (
         <Section title="Hosting">
@@ -83,7 +83,7 @@ export default async function MyEventsPage() {
                         Team {r.team.name}
                       </Link>
                     ) : (
-                      <Link href={`/events/${r.eventId}?tab=teams`} className="text-amber-700 hover:underline dark:text-amber-400">
+                      <Link href={`/events/${r.eventId}?tab=teams`} className="text-signal-ink hover:underline">
                         No team yet — find one
                       </Link>
                     ))}
@@ -131,7 +131,7 @@ export default async function MyEventsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-3 font-medium">{title}</h2>
+      <h2 className="mb-3 text-xl font-bold">{title}</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
     </section>
   );

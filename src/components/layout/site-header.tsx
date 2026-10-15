@@ -5,14 +5,10 @@ import { db, schema } from "@/db";
 import type { CurrentUser } from "@/lib/auth";
 import { runReminders } from "@/lib/reminders";
 import { Button } from "@/components/ui/button";
+import { Wordmark } from "@/components/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { UserMenu } from "@/components/layout/user-menu";
-
-const NAV = [
-  { href: "/", label: "Events" },
-  { href: "/me/events", label: "My events" },
-  { href: "/me/applications", label: "Teams & applications" },
-];
+import { NavLinks } from "@/components/layout/nav-links";
 
 export async function SiteHeader({ user }: { user: CurrentUser | null }) {
   let unread = 0;
@@ -27,32 +23,17 @@ export async function SiteHeader({ user }: { user: CurrentUser | null }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="grid size-7 place-items-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
-            CS
-          </span>
-          <span className="hidden sm:inline">CampusSquad</span>
+    <header className="sticky top-0 z-40 border-b border-rule bg-paper/95 backdrop-blur-sm" style={{ viewTransitionName: "site-header" }}>
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-6 px-4">
+        <Link href="/" className="shrink-0 rounded-md" aria-label="CampusSquad home">
+          <Wordmark />
         </Link>
-        {user && (
-          <nav className="hidden items-center gap-1 text-sm sm:flex">
-            {NAV.map((n) => (
-              <Link
-                key={n.href}
-                href={n.href}
-                className="rounded-md px-2.5 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                {n.label}
-              </Link>
-            ))}
-          </nav>
-        )}
-        <div className="ml-auto flex items-center gap-2">
+        {user && <NavLinks />}
+        <div className="ml-auto flex items-center gap-1.5">
           {user ? (
             <>
               <Button render={<Link href="/events/new" />} size="sm" className="hidden sm:inline-flex">
-                Post event
+                Post an event
               </Button>
               <NotificationBell userId={user.id} initialUnread={unread} />
               <UserMenu user={{ name: user.name, username: user.username, avatarUrl: user.avatarUrl, isAdmin: user.isAdmin }} />

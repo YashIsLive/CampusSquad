@@ -14,7 +14,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   if (!event || event.status === "draft") {
     return new ImageResponse(
       (
-        <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center", background: "#4f46e5", color: "white", fontSize: 72, fontWeight: 700 }}>
+        <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center", background: "#1a1714", color: "#f4efe4", fontSize: 72, fontWeight: 700 }}>
           CampusSquad
         </div>
       ),
@@ -24,13 +24,13 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
   return new ImageResponse(
     (
-      <div style={{ display: "flex", width: "100%", height: "100%", background: "linear-gradient(135deg, #312e81 0%, #4f46e5 60%, #7c3aed 100%)", color: "white", fontFamily: "sans-serif" }}>
+      <div style={{ display: "flex", width: "100%", height: "100%", background: "#1a1714", color: "#f4efe4", fontFamily: "sans-serif" }}>
         <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: 64, justifyContent: "space-between" }}>
           <div style={{ display: "flex", gap: 12 }}>
-            <span style={{ background: "rgba(255,255,255,0.18)", padding: "8px 20px", borderRadius: 999, fontSize: 28 }}>
+            <span style={{ background: "#f4efe4", color: "#1a1714", padding: "8px 20px", borderRadius: 999, fontSize: 28 }}>
               {EVENT_TYPE_LABEL[event.type]}
             </span>
-            <span style={{ background: "rgba(255,255,255,0.18)", padding: "8px 20px", borderRadius: 999, fontSize: 28 }}>
+            <span style={{ background: "#f4efe4", color: "#1a1714", padding: "8px 20px", borderRadius: 999, fontSize: 28 }}>
               {`${MODE_LABEL[event.mode]}${event.city && event.mode !== "online" ? ` · ${event.city}` : ""}`}
             </span>
           </div>
@@ -40,7 +40,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 30 }}>
             <div style={{ display: "flex" }}>{formatDate(event.startsAt)}</div>
-            <div style={{ display: "flex", color: "#fde68a" }}>{`Register by ${formatDateTime(event.regDeadline)}`}</div>
+            <div style={{ display: "flex", color: "#f06a3f" }}>{`Register by ${formatDateTime(event.regDeadline)}`}</div>
           </div>
         </div>
         {event.posterUrl && (

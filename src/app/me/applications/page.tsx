@@ -48,14 +48,14 @@ export default async function MyApplicationsPage() {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 sm:py-10">
       {/* Applicants see accept/reject the moment the leader decides. */}
       <RealtimeRefresh channel={`my-apps:${user.id}`} table="applications" filter={`applicant_id=eq.${user.id}`} events="UPDATE" />
-      <h1 className="text-2xl font-semibold tracking-tight">Teams & applications</h1>
+      <h1 className="text-3xl font-extrabold sm:text-4xl">Teams & applications</h1>
 
       {pendingInvites.length > 0 && (
         <section>
-          <h2 className="mb-3 font-medium">Invites</h2>
+          <h2 className="mb-3 text-xl font-bold">Invites</h2>
           <ul className="flex flex-col gap-2">
             {pendingInvites.map((i) => (
-              <li key={i.id} className="flex flex-col gap-2 rounded-xl border border-primary/40 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <li key={i.id} className="flex flex-col gap-2 rounded-lg border border-ink bg-signal-soft/40 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium">
                     <Link href={`/teams/${i.teamId}`} className="hover:underline">
@@ -74,7 +74,7 @@ export default async function MyApplicationsPage() {
       )}
 
       <section>
-        <h2 className="mb-3 font-medium">My teams</h2>
+        <h2 className="mb-3 text-xl font-bold">My teams</h2>
         {memberships.length === 0 ? (
           <EmptyState compact title="You're not on any team yet" action={<Button render={<Link href="/" />}>Find an event</Button>} />
         ) : (
@@ -83,7 +83,7 @@ export default async function MyApplicationsPage() {
               const size = m.team.members.length;
               return (
                 <li key={m.teamId}>
-                  <Link href={`/teams/${m.teamId}`} className="flex items-center justify-between gap-2 rounded-xl border p-4 hover:bg-muted/50">
+                  <Link href={`/teams/${m.teamId}`} className="flex items-center justify-between gap-2 rounded-lg border border-rule bg-card p-4 hover:bg-muted/50">
                     <div>
                       <p className="font-medium">
                         {m.team.name} {m.team.leaderId === user.id && <Badge variant="secondary">Leader</Badge>}
@@ -104,13 +104,13 @@ export default async function MyApplicationsPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 font-medium">My applications</h2>
+        <h2 className="mb-3 text-xl font-bold">My applications</h2>
         {applications.length === 0 ? (
           <EmptyState compact title="No applications yet" description="Open any team event and check the Teams tab for open roles." />
         ) : (
           <ul className="flex flex-col gap-2">
             {applications.map((a) => (
-              <li key={a.id} className="flex flex-col gap-2 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between">
+              <li key={a.id} className="flex flex-col gap-2 rounded-lg border border-rule bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="font-medium">
                     {a.vacancy.roleTitle} <span className="font-normal text-muted-foreground">at {a.vacancy.team.name}</span>

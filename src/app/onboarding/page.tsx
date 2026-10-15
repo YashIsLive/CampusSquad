@@ -21,7 +21,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">{firstTime ? "Set up your profile" : "Edit profile"}</h1>
+      <h1 className="text-3xl font-extrabold sm:text-4xl">{firstTime ? "Set up your profile" : "Edit profile"}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         {firstTime
           ? "Teams use this to decide who to invite. Takes about a minute."

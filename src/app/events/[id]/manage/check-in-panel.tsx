@@ -39,9 +39,9 @@ export function CheckInPanel({ eventId, checkedIn, total }: { eventId: string; c
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <section className="flex flex-col gap-3 rounded-xl border p-4">
+      <section className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-medium">Scan QR</h2>
+          <h2 className="text-xl font-bold">Scan QR</h2>
           <Badge variant="secondary" className="tabular-nums">
             {checkedIn}/{total} checked in
           </Badge>
@@ -64,8 +64,8 @@ export function CheckInPanel({ eventId, checkedIn, total }: { eventId: string; c
             role="status"
             className={
               last.already
-                ? "rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
-                : "rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
+                ? "rounded-md border border-ink/30 bg-marker/40 p-3 text-sm"
+                : "rounded-md border border-ok/50 bg-ok/10 p-3 text-sm"
             }
           >
             <p className="flex items-center gap-1.5 font-medium">
@@ -76,8 +76,8 @@ export function CheckInPanel({ eventId, checkedIn, total }: { eventId: string; c
         )}
       </section>
 
-      <section className="flex flex-col gap-3 rounded-xl border p-4">
-        <h2 className="font-medium">Search by name, email or team</h2>
+      <section className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-4">
+        <h2 className="text-xl font-bold">Search by name, email or team</h2>
         <form
           className="flex gap-2"
           onSubmit={(e) => {
@@ -215,7 +215,7 @@ function Scanner({ onCode, paused }: { onCode: (code: string) => void; paused: b
             {error ?? "Camera is off"}
           </div>
         )}
-        {on && <div className="pointer-events-none absolute inset-[18%] rounded-xl border-2 border-white/70" />}
+        {on && <div className="pointer-events-none absolute inset-[18%] rounded-lg border border-rule bg-card-2 border-white/70" />}
       </div>
       <canvas ref={canvasRef} className="hidden" />
       <Button variant={on ? "outline" : "default"} onClick={() => { setError(null); setOn((v) => !v); }}>

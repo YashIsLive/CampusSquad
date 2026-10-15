@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Breadcrumbs, TabNav } from "@/components/nav-bits";
 import { notFound } from "next/navigation";
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { Download, Pencil } from "lucide-react";
@@ -10,7 +11,6 @@ import { formatDateTime, relative, siteUrl } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
-import { cn } from "@/lib/utils";
 import { AnnouncementComposer } from "./announcement-composer";
 import { CheckInPanel } from "./check-in-panel";
 import { FinalizeAttendanceButton, NudgeSoloButton } from "./organizer-actions";
@@ -79,13 +79,17 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:py-8">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 motion-safe:animate-page-in sm:py-8">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <Link href={`/events/${event.id}`} className="text-sm text-muted-foreground hover:underline">
-            ← View event page
-          </Link>
-          <h1 className="text-2xl font-semibold tracking-tight">{event.title}</h1>
+          <Breadcrumbs
+            items={[
+              { href: "/me/events", label: "My events" },
+              { href: `/events/${event.id}`, label: event.title },
+              { label: "Manage" },
+            ]}
+          />
+          <h1 className="text-3xl font-extrabold sm:text-4xl">{event.title}</h1>
           <p className="text-sm text-muted-foreground">
             {event.org.name} · registration closes {formatDateTime(event.regDeadline)}
           </p>
@@ -98,21 +102,15 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
         </div>
       </header>
 
-      <nav className="flex gap-1 overflow-x-auto border-b" aria-label="Manage sections">
-        {SECTIONS.map((s) => (
-          <Link
-            key={s.key}
-            href={`/events/${event.id}/manage${s.key === "dashboard" ? "" : `?section=${s.key}`}`}
-            scroll={false}
-            className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm whitespace-nowrap",
-              section === s.key ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {s.label}
-          </Link>
-        ))}
-      </nav>
+      <TabNav
+        label="Manage sections"
+        id="manage"
+        tabs={SECTIONS.map((s) => ({
+          href: `/events/${event.id}/manage${s.key === "dashboard" ? "" : `?section=${s.key}`}`,
+          label: s.label,
+          active: section === s.key,
+        }))}
+      />
 
       {section === "dashboard" && (
         <div className="flex flex-col gap-6">
@@ -133,8 +131,8 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
             )}
           </div>
 
-          <section className="rounded-xl border p-4">
-            <h2 className="mb-3 font-medium">Funnel</h2>
+          <section className="rounded-lg border border-rule bg-card p-4">
+            <h2 className="mb-3 text-xl font-bold">Funnel</h2>
             <ol className="flex flex-col gap-2">
               {funnel.map((f) => {
                 const max = Math.max(1, funnel[0].value, ...funnel.map((x) => x.value));
@@ -142,7 +140,7 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
                   <li key={f.label} className="grid grid-cols-[8rem_1fr_3rem] items-center gap-3 text-sm">
                     <span className="text-muted-foreground">{f.label}</span>
                     <span className="h-3 rounded-full bg-muted">
-                      <span className="block h-3 rounded-full bg-primary" style={{ width: `${(f.value / max) * 100}%` }} />
+                      <span className="block h-3 rounded-full bg-ink" style={{ width: `${(f.value / max) * 100}%` }} />
                     </span>
                     <span className="text-right tabular-nums">{f.value}</span>
                   </li>
@@ -171,7 +169,7 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
           {total === 0 ? (
             <EmptyState title="No registrations yet" description="Share your event from the Share kit tab." />
           ) : (
-            <div className="overflow-x-auto rounded-xl border">
+            <div className="overflow-x-auto rounded-lg border border-rule bg-card">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                   <tr>
@@ -239,10 +237,10 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
 
 function Stat({ label, value, hint, children }: { label: string; value: number; hint?: string; children?: React.ReactNode }) {
   return (
-    <div className="rounded-xl border p-4">
+    <div className="rounded-lg border border-rule bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-2xl font-semibold tabular-nums">{value}</p>
-      {hint && <p className="text-xs text-amber-700 dark:text-amber-400">{hint}</p>}
+      {hint && <p className="text-xs text-signal-ink">{hint}</p>}
       {children && <div className="mt-2">{children}</div>}
     </div>
   );
@@ -251,8 +249,8 @@ function Stat({ label, value, hint, children }: { label: string; value: number; 
 function Breakdown({ title, rows, total }: { title: string; rows: Array<[string, number]>; total: number }) {
   const sorted = rows.sort((a, b) => b[1] - a[1]);
   return (
-    <section className="rounded-xl border p-4">
-      <h2 className="mb-3 font-medium">{title}</h2>
+    <section className="rounded-lg border border-rule bg-card p-4">
+      <h2 className="mb-3 text-xl font-bold">{title}</h2>
       {sorted.length === 0 ? (
         <p className="text-sm text-muted-foreground">No data yet.</p>
       ) : (
@@ -266,7 +264,7 @@ function Breakdown({ title, rows, total }: { title: string; rows: Array<[string,
                 </span>
               </div>
               <span className="h-1.5 rounded-full bg-muted">
-                <span className="block h-1.5 rounded-full bg-primary/70" style={{ width: `${(n / Math.max(1, total)) * 100}%` }} />
+                <span className="block h-1.5 rounded-full bg-ink/70" style={{ width: `${(n / Math.max(1, total)) * 100}%` }} />
               </span>
             </li>
           ))}

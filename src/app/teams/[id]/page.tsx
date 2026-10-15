@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/nav-bits";
 import { notFound } from "next/navigation";
 import { and, asc, count, eq, inArray } from "drizzle-orm";
 import { AlertTriangle, BadgeCheck, CalendarClock } from "lucide-react";
@@ -83,11 +84,15 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:py-8">
       <header className="flex flex-col gap-2">
-        <Link href={`/events/${event.id}?tab=teams`} className="text-sm text-muted-foreground hover:underline">
-          ← {event.title}
-        </Link>
+        <Breadcrumbs
+          items={[
+            { href: "/", label: "Explore" },
+            { href: `/events/${event.id}?tab=teams`, label: event.title },
+            { label: team.name },
+          ]}
+        />
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">{team.name}</h1>
+          <h1 className="text-3xl font-extrabold sm:text-4xl">{team.name}</h1>
           <Badge variant="secondary">
             {size}/{event.teamMax} members
           </Badge>
@@ -112,10 +117,10 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="flex min-w-0 flex-col gap-6">
           <section>
-            <h2 className="mb-3 font-medium">Members</h2>
+            <h2 className="mb-3 text-xl font-bold">Members</h2>
             <ul className="grid gap-2 sm:grid-cols-2">
               {team.members.map((m) => (
-                <li key={m.userId} className="flex items-start gap-3 rounded-xl border p-3">
+                <li key={m.userId} className="flex items-start gap-3 rounded-lg border border-rule bg-card p-3">
                   <UserAvatar name={m.user.name} src={m.user.avatarUrl} className="size-9" />
                   <div className="min-w-0 flex-1">
                     <Link href={`/u/${m.user.username}`} className="font-medium hover:underline">
@@ -123,7 +128,7 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
                     </Link>
                     <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
                       {m.userId === team.leaderId ? "Leader" : (m.roleTitle ?? "Member")} · {m.user.college?.name ?? "No college"}
-                      {m.user.collegeVerified && <BadgeCheck className="size-3.5 text-emerald-600" />}
+                      {m.user.collegeVerified && <BadgeCheck className="size-3.5 text-ok" />}
                     </p>
                     <p className="mt-1 truncate text-xs text-muted-foreground">
                       {m.user.skills
@@ -143,7 +148,7 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
 
           <section>
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="font-medium">Open roles</h2>
+              <h2 className="text-xl font-bold">Open roles</h2>
               {isLeader && !over && <PostVacancyButton teamId={team.id} skills={skills} capacityLeft={capacityLeft} allowCross={event.allowCrossCollege} />}
             </div>
             {team.vacancies.filter((v) => isLeader || v.status === "open").length === 0 ? (
@@ -157,7 +162,7 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
                 {team.vacancies
                   .filter((v) => isLeader || v.status === "open")
                   .map((v) => (
-                    <li key={v.id} className="flex flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <li key={v.id} className="flex flex-col gap-2 rounded-lg border border-rule bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
                         <p className="font-medium">
                           {v.roleTitle}{" "}
@@ -207,8 +212,8 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
 
         {isMember ? (
           <aside className="flex flex-col gap-4">
-            <section className="rounded-xl border p-4">
-              <h2 className="mb-2 flex items-center gap-1.5 font-medium">
+            <section className="rounded-lg border border-rule bg-card p-4">
+              <h2 className="mb-2 flex items-center gap-1.5 text-lg font-bold">
                 <CalendarClock className="size-4" /> Deadlines
               </h2>
               <ul className="flex flex-col gap-1.5 text-sm">

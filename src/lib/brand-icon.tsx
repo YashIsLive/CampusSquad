@@ -6,7 +6,7 @@ export function brandIcon(size: number, { maskable = false }: { maskable?: boole
   const inset = maskable ? size * 0.1 : 0;
   return new ImageResponse(
     (
-      <div style={{ display: "flex", width: "100%", height: "100%", background: maskable ? "#4f46e5" : "transparent" }}>
+      <div style={{ display: "flex", width: "100%", height: "100%", background: maskable ? "#1a1714" : "transparent" }}>
         <div
           style={{
             display: "flex",
@@ -14,7 +14,8 @@ export function brandIcon(size: number, { maskable = false }: { maskable?: boole
             margin: inset,
             alignItems: "center",
             justifyContent: "center",
-            background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+            background: "#1a1714",
+            borderTop: `${Math.round(size * 0.06)}px solid #c23c17`,
             borderRadius: maskable ? 0 : size * 0.22,
             color: "white",
             fontSize: size * 0.42,

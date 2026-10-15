@@ -36,7 +36,7 @@ export function TeamBoardFilters({
       aria-label={label}
       value={params.get(key) ?? ""}
       onChange={(e) => update({ [key]: e.target.value || null })}
-      className={cn("h-8 w-auto max-w-48 text-xs sm:text-sm", params.get(key) && "border-primary text-primary")}
+      className={cn("h-8 w-auto max-w-48 text-xs sm:text-sm", params.get(key) && "border-ink font-medium")}
     >
       <option value="">{label}</option>
       {options.map(([v, l]) => (

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/nav-bits";
 import { notFound, redirect } from "next/navigation";
 import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { BadgeCheck, ExternalLink } from "lucide-react";
@@ -13,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { UserAvatar } from "@/components/user-avatar";
+import { MatchMeter, SkillChip } from "@/components/match";
+import { MetaLine } from "@/components/noticeboard";
 import { cn } from "@/lib/utils";
 import { ApplicationActions } from "./application-actions";
 
@@ -64,10 +67,14 @@ export default async function ApplicationsPage({ params }: PageProps<"/teams/[id
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:py-8">
       <RealtimeRefresh channel={`apps:${team.id}`} table="applications" filter={`vacancy_id=in.(${vacancyIds.join(",") || "00000000-0000-0000-0000-000000000000"})`} />
       <header>
-        <Link href={`/teams/${team.id}`} className="text-sm text-muted-foreground hover:underline">
-          ← {team.name}
-        </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">Applications</h1>
+        <Breadcrumbs
+          items={[
+            { href: `/events/${team.event.id}?tab=teams`, label: team.event.title },
+            { href: `/teams/${team.id}`, label: team.name },
+            { label: "Applications" },
+          ]}
+        />
+        <h1 className="text-3xl font-extrabold sm:text-4xl">Applications</h1>
         <p className="text-sm text-muted-foreground">
           Sorted by match score. New applications appear live. {teamFull && "Your team is full."}
         </p>
@@ -103,7 +110,7 @@ export default async function ApplicationsPage({ params }: PageProps<"/teams/[id
                     const h = historyBy.get(a.applicantId);
                     const decided = !["pending", "shortlisted"].includes(a.status);
                     return (
-                      <li key={a.id} className={cn("flex flex-col gap-3 rounded-xl border p-4", decided && "opacity-70")}>
+                      <li key={a.id} className={cn("flex flex-col gap-3 rounded-lg border border-rule bg-card p-4", decided && "opacity-70")}>
                         <div className="flex items-start gap-3">
                           <UserAvatar name={a.applicant.name} src={a.applicant.avatarUrl} className="size-10" />
                           <div className="min-w-0 flex-1">
@@ -111,14 +118,6 @@ export default async function ApplicationsPage({ params }: PageProps<"/teams/[id
                               <Link href={`/u/${a.applicant.username}`} className="font-medium hover:underline">
                                 {a.applicant.name}
                               </Link>
-                              <span
-                                className={cn(
-                                  "rounded-full px-2 py-0.5 text-xs font-semibold",
-                                  a.matchScore >= 75 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : a.matchScore >= 40 ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-muted",
-                                )}
-                              >
-                                {a.matchScore}% match
-                              </span>
                               {a.status !== "pending" && (
                                 <Badge variant={a.status === "accepted" ? "default" : "outline"} className="capitalize">
                                   {a.status}
@@ -127,35 +126,38 @@ export default async function ApplicationsPage({ params }: PageProps<"/teams/[id
                             </div>
                             <p className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                               {a.applicant.college?.name ?? "No college"}
-                              {a.applicant.collegeVerified && <BadgeCheck className="size-3.5 text-emerald-600" />}
+                              {a.applicant.collegeVerified && <BadgeCheck className="size-3.5 text-ok" />}
                               {a.applicant.year && ` · Year ${a.applicant.year}`}
                               {a.applicant.branch && ` · ${a.applicant.branch}`}
                               {` · applied ${relative(a.createdAt)}`}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {h ? `${h.events} event${h.events === 1 ? "" : "s"} · ${h.attended} attended` : "First event"} · reliability{" "}
-                              {Math.round(Number(a.applicant.reliabilityScore))}%
-                            </p>
+                            <MetaLine
+                              className="mt-1"
+                              items={[
+                                h ? `${h.events} event${h.events === 1 ? "" : "s"} · ${h.attended} attended` : "First event",
+                                `Reliability ${Math.round(Number(a.applicant.reliabilityScore))}%`,
+                              ]}
+                            />
                           </div>
+                          <MatchMeter score={a.matchScore} />
                         </div>
                         <div className="flex flex-wrap gap-1">
                           {a.applicant.skills
                             .sort((x, y) => Number(wanted.has(y.skillId)) - Number(wanted.has(x.skillId)) || y.level - x.level)
                             .slice(0, 10)
                             .map((s) => (
-                              <Badge
+                              <SkillChip
                                 key={s.skillId}
-                                variant={wanted.has(s.skillId) && s.level >= MIN_LEVEL_HELD ? "default" : "outline"}
-                                title={`Level ${s.level}/5${s.endorsedCount ? ` · ${s.endorsedCount} endorsements` : ""}`}
-                              >
-                                {s.skill.name} · {s.level}
-                                {s.endorsedCount > 0 && ` · ✓${s.endorsedCount}`}
-                              </Badge>
+                                name={s.endorsedCount > 0 ? `${s.skill.name} (${s.endorsedCount} endorsed)` : s.skill.name}
+                                required={wanted.has(s.skillId)}
+                                held={wanted.has(s.skillId) && s.level >= MIN_LEVEL_HELD}
+                                level={s.level}
+                              />
                             ))}
                         </div>
-                        <blockquote className="border-l-2 pl-3 text-sm">{a.message}</blockquote>
+                        <blockquote className="border-l-2 border-ink/30 pl-3 text-sm">{a.message}</blockquote>
                         {a.screeningAnswer && v.screeningQuestion && (
-                          <div className="rounded-lg bg-muted/50 p-2 text-sm">
+                          <div className="rounded-md bg-secondary p-3 text-sm">
                             <p className="text-xs text-muted-foreground">{v.screeningQuestion}</p>
                             <p className="break-words">{a.screeningAnswer}</p>
                           </div>

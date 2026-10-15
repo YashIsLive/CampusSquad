@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { and, asc, eq, inArray } from "drizzle-orm";
-import { BadgeCheck, Clock, Users } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 import { db, schema } from "@/db";
 import type { CurrentUser } from "@/lib/auth";
 import type { EventWithOrg } from "@/lib/queries";
 import { crossCollegeAllowed, isEligible } from "@/lib/eligibility";
 import { matchScore, MIN_LEVEL_HELD } from "@/lib/match-score";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
+import { MatchMeter, SkillChip } from "@/components/match";
+import { MetaLine, Stamp } from "@/components/noticeboard";
 import { UserAvatar } from "@/components/user-avatar";
-import { cn } from "@/lib/utils";
 import { ApplyButton } from "./apply-button";
 import { AvailabilityForm } from "./availability-form";
 import { InviteButton } from "./invite-button";
@@ -114,7 +114,7 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
     <div className="flex flex-col gap-6">
       {/* Viewer's own status */}
       {user && !over && (
-        <div className="flex flex-col gap-3 rounded-xl border bg-muted/30 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-lg border border-rule bg-secondary/60 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
           {myTeam ? (
             <>
               <p>
@@ -157,7 +157,7 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
       <TeamBoardFilters skills={allSkills} colleges={colleges} />
 
       <section>
-        <h2 className="mb-3 flex items-center gap-2 font-medium">
+        <h2 className="mb-3 flex items-center gap-2 text-xl font-bold">
           Open roles <span className="text-sm font-normal text-muted-foreground">{vacancies.length}</span>
         </h2>
         {vacancies.length === 0 ? (
@@ -172,71 +172,59 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
               const myApp = myAppByVacancy.get(v.id);
               const memberSkills = [...new Set(team.members.flatMap((m) => m.user.skills.filter((s) => s.level >= 3).map((s) => s.skill.name)))];
               return (
-                <li key={v.id} className="flex flex-col gap-3 rounded-xl border bg-card p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-medium">{v.roleTitle}</h3>
-                      <Link href={`/teams/${team.id}`} className="text-sm text-muted-foreground hover:underline">
-                        {team.name} · {team.leader.college?.name ?? "No college"}
-                      </Link>
+                <li key={v.id} className="flex flex-col overflow-hidden rounded-lg border border-rule bg-card">
+                  <div className="flex items-center justify-between gap-2 border-b border-dashed border-rule bg-secondary/60 px-4 py-2">
+                    <span className="label-mono font-semibold">Wanted</span>
+                    <Link href={`/teams/${team.id}`} className="label-mono truncate text-muted-foreground hover:text-foreground hover:underline">
+                      {team.name}
+                    </Link>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-3 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="font-display text-xl leading-tight font-bold">{v.roleTitle}</h3>
+                        <p className="text-sm text-muted-foreground">{team.leader.college?.name ?? "No college listed"}</p>
+                      </div>
+                      {score !== null && <MatchMeter score={score} label="your match" />}
                     </div>
-                    {score !== null && (
-                      <span
-                        className={cn(
-                          "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold",
-                          score >= 75 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : score >= 40 ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-muted text-muted-foreground",
-                        )}
-                        title="How well your skills match this role"
-                      >
-                        {score}% match
-                      </span>
+                    {team.ideaPitch && <p className="border-l-2 border-ink/30 pl-3 text-sm">{team.ideaPitch}</p>}
+                    {v.description && <p className="text-sm text-muted-foreground">{v.description}</p>}
+                    <ul aria-label="Skills" className="flex flex-wrap gap-1">
+                      {v.skills
+                        .sort((a, b) => Number(b.required) - Number(a.required))
+                        .map((s) => (
+                          <li key={s.skillId}>
+                            <SkillChip name={s.skill.name} required={s.required} held={Boolean(user && heldSkillIds.has(s.skillId))} />
+                          </li>
+                        ))}
+                    </ul>
+                    <MetaLine
+                      items={[
+                        v.commitmentHours && `${v.commitmentHours} h/week`,
+                        `${v.slotsOpen} slot${v.slotsOpen === 1 ? "" : "s"} open`,
+                        `Team ${team.members.length}/${event.teamMax}`,
+                        v.scope === "intra" ? "Same college only" : "Any college",
+                      ]}
+                    />
+                    {memberSkills.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        <span className="label-mono">Team has · </span>
+                        {memberSkills.slice(0, 6).join(", ")}
+                      </p>
                     )}
-                  </div>
-                  {team.ideaPitch && <p className="text-sm">{team.ideaPitch}</p>}
-                  {v.description && <p className="text-sm text-muted-foreground">{v.description}</p>}
-                  <div className="flex flex-wrap gap-1">
-                    {v.skills
-                      .sort((a, b) => Number(b.required) - Number(a.required))
-                      .map((s) => (
-                        <Badge
-                          key={s.skillId}
-                          variant={s.required ? "default" : "outline"}
-                          className={cn(user && heldSkillIds.has(s.skillId) && "ring-2 ring-emerald-500/60")}
-                          title={s.required ? "Required" : "Nice to have"}
-                        >
-                          {s.skill.name}
-                          {!s.required && " (nice)"}
-                        </Badge>
-                      ))}
-                  </div>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    {v.commitmentHours && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="size-3.5" /> {v.commitmentHours} h/week
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <Users className="size-3.5" /> {v.slotsOpen} slot{v.slotsOpen === 1 ? "" : "s"} · team {team.members.length}/{event.teamMax}
-                    </span>
-                    <span>{v.scope === "intra" ? "Same college only" : "Cross-college OK"}</span>
-                  </div>
-                  {memberSkills.length > 0 && (
-                    <p className="text-xs text-muted-foreground">Team already has: {memberSkills.slice(0, 6).join(", ")}</p>
-                  )}
-                  <div className="mt-auto">
-                    {!user ? (
-                      <Button size="sm" render={<Link href={`/login?next=/events/${event.id}?tab=teams`} />}>
-                        Sign in to apply
-                      </Button>
-                    ) : myApp ? (
-                      <Badge variant="secondary" className="capitalize">
-                        Applied · {myApp.status}
-                      </Badge>
-                    ) : blocked ? (
-                      <p className="text-xs text-muted-foreground">{blocked}</p>
-                    ) : (
-                      <ApplyButton vacancyId={v.id} roleTitle={v.roleTitle} teamName={team.name} screeningQuestion={v.screeningQuestion} score={score ?? 0} />
-                    )}
+                    <div className="mt-auto pt-1">
+                      {!user ? (
+                        <Button size="sm" render={<Link href={`/login?next=/events/${event.id}?tab=teams`} />}>
+                          Sign in to apply
+                        </Button>
+                      ) : myApp ? (
+                        <Stamp tone={myApp.status === "accepted" ? "ok" : myApp.status === "rejected" ? "signal" : "ink"}>Applied · {myApp.status}</Stamp>
+                      ) : blocked ? (
+                        <p className="text-xs text-muted-foreground">{blocked}</p>
+                      ) : (
+                        <ApplyButton vacancyId={v.id} roleTitle={v.roleTitle} teamName={team.name} screeningQuestion={v.screeningQuestion} score={score ?? 0} />
+                      )}
+                    </div>
                   </div>
                 </li>
               );
@@ -246,7 +234,7 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
       </section>
 
       <section>
-        <h2 className="mb-3 flex items-center gap-2 font-medium">
+        <h2 className="mb-3 flex items-center gap-2 text-xl font-bold">
           Looking for a team <span className="text-sm font-normal text-muted-foreground">{lookers.length}</span>
         </h2>
         {lookers.length === 0 ? (
@@ -261,7 +249,7 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
                 crossCollegeAllowed(event, myTeam.leader.collegeId, a.user.collegeId) &&
                 (a.user.collegeId === myTeam.leader.collegeId || (a.scope === "cross" && a.user.openToCrossCollege));
               return (
-                <li key={a.id} className="flex flex-col gap-2 rounded-xl border bg-card p-4">
+                <li key={a.id} className="flex flex-col gap-2 rounded-lg border border-rule bg-card p-4">
                   <div className="flex items-center gap-3">
                     <UserAvatar name={a.user.name} src={a.user.avatarUrl} className="size-9" />
                     <div className="min-w-0">
@@ -270,7 +258,7 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
                       </Link>
                       <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
                         {a.user.college?.name ?? "No college"}
-                        {a.user.collegeVerified && <BadgeCheck className="size-3.5 text-emerald-600" />}
+                        {a.user.collegeVerified && <BadgeCheck className="size-3.5 text-ok" />}
                         {a.user.year && ` · Year ${a.user.year}`}
                       </p>
                     </div>
@@ -285,9 +273,7 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
                       .sort((x, y) => y.level - x.level)
                       .slice(0, 8)
                       .map((s) => (
-                        <Badge key={s.skillId} variant="outline">
-                          {s.skill.name} · {s.level}
-                        </Badge>
+                        <SkillChip key={s.skillId} name={s.skill.name} required={false} level={s.level} />
                       ))}
                   </div>
                   {canInvite && myTeam && <InviteButton teamId={myTeam.id} userId={a.userId} name={a.user.name} />}

@@ -14,7 +14,7 @@ export function MagicLinkForm({ next }: { next: string }) {
 
   if (sentTo) {
     return (
-      <p className="rounded-md bg-muted px-3 py-3 text-sm">
+      <p role="status" className="rounded-md border border-ok/40 bg-ok/10 px-3 py-3 text-sm">
         Check <strong>{sentTo}</strong> for a sign-in link. You can close this tab.
       </p>
     );
@@ -42,10 +42,16 @@ export function MagicLinkForm({ next }: { next: string }) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
-        className="h-10"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? "email-error" : undefined}
+        className="h-11"
       />
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" className="h-10" disabled={pending}>
+      {error && (
+        <p id="email-error" role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      <Button type="submit" size="lg" disabled={pending}>
         {pending ? "Sending…" : "Email me a sign-in link"}
       </Button>
     </form>

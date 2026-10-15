@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { and, eq, inArray, isNull, or } from "drizzle-orm";
-import { Sparkles } from "lucide-react";
 import { db, schema } from "@/db";
 import { suggestTeammates, type Candidate } from "@/lib/recommend";
 import { Badge } from "@/components/ui/badge";
@@ -85,15 +84,15 @@ export async function SuggestedTeammates({
 
   return (
     <section>
-      <h2 className="mb-1 flex items-center gap-1.5 font-medium">
-        <Sparkles className="size-4 text-primary" /> Suggested teammates
+      <h2 className="mb-1 flex items-center gap-1.5 text-xl font-bold">
+        Suggested teammates
       </h2>
       <p className="mb-3 text-sm text-muted-foreground">People at this event without a team whose skills fit your open roles.</p>
       <ul className="grid gap-2 sm:grid-cols-2">
         {suggestions.map((s) => {
           const p = byId.get(s.candidate.userId)!;
           return (
-            <li key={p.id} className="flex flex-col gap-2 rounded-xl border p-3">
+            <li key={p.id} className="flex flex-col gap-2 rounded-lg border border-rule bg-card p-3">
               <div className="flex items-center gap-3">
                 <UserAvatar name={p.name} src={p.avatarUrl} className="size-9" />
                 <div className="min-w-0 flex-1">

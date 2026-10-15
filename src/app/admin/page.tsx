@@ -42,7 +42,7 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-6 sm:py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Admin</h1>
+      <h1 className="text-3xl font-extrabold sm:text-4xl">Admin</h1>
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
@@ -51,7 +51,7 @@ export default async function AdminPage() {
           ["Teams", stats.teams],
           ["Roles filled", stats.accepted],
         ].map(([label, n]) => (
-          <div key={label} className="rounded-xl border p-4">
+          <div key={label} className="rounded-lg border border-rule bg-card p-4">
             <dt className="text-xs text-muted-foreground">{label}</dt>
             <dd className="text-2xl font-semibold tabular-nums">{n}</dd>
           </div>
@@ -59,7 +59,7 @@ export default async function AdminPage() {
       </dl>
 
       <section>
-        <h2 className="font-medium">College requests</h2>
+        <h2 className="text-xl font-bold">College requests</h2>
         <p className="mb-3 text-sm text-muted-foreground">
           Students who couldn&apos;t find their college requested these. Set the official email domain to verify everyone whose email matches.
         </p>
@@ -86,8 +86,8 @@ export default async function AdminPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 font-medium">Organizations</h2>
-        <ul className="flex flex-col divide-y rounded-xl border">
+        <h2 className="mb-3 text-xl font-bold">Organizations</h2>
+        <ul className="flex flex-col divide-y divide-rule rounded-lg border border-rule bg-card">
           {orgs.map((o) => (
             <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
               <div className="min-w-0">

@@ -14,7 +14,7 @@ export function OrgAdmins({ orgId, members }: { orgId: string; members: Member[]
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border p-4">
+    <div className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-4">
       <ul className="flex flex-col divide-y">
         {members.map((m) => (
           <li key={m.userId} className="flex items-center justify-between py-2 text-sm">

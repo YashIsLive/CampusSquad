@@ -145,7 +145,7 @@ export function ProfileForm({
         </Field>
         {chosen &&
           (willVerify ? (
-            <p className="flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-400">
+            <p className="flex items-center gap-1.5 text-sm text-ok">
               <BadgeCheck className="size-4" /> Your email ({email}) matches {chosen.emailDomain} — you&apos;ll be verified.
             </p>
           ) : (
@@ -216,7 +216,7 @@ export function ProfileForm({
         </label>
       </FormSection>
 
-      <div className="sticky bottom-16 flex justify-end gap-2 rounded-xl border bg-background/95 p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
+      <div className="sticky bottom-16 flex justify-end gap-2 rounded-lg border border-rule bg-card bg-background/95 p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
         <Button type="submit" size="lg" disabled={pending}>
           {pending ? "Saving…" : "Save profile"}
         </Button>

@@ -84,8 +84,8 @@ export function TeamChat({ teamId, me, initial, members }: { teamId: string; me:
   };
 
   return (
-    <section className="flex h-[28rem] flex-col rounded-xl border">
-      <h2 className="border-b px-4 py-2.5 font-medium">Team chat</h2>
+    <section className="flex h-[28rem] flex-col rounded-lg border border-rule bg-card">
+      <h2 className="border-b border-rule px-4 py-2.5 text-lg font-bold">Team chat</h2>
       <div ref={listRef} className="flex flex-1 flex-col gap-3 overflow-y-auto p-3" aria-live="polite">
         {messages.length === 0 && <p className="m-auto text-sm text-muted-foreground">Say hi to your team 👋</p>}
         {messages.map((m) => {
@@ -93,7 +93,7 @@ export function TeamChat({ teamId, me, initial, members }: { teamId: string; me:
           return (
             <div key={m.id} className={cn("flex gap-2", mine && "flex-row-reverse")}>
               {!mine && <UserAvatar name={m.sender.name} src={m.sender.avatarUrl} className="size-7" />}
-              <div className={cn("max-w-[80%] rounded-2xl px-3 py-1.5 text-sm", mine ? "bg-primary text-primary-foreground" : "bg-muted", m.pending && "opacity-60")}>
+              <div className={cn("max-w-[80%] rounded-2xl px-3 py-1.5 text-sm", mine ? "bg-primary text-signal-ink-foreground" : "bg-muted", m.pending && "opacity-60")}>
                 {!mine && <p className="text-xs font-medium opacity-70">{m.sender.name}</p>}
                 <p className="break-words whitespace-pre-wrap">{m.body}</p>
                 <p className="mt-0.5 text-[10px] opacity-60">{timeFmt.format(new Date(m.createdAt))}</p>

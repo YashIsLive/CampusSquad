@@ -40,18 +40,18 @@ export default async function NotificationsPage() {
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-6 sm:py-10">
       <RealtimeRefresh channel={`notif-page:${user.id}`} table="notifications" filter={`user_id=eq.${user.id}`} events="INSERT" />
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
+        <h1 className="text-3xl font-extrabold sm:text-4xl">Notifications</h1>
         {unread > 0 && <MarkAllRead />}
       </div>
       {rows.length === 0 ? (
         <EmptyState icon={<Bell className="size-6" />} title="All caught up" description="Applications, invites, announcements and deadline reminders show up here." />
       ) : (
-        <ul className="flex flex-col divide-y rounded-xl border">
+        <ul className="flex flex-col divide-y divide-rule rounded-lg border border-rule bg-card">
           {rows.map((n) => {
             const Icon = ICONS[n.type];
             const content = (
-              <div className={cn("flex gap-3 px-4 py-3", !n.readAt && "bg-primary/5")}>
-                <Icon className={cn("mt-0.5 size-5 shrink-0", !n.readAt ? "text-primary" : "text-muted-foreground")} />
+              <div className={cn("flex gap-3 px-4 py-3", !n.readAt && "bg-signal-soft/40")}>
+                <Icon className={cn("mt-0.5 size-5 shrink-0", !n.readAt ? "text-signal-ink" : "text-muted-foreground")} />
                 <div className="min-w-0 flex-1">
                   <p className={cn("text-sm", !n.readAt && "font-medium")}>{n.payload.title}</p>
                   {n.payload.body && <p className="text-sm whitespace-pre-line text-muted-foreground">{n.payload.body}</p>}
