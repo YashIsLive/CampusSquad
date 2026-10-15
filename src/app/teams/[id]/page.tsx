@@ -16,6 +16,7 @@ import { PostVacancyButton } from "./post-vacancy";
 import { TeamChat } from "./team-chat";
 import { TeamChecklist } from "./team-checklist";
 import { EndorsePanel } from "./endorse-panel";
+import { SuggestedTeammates } from "./suggested-teammates";
 
 async function getTeam(id: string) {
   if (!isUuid(id)) return undefined;
@@ -182,6 +183,15 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
               </ul>
             )}
           </section>
+
+          {isLeader && !over && size < event.teamMax && (
+            <SuggestedTeammates
+              team={{ id: team.id }}
+              event={{ id: event.id, allowCrossCollege: event.allowCrossCollege }}
+              leaderCollegeId={team.leader.collegeId}
+              roles={team.vacancies}
+            />
+          )}
 
           {isMember && over && user && (
             <EndorsePanel

@@ -23,3 +23,14 @@ Ambiguities resolved during the build, newest last. Format: what was decided, an
 **D-010 — College verification = email domain match** (exact or subdomain, e.g. `students.coeptech.ac.in` matches `coeptech.ac.in`). Picking a college whose domain doesn't match leaves the user unverified. Creating an organization requires being verified.
 
 **D-011 — Team chat only.** The blueprint's `messages.channel_type` (team/direct) is narrowed to team chat; "message applicant" from leader review opens an invite-style note via notification for MVP. DMs can be added by introducing a `channel_type` column later.
+
+**D-012 — Followers are notified once per event.** `events.published_at` is stamped by a conditional update the first time an event goes live; only that update sends follower notifications, so unpublish → republish (or editing a live event) never re-notifies.
+
+**D-013 — Reminders run lazily and from cron.** Vercel's free cron is daily, too coarse for a 2-hour reminder. Each signed-in page load also runs that user's due reminders after the response. Rows are claimed atomically (an INSERT into `reminder_log`, or a conditional UPDATE on `saved_events`) so concurrent runs can't double-send. A tighter reminder also marks the looser ones as sent: registering 10 h before the start gives one "tomorrow" reminder, not two.
+
+**D-014 — Reliability score is Laplace-smoothed.** `100 × (attended + 1) / (attended + no-shows + 1)`, recomputed when an organizer finalizes attendance. Newcomers start at 100 and one no-show doesn't zero anyone. Finalizing requires at least one check-in, so an event that didn't use check-in can't mark everyone absent.
+
+**D-015 — Teammate suggestions are rule-based.** They reuse `matchScore` against each open role, apply the same cross-college rules as applications, require ≥ 40 % fit, and break ties in favour of people who posted a "looking for a team" card. The `suggestTeammates` interface can later sit on top of embeddings without changing callers.
+
+**D-016 — Requested colleges need an admin.** Admins set the verified email domain on `/admin`, which also verifies existing students whose emails match. A rejected request unlinks its students, who then pick another college.
+

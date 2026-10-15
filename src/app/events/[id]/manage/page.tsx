@@ -6,13 +6,14 @@ import { Download, Pencil } from "lucide-react";
 import { db, schema } from "@/db";
 import { isOrgAdmin, requireUser } from "@/lib/auth";
 import { getEventWithOrg } from "@/lib/queries";
-import { formatDateTime, siteUrl } from "@/lib/format";
+import { formatDateTime, relative, siteUrl } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { cn } from "@/lib/utils";
 import { AnnouncementComposer } from "./announcement-composer";
 import { CheckInPanel } from "./check-in-panel";
+import { FinalizeAttendanceButton, NudgeSoloButton } from "./organizer-actions";
 import { ShareKit } from "./share-kit";
 import { StatusControls } from "./status-controls";
 
@@ -121,7 +122,11 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
             {isTeamEvent ? (
               <>
                 <Stat label="Teams formed" value={teamStats?.teams ?? 0} hint={teamStats?.incomplete ? `${teamStats.incomplete} below min size` : undefined} />
-                <Stat label="Solo registrants" value={solo} hint={solo ? "Nudge them to the team board" : undefined} />
+                <Stat label="Solo registrants" value={solo}>
+                  {event.endsAt > new Date() && (
+                    <NudgeSoloButton eventId={event.id} solo={solo} nudgedAt={event.soloNudgedAt ? relative(event.soloNudgedAt) : null} />
+                  )}
+                </Stat>
               </>
             ) : (
               <Stat label="Checked in" value={checkedIn} />
@@ -217,17 +222,28 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
         />
       )}
 
-      {section === "checkin" && <CheckInPanel eventId={event.id} checkedIn={checkedIn} total={total} />}
+      {section === "checkin" && (
+        <div className="flex flex-col gap-6">
+          <CheckInPanel eventId={event.id} checkedIn={checkedIn} total={total} />
+          <FinalizeAttendanceButton
+            eventId={event.id}
+            started={event.startsAt <= new Date()}
+            finalizedAt={event.attendanceFinalizedAt ? formatDateTime(event.attendanceFinalizedAt) : null}
+            pendingCount={registrants.filter((r) => r.status === "registered").length}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
-function Stat({ label, value, hint }: { label: string; value: number; hint?: string }) {
+function Stat({ label, value, hint, children }: { label: string; value: number; hint?: string; children?: React.ReactNode }) {
   return (
     <div className="rounded-xl border p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-2xl font-semibold tabular-nums">{value}</p>
       {hint && <p className="text-xs text-amber-700 dark:text-amber-400">{hint}</p>}
+      {children && <div className="mt-2">{children}</div>}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
 import { isOrgAdmin } from "@/lib/auth";
 import { DOMAINS, fromLocalInput } from "@/lib/format";
+import { notifyFollowersOnFirstPublish } from "@/lib/publish";
 
 const localDate = z
   .string()
@@ -84,6 +85,7 @@ export const createEvent = authedAction(eventSchema, async ({ publish, ...input 
       createdBy: user.id,
     })
     .returning({ id: schema.events.id });
+  if (publish) await notifyFollowersOnFirstPublish(event.id);
   revalidatePath("/");
   return { id: event.id };
 });
@@ -114,6 +116,7 @@ export const updateEvent = authedAction(
         updatedAt: new Date(),
       })
       .where(eq(schema.events.id, eventId));
+    if (publish) await notifyFollowersOnFirstPublish(eventId);
     revalidatePath(`/events/${eventId}`);
     revalidatePath("/");
     return { id: eventId };
@@ -138,6 +141,7 @@ export const setEventStatus = authedAction(
         updatedAt: new Date(),
       })
       .where(eq(schema.events.id, eventId));
+    if (status === "published") await notifyFollowersOnFirstPublish(eventId);
     revalidatePath(`/events/${eventId}`, "layout");
     revalidatePath("/");
     return null;

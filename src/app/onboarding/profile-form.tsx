@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, FolderGit2 } from "lucide-react";
 import { toast } from "sonner";
-import { saveProfile } from "@/app/actions/profile";
+import { saveProfile, suggestSkillsFromGithub } from "@/app/actions/profile";
+import { ImageUpload } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -17,12 +18,14 @@ type College = { id: string; name: string; city: string; emailDomain: string | n
 const NEW_COLLEGE = "__new__";
 
 export function ProfileForm({
+  userId,
   email,
   next,
   colleges,
   skills,
   initial,
 }: {
+  userId: string;
   email: string;
   next: string | null;
   colleges: College[];
@@ -38,6 +41,7 @@ export function ProfileForm({
     linkedinUrl: string;
     openToCrossCollege: boolean;
     skills: PickedSkill[];
+    avatarUrl: string | null;
   };
 }) {
   const router = useRouter();
@@ -70,6 +74,7 @@ export function ProfileForm({
         linkedinUrl: form.linkedinUrl,
         openToCrossCollege: form.openToCrossCollege,
         skills: form.skills,
+        avatarUrl: form.avatarUrl,
       });
       if (!res.ok) {
         setErrors(res.fieldErrors ?? {});
@@ -84,9 +89,35 @@ export function ProfileForm({
 
   const err = (k: string) => errors[k]?.[0];
 
+  const [importing, startImport] = useTransition();
+  function importFromGithub() {
+    startImport(async () => {
+      const res = await suggestSkillsFromGithub({ githubUrl: form.githubUrl });
+      if (!res.ok) return void toast.error(res.error);
+      const have = new Set(form.skills.map((s) => s.skillId));
+      const added = res.data.suggestions.filter((s) => !have.has(s.skillId));
+      if (added.length === 0) {
+        toast.info(`No new skills found in ${res.data.repoCount} public repos of @${res.data.username}.`);
+        return;
+      }
+      set("skills", [...form.skills, ...added.map((s) => ({ skillId: s.skillId, level: s.level }))].slice(0, 25));
+      toast.success(`Added ${added.map((s) => s.name).join(", ")} from GitHub — adjust levels if needed, then save.`);
+    });
+  }
+
   return (
     <form onSubmit={submit} className="mt-6 flex flex-col gap-5">
       <FormSection title="About you">
+        <Field label="Photo">
+          <ImageUpload
+            bucket="avatars"
+            userId={userId}
+            value={form.avatarUrl}
+            onChange={(url) => set("avatarUrl", url)}
+            aspect="aspect-square"
+            label="Upload photo"
+          />
+        </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Full name" htmlFor="name" error={err("name")}>
             <Input id="name" value={form.name} onChange={(e) => set("name", e.target.value)} required />
@@ -157,6 +188,14 @@ export function ProfileForm({
       <FormSection title="Skills" description="Pick what you can actually do. Levels: 1 beginner → 5 expert.">
         <SkillPicker options={skills} value={form.skills} onChange={(v) => set("skills", v)} withLevels />
         {err("skills") && <p className="text-xs text-destructive">{err("skills")}</p>}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" size="sm" disabled={importing || !form.githubUrl} onClick={importFromGithub}>
+            <FolderGit2 /> {importing ? "Reading your repos…" : "Suggest from my GitHub"}
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            {form.githubUrl ? "Uses the languages of your public repos." : "Add your GitHub URL below to enable this."}
+          </span>
+        </div>
       </FormSection>
 
       <FormSection title="Proof of work">

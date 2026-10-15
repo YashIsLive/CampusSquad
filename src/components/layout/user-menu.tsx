@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function UserMenu({ user }: { user: { name: string; username: string; avatarUrl: string | null } }) {
+export function UserMenu({ user }: { user: { name: string; username: string; avatarUrl: string | null; isAdmin: boolean } }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -28,6 +28,7 @@ export function UserMenu({ user }: { user: { name: string; username: string; ava
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/events/new" />}>Post an event</DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/orgs/new" />}>Create organization</DropdownMenuItem>
+        {user.isAdmin && <DropdownMenuItem render={<Link href="/admin" />}>Admin</DropdownMenuItem>}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => void signOut()}>Sign out</DropdownMenuItem>
       </DropdownMenuContent>

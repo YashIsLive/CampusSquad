@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, notInArray } from "drizzle-orm";
+import { and, eq, inArray, notInArray } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
 import { emailMatchesDomain } from "@/lib/college";
+import { githubUsername, skillsFromRepos } from "@/lib/github";
 
 const optionalUrl = z
   .string()
@@ -112,6 +113,40 @@ export const saveProfile = authedAction(
 
     revalidatePath("/", "layout");
     return { username: input.username };
+  },
+  { allowUnonboarded: true },
+);
+
+/** Reads the user's public GitHub repos and suggests skills from their languages. */
+export const suggestSkillsFromGithub = authedAction(
+  z.object({ githubUrl: z.url("Enter your GitHub profile URL first.") }),
+  async ({ githubUrl }) => {
+    const username = githubUsername(githubUrl);
+    if (!username) fail("That doesn't look like a GitHub profile URL (https://github.com/username).");
+    const res = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner&sort=pushed`, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "CampusSquad",
+        ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
+      },
+      cache: "no-store",
+    });
+    if (res.status === 404) fail(`GitHub user "${username}" not found.`);
+    if (res.status === 403 || res.status === 429) fail("GitHub's rate limit was hit. Try again in a few minutes.");
+    if (!res.ok) fail("Couldn't reach GitHub. Try again later.");
+    const repos = (await res.json()) as Array<{ language: string | null; fork: boolean }>;
+    const suggestions = skillsFromRepos(repos);
+    const names = suggestions.map((s) => s.skill);
+    const known = names.length ? await db.query.skills.findMany({ where: inArray(schema.skills.name, names) }) : [];
+    const idByName = new Map(known.map((k) => [k.name, k.id]));
+    return {
+      username,
+      repoCount: repos.filter((r) => !r.fork).length,
+      suggestions: suggestions.flatMap((s) => {
+        const skillId = idByName.get(s.skill);
+        return skillId ? [{ skillId, name: s.skill, level: s.level, repos: s.repos }] : [];
+      }),
+    };
   },
   { allowUnonboarded: true },
 );

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { Bell, CalendarClock, Megaphone, UserPlus, Users, XCircle, CheckCircle2 } from "lucide-react";
+import { AlarmClock, Bell, CalendarClock, CalendarPlus, CheckCircle2, Megaphone, UserPlus, Users, UsersRound, XCircle } from "lucide-react";
 import { db, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
 import { relative } from "@/lib/format";
@@ -21,6 +21,9 @@ const ICONS = {
   invite_response: UserPlus,
   announcement: Megaphone,
   event_closing: CalendarClock,
+  new_event: CalendarPlus,
+  team_nudge: UsersRound,
+  event_reminder: AlarmClock,
 } as const;
 
 export default async function NotificationsPage() {

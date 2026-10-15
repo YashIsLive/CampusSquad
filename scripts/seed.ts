@@ -184,6 +184,9 @@ async function main() {
     COLLEGES.map((c) => [c.key, collegeRows.find((r) => r.name === c.name)!]),
   ) as Record<CollegeKey, (typeof collegeRows)[number]>;
 
+  // A student-requested college awaiting admin review (shows up on /admin).
+  await db.insert(s.colleges).values({ name: "Vishwakarma Institute of Technology", city: "Pune", state: "Maharashtra", verified: false });
+
   // Re-link any real users whose email matches a seeded college domain.
   await db.execute(sql`
     UPDATE public.profiles p SET college_id = public.college_for_email(p.email), college_verified = true
@@ -208,6 +211,8 @@ async function main() {
         bio: u.bio ?? null,
         githubUrl: u.github ?? null,
         openToCrossCollege: u.cross ?? true,
+        // Riya doubles as the platform admin in the demo.
+        isAdmin: u.handle === "riya",
         onboardedAt: new Date(),
       })
       .where(sql`${s.profiles.id} = ${id}`);
@@ -250,6 +255,7 @@ async function main() {
     collegeId: collegeByKey[college].id,
     city: collegeByKey[college].city,
     status: "published" as const,
+    publishedAt: new Date(),
   });
   const eventRows = await db
     .insert(s.events)

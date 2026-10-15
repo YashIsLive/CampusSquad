@@ -17,6 +17,10 @@ Product context: [`BLUEPRINT.md`](BLUEPRINT.md) · MVP scope: [`BUILD_PROMPT.md`
 | Team formation | Team board per event: open roles + "looking for a team" cards, filters (skill, my college/other colleges, college, hours), rule-based **match score**, apply with screening question, leader review (shortlist / accept / reject / message), **transactional accept**, invites |
 | Realtime | Notification bell, live applications for leaders, live status for applicants, team chat and checklist |
 | Endorsements | After an event ends, teammates endorse each other's skills; counts appear on profiles |
+| Organizer extras | Followers notified when an event first goes live, one-click "nudge solo registrants", automatic reminders 72 h / 24 h / 2 h before the start, finalize attendance (no-shows feed a **reliability score**) |
+| Matching extras | **Suggested teammates** for leaders (solo registrants and "looking" cards ranked against open roles), skill suggestions from a student's public GitHub repos, avatar upload |
+| Admin | `/admin` for platform admins: approve student-requested colleges (sets the email domain and verifies matching students), toggle org verified badges |
+| Installable | PWA manifest + generated icons, so it can be added to a phone's home screen |
 
 ## Setup
 
@@ -42,6 +46,7 @@ npm run dev                  # http://localhost:3000
 | `NEXT_PUBLIC_SITE_URL` | your URL (`http://localhost:3000` locally) | share links, OG/canonical URLs |
 | `RESEND_API_KEY`, `EMAIL_FROM` | optional, [resend.com](https://resend.com) | emails for announcements/reminders (no-op if unset) |
 | `CRON_SECRET` | any random string | protects `/api/cron/deadline-reminders` |
+| `GITHUB_TOKEN` | optional, any GitHub token with no scopes | raises the GitHub API limit for "Suggest from my GitHub" (60 → 5,000 requests/hour) |
 | `E2E_TEST_LOGIN` | set to `1` **only locally** | enables the demo login (see below) |
 
 ### Supabase dashboard settings
@@ -55,6 +60,16 @@ npm run dev                  # http://localhost:3000
 With `E2E_TEST_LOGIN=1` in `.env.local`, the login page shows "Demo login" buttons that sign you in as seed users without email (Riya the organizer, Aarav the solo student, Neha/Dev the team leaders…). The route refuses to run in production builds and only accepts `*.seed.test` accounts.
 
 Seed users never receive mail: their addresses end in `.seed.test`.
+
+### Admins
+
+Riya is an admin in the seed data. To make a real account an admin (it must have signed in once):
+
+```bash
+npm run make-admin -- you@example.com
+```
+
+Add `--revoke` to remove the flag. Admins see an **Admin** item in the account menu.
 
 ## Database
 

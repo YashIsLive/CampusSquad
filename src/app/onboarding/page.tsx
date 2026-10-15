@@ -28,6 +28,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
           : "Your skills and links are visible to team leaders when you apply."}
       </p>
       <ProfileForm
+        userId={user.id}
         email={user.email}
         next={next}
         colleges={colleges.map((c) => ({ id: c.id, name: c.name, city: c.city, emailDomain: c.emailDomain }))}
@@ -43,6 +44,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
           linkedinUrl: user.linkedinUrl ?? "",
           openToCrossCollege: user.openToCrossCollege,
           skills: mySkills.map((s) => ({ skillId: s.skillId, level: s.level })),
+          avatarUrl: user.avatarUrl,
         }}
       />
     </div>

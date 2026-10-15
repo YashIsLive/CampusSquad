@@ -79,7 +79,11 @@ export const notificationType = pgEnum("notification_type", [
   "invite_response",
   "announcement",
   "event_closing",
+  "new_event",
+  "team_nudge",
+  "event_reminder",
 ]);
+export const reminderKind = pgEnum("reminder_kind", ["h72", "h24", "h2"]);
 
 // ---------- tables ----------
 
@@ -219,6 +223,11 @@ export const events = pgTable(
     registrationsOpen: boolean("registrations_open").notNull().default(true),
     isFeatured: boolean("is_featured").notNull().default(false),
     viewCount: integer("view_count").notNull().default(0),
+    /** First time the event went live; followers are notified once, when this is set. */
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    soloNudgedAt: timestamp("solo_nudged_at", { withTimezone: true }),
+    /** Set when organizers finalize attendance; unchecked registrants become no-shows. */
+    attendanceFinalizedAt: timestamp("attendance_finalized_at", { withTimezone: true }),
     search: tsvector("search").generatedAlwaysAs(
       sql`to_tsvector('english'::regconfig, coalesce(title, '') || ' ' || coalesce(description, ''))`,
     ),
@@ -521,6 +530,19 @@ export type NotificationPayload = {
   body?: string;
   href?: string;
 };
+
+/** One row per reminder sent, so each 72 h / 24 h / 2 h reminder goes out once per registration. */
+export const reminderLog = pgTable(
+  "reminder_log",
+  {
+    registrationId: uuid("registration_id")
+      .notNull()
+      .references(() => registrations.id, { onDelete: "cascade" }),
+    kind: reminderKind("kind").notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.registrationId, t.kind] })],
+);
 
 export const announcements = pgTable("announcements", {
   id: id(),

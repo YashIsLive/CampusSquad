@@ -1,13 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, ilike, or } from "drizzle-orm";
+import { and, count, eq, ilike, isNull, or } from "drizzle-orm";
 import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
 import { isOrgAdmin } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
+import { finalizeAttendance as finalizeAttendanceTx, recomputeReliability } from "@/lib/attendance";
 
 const shortCode = customAlphabet("abcdefghijkmnpqrstuvwxyz23456789", 7);
 
@@ -78,7 +79,7 @@ export const checkIn = authedAction(
     .object({ eventId: z.uuid(), code: z.string().trim().toUpperCase().optional(), registrationId: z.uuid().optional(), undo: z.boolean().optional() })
     .refine((v) => v.code || v.registrationId, { message: "Scan or enter a code." }),
   async ({ eventId, code, registrationId, undo }, user) => {
-    await assertEventAdmin(eventId, user.id);
+    const event = await assertEventAdmin(eventId, user.id);
     const reg = await db.query.registrations.findFirst({
       where: and(
         eq(schema.registrations.eventId, eventId),
@@ -91,7 +92,7 @@ export const checkIn = authedAction(
     if (undo) {
       await db
         .update(schema.registrations)
-        .set({ status: "registered", checkedInAt: null })
+        .set({ status: event.attendanceFinalizedAt ? "no_show" : "registered", checkedInAt: null })
         .where(eq(schema.registrations.id, reg.id));
     } else if (!already) {
       await db
@@ -99,6 +100,8 @@ export const checkIn = authedAction(
         .set({ status: "checked_in", checkedInAt: new Date() })
         .where(eq(schema.registrations.id, reg.id));
     }
+    // After attendance is finalized, a late check-in (or undo) changes the person's reliability.
+    if (event.attendanceFinalizedAt) await recomputeReliability([reg.userId]);
     revalidatePath(`/events/${eventId}/manage`, "layout");
     return { name: reg.user.name, team: reg.team?.name ?? null, alreadyCheckedIn: already && !undo };
   },
@@ -131,3 +134,59 @@ export const searchRegistrants = authedAction(
     return rows;
   },
 );
+
+const NUDGE_COOLDOWN_MS = 12 * 3600 * 1000;
+
+/** One-click: remind every registrant without a team to use the team board. */
+export const nudgeSoloRegistrants = authedAction(z.object({ eventId: z.uuid() }), async ({ eventId }, user) => {
+  const event = await assertEventAdmin(eventId, user.id);
+  if (event.teamMax < 2) fail("This is a solo event.");
+  if (event.endsAt < new Date()) fail("This event has ended.");
+  if (event.soloNudgedAt && Date.now() - event.soloNudgedAt.getTime() < NUDGE_COOLDOWN_MS) {
+    fail("You nudged solo registrants recently. Try again in a few hours.");
+  }
+  const solo = await db
+    .select({ userId: schema.registrations.userId })
+    .from(schema.registrations)
+    .where(and(eq(schema.registrations.eventId, eventId), isNull(schema.registrations.teamId)));
+  if (solo.length === 0) fail("Everyone registered is already on a team.");
+
+  const [{ openRoles }] = await db
+    .select({ openRoles: count() })
+    .from(schema.vacancies)
+    .innerJoin(schema.teams, eq(schema.teams.id, schema.vacancies.teamId))
+    .where(and(eq(schema.teams.eventId, eventId), eq(schema.vacancies.status, "open")));
+
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.notifications).values(
+      solo.map((s) => ({
+        userId: s.userId,
+        type: "team_nudge" as const,
+        payload: {
+          title: `Find a team for ${event.title}`,
+          body: openRoles
+            ? `${openRoles} open role${openRoles === 1 ? " is" : "s are"} waiting on the team board. Apply in one tap, or post a "looking for a team" card.`
+            : `Post a "looking for a team" card so leaders can invite you, or start your own team.`,
+          href: `/events/${eventId}?tab=teams`,
+        },
+      })),
+    );
+    await tx.update(schema.events).set({ soloNudgedAt: new Date() }).where(eq(schema.events.id, eventId));
+  });
+  revalidatePath(`/events/${eventId}/manage`);
+  return { nudged: solo.length };
+});
+
+export const finalizeAttendance = authedAction(z.object({ eventId: z.uuid() }), async ({ eventId }, user) => {
+  const event = await assertEventAdmin(eventId, user.id);
+  if (event.startsAt > new Date()) fail("You can finalize attendance once the event has started.");
+  if (event.attendanceFinalizedAt) fail("Attendance is already finalized.");
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(schema.registrations)
+    .where(and(eq(schema.registrations.eventId, eventId), eq(schema.registrations.status, "checked_in")));
+  if (n === 0) fail("No one has been checked in, so everyone would be marked absent. Check people in first.");
+  const marked = await finalizeAttendanceTx(eventId);
+  revalidatePath(`/events/${eventId}/manage`, "layout");
+  return { noShows: marked };
+});
