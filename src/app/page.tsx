@@ -15,6 +15,8 @@ import { Pin } from "@/components/noticeboard";
 import { SaveEventButton } from "@/app/events/[id]/save-button";
 import { cn } from "@/lib/utils";
 import { FeedFilters } from "./feed-filters";
+import { GettingStarted } from "@/components/guide/getting-started";
+import { PageTour } from "@/components/guide/page-tour";
 
 export default async function Home({ searchParams }: PageProps<"/">) {
   const sp = await searchParams;
@@ -61,8 +63,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         <Hero events={events.slice(0, 3)} />
       )}
 
+      {user && <GettingStarted user={user} />}
+      {user && <PageTour tour="feed" seen={Boolean(user.guide.tours?.feed)} />}
+
       <div className="flex flex-col gap-3">
-        <nav aria-label="Where" className="flex w-full gap-1 rounded-lg border border-rule bg-card p-1 sm:w-fit">
+        <nav aria-label="Where" data-tour="scope" className="flex w-full gap-1 rounded-lg border border-rule bg-card p-1 sm:w-fit">
           {scopes.map((s) =>
             s.disabled ? (
               <span
@@ -161,6 +166,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <EventCard
                     key={e.id}
                     event={e}
+                    tourTarget={index === 0}
                     index={index++}
                     action={user ? <SaveEventButton eventId={e.id} initialSaved={savedIds.has(e.id)} compact /> : undefined}
                   />

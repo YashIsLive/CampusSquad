@@ -24,12 +24,15 @@ export function EventCard({
   action,
   footer,
   index = 0,
+  tourTarget = false,
 }: {
   event: CardEvent;
   showStatus?: boolean;
   action?: ReactNode;
   footer?: ReactNode;
   index?: number;
+  /** First card on the feed carries the guided-tour anchors. */
+  tourTarget?: boolean;
 }) {
   const now = new Date();
   const closed = event.regDeadline < now || !event.registrationsOpen || event.status === "closed";
@@ -40,6 +43,7 @@ export function EventCard({
   return (
     <article
       className="group lift relative flex flex-col rounded-lg border border-rule bg-card"
+      data-tour={tourTarget ? "event-card" : undefined}
       style={{ "--i": index } as React.CSSProperties}
     >
       <ViewTransition name={posterVT(event.id)} share="morph" default="none">
@@ -57,7 +61,11 @@ export function EventCard({
           )}
         </EventArt>
       </ViewTransition>
-      {action && <div className="absolute top-2 right-2 z-10">{action}</div>}
+      {action && (
+        <div className="absolute top-2 right-2 z-10" data-tour={tourTarget ? "save" : undefined}>
+          {action}
+        </div>
+      )}
 
       <div className="flex flex-1 flex-col gap-3 p-3.5">
         <div className="flex gap-3">

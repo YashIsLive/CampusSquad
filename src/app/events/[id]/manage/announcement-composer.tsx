@@ -12,7 +12,7 @@ export function AnnouncementComposer({ eventId, registrantCount }: { eventId: st
   const [pending, startTransition] = useTransition();
 
   return (
-    <section className="rounded-lg border border-rule bg-card p-4">
+    <section data-tour="announce" className="rounded-lg border border-rule bg-card p-4">
       <h2 className="text-xl font-bold">Announce to registrants</h2>
       <p className="mb-3 text-sm text-muted-foreground">
         Sends an in-app notification to all {registrantCount} registrants and posts it on the event&apos;s Updates tab.

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, TabNav } from "@/components/nav-bits";
+import { PageTour } from "@/components/guide/page-tour";
 import { notFound } from "next/navigation";
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { Download, Pencil } from "lucide-react";
@@ -80,6 +81,7 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 motion-safe:animate-page-in sm:py-8">
+      <PageTour tour="manage" seen={Boolean(user.guide.tours?.manage)} />
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Breadcrumbs
@@ -103,6 +105,7 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
       </header>
 
       <TabNav
+        tourId="manage-tabs"
         label="Manage sections"
         id="manage"
         tabs={SECTIONS.map((s) => ({
@@ -114,7 +117,7 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
 
       {section === "dashboard" && (
         <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div data-tour="stats" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="Views" value={event.viewCount} />
             <Stat label="Registrations" value={total} />
             {isTeamEvent ? (

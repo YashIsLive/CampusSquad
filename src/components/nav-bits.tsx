@@ -42,7 +42,9 @@ export function TabNav({
   id,
   tabs,
   className,
+  tourId,
 }: {
+  tourId?: string;
   label: string;
   /** Unique per tab bar on a page, used to name the sliding indicator. */
   id: string;
@@ -50,7 +52,7 @@ export function TabNav({
   className?: string;
 }) {
   return (
-    <nav aria-label={label} className={cn("no-scrollbar flex gap-1 overflow-x-auto border-b border-rule", className)}>
+    <nav aria-label={label} data-tour={tourId} className={cn("no-scrollbar flex gap-1 overflow-x-auto border-b border-rule", className)}>
       {tabs.map((t) => (
         <Link
           key={t.href}

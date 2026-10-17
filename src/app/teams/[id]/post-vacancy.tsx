@@ -53,7 +53,7 @@ export function PostVacancyButton({
 
   return (
     <>
-      <Button size="sm" onClick={() => setOpen(true)}>
+      <Button size="sm" data-tour="post-role" onClick={() => setOpen(true)}>
         <Plus /> Post a role
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>

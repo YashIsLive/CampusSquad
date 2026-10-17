@@ -156,7 +156,7 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
 
       <TeamBoardFilters skills={allSkills} colleges={colleges} />
 
-      <section>
+      <section data-tour="roles">
         <h2 className="mb-3 flex items-center gap-2 text-xl font-bold">
           Open roles <span className="text-sm font-normal text-muted-foreground">{vacancies.length}</span>
         </h2>

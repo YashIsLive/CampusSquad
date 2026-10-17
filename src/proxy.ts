@@ -3,6 +3,16 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /** Refreshes the Supabase session cookie on every request. Authorization happens in pages/actions, not here. */
 export async function proxy(request: NextRequest) {
+  // If Supabase falls back to the Site URL (e.g. a redirect URL missing from its allow-list),
+  // the auth code lands on an ordinary page. Route it to the confirm handler instead of losing it.
+  const { pathname, searchParams } = request.nextUrl;
+  if (searchParams.has("code") && !pathname.startsWith("/auth/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/confirm";
+    url.search = `?code=${encodeURIComponent(searchParams.get("code")!)}&next=${encodeURIComponent(pathname)}`;
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

@@ -16,6 +16,9 @@ import * as s from "../src/db/schema";
 import { matchScore } from "../src/lib/match-score";
 
 const SEED_DOMAIN_SUFFIX = ".seed.test";
+/** Local demo password for every seed account (they're *.seed.test, never real inboxes). */
+const SEED_TIME = new Date().toISOString();
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "campus-demo-2026";
 const code = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 10);
 const shortCode = customAlphabet("abcdefghijkmnpqrstuvwxyz23456789", 7);
 
@@ -120,6 +123,7 @@ async function createAuthUser(email: string, fullName: string) {
     const { data, error } = await admin.auth.admin.createUser({
       email,
       email_confirm: true,
+      password: SEED_PASSWORD,
       user_metadata: { full_name: fullName },
     });
     if (!error) return data.user.id;
@@ -213,6 +217,8 @@ async function main() {
         openToCrossCollege: u.cross ?? true,
         // Riya doubles as the platform admin in the demo.
         isAdmin: u.handle === "riya",
+        // Seed accounts are "existing users": page tours already seen (replay via the ? menu).
+        guide: { tours: { feed: SEED_TIME, event: SEED_TIME, team: SEED_TIME, manage: SEED_TIME } },
         onboardedAt: new Date(),
       })
       .where(sql`${s.profiles.id} = ${id}`);

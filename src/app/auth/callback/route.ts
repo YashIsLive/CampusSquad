@@ -1,19 +1,2 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-/** OAuth + magic-link landing: exchange the PKCE code for a session cookie, then continue. */
-export async function GET(request: NextRequest) {
-  const url = new URL(request.url);
-  const code = url.searchParams.get("code");
-  const nextParam = url.searchParams.get("next") ?? "/";
-  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
-
-  if (code) {
-    const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(new URL(next, url.origin));
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, url.origin));
-  }
-  const desc = url.searchParams.get("error_description") ?? "Sign-in link is invalid or expired.";
-  return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(desc)}`, url.origin));
-}
+/** Older links (and OAuth redirects configured before /auth/confirm existed) still work. */
+export { GET } from "../confirm/route";

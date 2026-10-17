@@ -9,6 +9,7 @@ import { Wordmark } from "@/components/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { UserMenu } from "@/components/layout/user-menu";
 import { NavLinks } from "@/components/layout/nav-links";
+import { GuideMenu } from "@/components/guide/guide-menu";
 
 export async function SiteHeader({ user }: { user: CurrentUser | null }) {
   let unread = 0;
@@ -35,6 +36,7 @@ export async function SiteHeader({ user }: { user: CurrentUser | null }) {
               <Button render={<Link href="/events/new" />} size="sm" className="hidden sm:inline-flex">
                 Post an event
               </Button>
+              <GuideMenu />
               <NotificationBell userId={user.id} initialUnread={unread} />
               <UserMenu user={{ name: user.name, username: user.username, avatarUrl: user.avatarUrl, isAdmin: user.isAdmin }} />
             </>

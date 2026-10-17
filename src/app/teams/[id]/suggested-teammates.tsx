@@ -83,7 +83,7 @@ export async function SuggestedTeammates({
   const byId = new Map(people.map((p) => [p.id, p]));
 
   return (
-    <section>
+    <section data-tour="suggestions">
       <h2 className="mb-1 flex items-center gap-1.5 text-xl font-bold">
         Suggested teammates
       </h2>

@@ -117,7 +117,7 @@ export function FeedFilters() {
       <div aria-hidden="true" className={cn("absolute -top-2 left-0 h-0.5 bg-signal transition-all duration-500", pending ? "w-2/3 opacity-100" : "w-0 opacity-0")} />
 
       <div className="flex gap-2">
-        <div className="relative flex-1">
+        <div className="relative flex-1" data-tour="search">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             ref={searchRef}
@@ -152,7 +152,7 @@ export function FeedFilters() {
         </Button>
       </div>
 
-      <div role="group" aria-label="Event type" className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <div role="group" aria-label="Event type" data-tour="types" className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <TypeChip active={!type} onClick={() => update({ type: null })}>
           Everything
         </TypeChip>

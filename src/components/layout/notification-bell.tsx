@@ -48,8 +48,9 @@ export function NotificationBell({ userId, initialUnread }: { userId: string; in
   return (
     <Link
       href="/notifications"
+      data-tour="notifications"
       aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
-      className="relative grid size-8 place-items-center rounded-full hover:bg-muted"
+      className="relative grid size-10 place-items-center rounded-full hover:bg-secondary sm:size-9"
     >
       <Bell className="size-5" />
       {unread > 0 && (

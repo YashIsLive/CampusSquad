@@ -18,6 +18,7 @@ import { TeamChat } from "./team-chat";
 import { TeamChecklist } from "./team-checklist";
 import { EndorsePanel } from "./endorse-panel";
 import { SuggestedTeammates } from "./suggested-teammates";
+import { PageTour } from "@/components/guide/page-tour";
 
 async function getTeam(id: string) {
   if (!isUuid(id)) return undefined;
@@ -83,6 +84,7 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:py-8">
+      {isMember && user && <PageTour tour="team" seen={Boolean(user.guide.tours?.team)} />}
       <header className="flex flex-col gap-2">
         <Breadcrumbs
           items={[
@@ -106,7 +108,7 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
         {team.ideaPitch && <p className="max-w-2xl text-sm">{team.ideaPitch}</p>}
         {isLeader && !over && (
           <div className="flex flex-wrap gap-2 pt-1">
-            <Button size="sm" render={<Link href={`/teams/${team.id}/applications`} />}>
+            <Button size="sm" data-tour="review" render={<Link href={`/teams/${team.id}/applications`} />}>
               Review applications{totalPending ? ` (${totalPending})` : ""}
             </Button>
             <TeamSettings team={{ id: team.id, name: team.name, ideaPitch: team.ideaPitch ?? "", isOpen: team.isOpen }} />
@@ -116,7 +118,7 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="flex min-w-0 flex-col gap-6">
-          <section>
+          <section data-tour="members">
             <h2 className="mb-3 text-xl font-bold">Members</h2>
             <ul className="grid gap-2 sm:grid-cols-2">
               {team.members.map((m) => (

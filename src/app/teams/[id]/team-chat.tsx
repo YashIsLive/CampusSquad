@@ -84,7 +84,7 @@ export function TeamChat({ teamId, me, initial, members }: { teamId: string; me:
   };
 
   return (
-    <section className="flex h-[28rem] flex-col rounded-lg border border-rule bg-card">
+    <section data-tour="chat" className="flex h-[28rem] flex-col rounded-lg border border-rule bg-card">
       <h2 className="border-b border-rule px-4 py-2.5 text-lg font-bold">Team chat</h2>
       <div ref={listRef} className="flex flex-1 flex-col gap-3 overflow-y-auto p-3" aria-live="polite">
         {messages.length === 0 && <p className="m-auto text-sm text-muted-foreground">Say hi to your team 👋</p>}

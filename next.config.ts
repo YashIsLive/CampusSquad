@@ -7,6 +7,12 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
 const nextConfig: NextConfig = {
   // Cache Components is off on purpose: almost every page is per-user and auth-dependent.
   // See DECISIONS.md (D-002).
+  async redirects() {
+    return [
+      // Friendly URL for "sign up" links; the login page handles both (query params pass through).
+      { source: "/signup", destination: "/login?mode=signup", permanent: false },
+    ];
+  },
   images: {
     remotePatterns: [
       ...(supabaseHost ? [{ protocol: "https" as const, hostname: supabaseHost }] : []),

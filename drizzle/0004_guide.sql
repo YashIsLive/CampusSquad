@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ADD COLUMN "guide" jsonb DEFAULT '{}'::jsonb NOT NULL;

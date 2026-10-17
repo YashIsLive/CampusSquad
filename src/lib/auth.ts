@@ -38,3 +38,19 @@ export async function isOrgAdmin(userId: string, orgId: string) {
   });
   return Boolean(row);
 }
+
+/**
+ * Where to send someone right after they sign in: first-timers go through profile setup first,
+ * then on to wherever they were heading.
+ */
+export async function destinationAfterSignIn(next: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+  if (!userId) return next;
+  const profile = await db.query.profiles.findFirst({ where: eq(schema.profiles.id, userId), columns: { onboardedAt: true } });
+  if (profile && !profile.onboardedAt && !next.startsWith("/onboarding") && !next.startsWith("/auth/")) {
+    return `/onboarding?next=${encodeURIComponent(next)}`;
+  }
+  return next;
+}

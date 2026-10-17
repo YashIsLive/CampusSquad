@@ -16,6 +16,7 @@ export function NudgeSoloButton({ eventId, solo, nudgedAt }: { eventId: string; 
       <Button
         size="sm"
         variant="outline"
+        data-tour="nudge"
         disabled={pending}
         onClick={() =>
           startTransition(async () => {

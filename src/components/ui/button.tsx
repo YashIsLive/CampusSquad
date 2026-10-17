@@ -53,10 +53,15 @@ function ButtonStyled({
   render,
   className,
   children,
-}: Pick<ButtonProps, "render" | "children"> & { className: string }) {
+  ...rest
+}: Pick<ButtonProps, "render" | "children"> & { className: string } & Record<string, unknown>) {
+  // Forward only attributes that make sense on a link: data-*, aria-*, id, title, handlers.
+  const passthrough = Object.fromEntries(
+    Object.entries(rest).filter(([k]) => k.startsWith("data-") || k.startsWith("aria-") || k === "id" || k === "title" || k.startsWith("on")),
+  )
   return useRender({
     render: render as useRender.RenderProp,
-    props: mergeProps<"a">({ className, children: children as React.ReactNode }, { "data-slot": "button" } as object),
+    props: mergeProps<"a">({ className, children: children as React.ReactNode, ...passthrough }, { "data-slot": "button" } as object),
   })
 }
 

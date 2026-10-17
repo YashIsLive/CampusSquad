@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/brand";
 import { Stamp } from "@/components/noticeboard";
 import { UserAvatar } from "@/components/user-avatar";
-import { MagicLinkForm } from "./magic-link-form";
+import { safeNext } from "@/lib/auth-errors";
+import { AuthPanel } from "./auth-panel";
 
 const DEMO_USERS = [
   { handle: "riya", name: "Riya Kulkarni", role: "Organizer · COEP AI Club · admin" },
@@ -20,7 +21,9 @@ const DEMO_USERS = [
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const sp = await searchParams;
-  const next = typeof sp.next === "string" ? sp.next : "/";
+  const next = safeNext(typeof sp.next === "string" ? sp.next : null);
+  const modeParam = typeof sp.mode === "string" ? sp.mode : "";
+  const mode = modeParam === "signup" || modeParam === "signin" || modeParam === "forgot" ? modeParam : "link";
   const error = typeof sp.error === "string" ? sp.error : null;
   if (await getCurrentUser()) redirect(next);
   const google = await isGoogleEnabled();
@@ -30,8 +33,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     <div className="mx-auto grid w-full max-w-5xl flex-1 items-center gap-10 px-4 py-10 motion-safe:animate-page-in lg:grid-cols-[1fr_1fr] lg:py-16">
       <div className="flex w-full max-w-md flex-col gap-6 justify-self-center lg:justify-self-start">
         <div>
-          <p className="label-mono text-muted-foreground">Sign in</p>
-          <h1 className="mt-1 text-4xl font-extrabold">Pick up where your campus is.</h1>
+          <p className="label-mono text-muted-foreground">{mode === "signup" ? "Create your account" : "Sign in or sign up"}</p>
+          <h1 className="mt-1 text-4xl font-extrabold">{mode === "signup" ? "Join your campus board." : "Pick up where your campus is."}</h1>
           <p className="mt-2 text-muted-foreground">
             Use your <strong className="font-semibold text-foreground">college email</strong> and you&apos;re verified for your campus
             automatically — no forms, no ID upload.
@@ -57,7 +60,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
               </div>
             </>
           )}
-          <MagicLinkForm next={next} />
+          <AuthPanel next={next} initialMode={mode} />
         </div>
 
         {demo && (

@@ -55,6 +55,7 @@ export function ImageUpload({
     <div className="flex items-start gap-3">
       <button
         type="button"
+        aria-label={value ? `${label}: replace current image` : label}
         onClick={() => input.current?.click()}
         className={`relative grid w-32 shrink-0 place-items-center overflow-hidden rounded-lg border border-dashed bg-muted/40 text-muted-foreground hover:bg-muted ${aspect}`}
       >
@@ -83,6 +84,8 @@ export function ImageUpload({
         type="file"
         accept="image/*"
         className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) void upload(f);

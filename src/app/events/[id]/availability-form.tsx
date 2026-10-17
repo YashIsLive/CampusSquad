@@ -23,7 +23,7 @@ export function AvailabilityForm({ eventId, existing, allowCross }: { eventId: s
 
   return (
     <div className="flex gap-2">
-      <Button size="sm" onClick={() => setOpen(true)}>
+      <Button size="sm" data-tour="looking" onClick={() => setOpen(true)}>
         {existing ? "Edit my card" : "I'm looking for a team"}
       </Button>
       {existing && (

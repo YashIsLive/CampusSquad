@@ -27,6 +27,7 @@ import { EventArt } from "@/components/event-art";
 import { posterVT, titleVT } from "@/components/event-card";
 import { DateBlock, Stamp } from "@/components/noticeboard";
 import { Breadcrumbs, TabNav } from "@/components/nav-bits";
+import { PageTour } from "@/components/guide/page-tour";
 import { cn } from "@/lib/utils";
 import { RegisterPanel } from "./register-panel";
 import { SaveEventButton } from "./save-button";
@@ -110,6 +111,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
   return (
     <>
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-5 motion-safe:animate-page-in sm:py-8">
+      {user?.onboardedAt && <PageTour tour="event" seen={Boolean(user.guide.tours?.event)} />}
       <Breadcrumbs
         items={[
           { href: "/", label: "Explore" },
@@ -171,7 +173,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
             </div>
           </header>
 
-          <dl className="grid overflow-hidden rounded-lg border border-rule bg-card sm:grid-cols-2">
+          <dl data-tour="facts" className="grid overflow-hidden rounded-lg border border-rule bg-card sm:grid-cols-2">
             <Fact icon={CalendarDays} label="When">
               {formatDateTime(event.startsAt)} → {formatDateTime(event.endsAt)}
             </Fact>
@@ -202,6 +204,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
           </dl>
 
           <TabNav
+            tourId="event-tabs"
             label="Event sections"
             id="event"
             tabs={TABS.map((t) => ({
@@ -241,7 +244,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
           </div>
         </div>
 
-        <aside aria-label="Registration" className="flex flex-col gap-3 lg:sticky lg:top-20">
+        <aside aria-label="Registration" data-tour="ticket" className="flex flex-col gap-3 lg:sticky lg:top-20">
           <RegisterPanel
             eventId={event.id}
             signedIn={Boolean(user)}
@@ -262,7 +265,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
           />
           <div className="flex gap-2">
             {user && <SaveEventButton eventId={event.id} initialSaved={Boolean(saved)} />}
-            <Button variant="outline" className="flex-1" render={<a href={googleCalendarUrl(event)} target="_blank" rel="noreferrer" />}>
+            <Button variant="outline" className="flex-1" data-tour="calendar" render={<a href={googleCalendarUrl(event)} target="_blank" rel="noreferrer" />}>
               <CalendarPlus /> Add to calendar
             </Button>
           </div>

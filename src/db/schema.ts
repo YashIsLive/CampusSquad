@@ -117,6 +117,8 @@ export const profiles = pgTable(
     reliabilityScore: numeric("reliability_score", { precision: 5, scale: 2 }).notNull().default("100"),
     isAdmin: boolean("is_admin").notNull().default(false),
     onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
+    /** First-run guide progress: which page tours were seen, and whether the checklist was hidden. */
+    guide: jsonb("guide").$type<GuideState>().notNull().default({}),
     createdAt: createdAt(),
   },
   (t) => [index("profiles_college_idx").on(t.collegeId)],
@@ -524,6 +526,12 @@ export const notifications = pgTable(
   },
   (t) => [index("notifications_user_created_idx").on(t.userId, t.createdAt)],
 );
+
+export type GuideState = {
+  tours?: Partial<Record<"feed" | "event" | "team" | "manage", string>>;
+  checklistHiddenAt?: string;
+  track?: "student" | "organizer";
+};
 
 export type NotificationPayload = {
   title: string;

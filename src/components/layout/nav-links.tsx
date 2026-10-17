@@ -23,6 +23,7 @@ export function NavLinks() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
+            data-tour={item.href === "/me/applications" ? "teams-nav" : undefined}
             className={cn(
               "relative flex items-center px-2.5 text-sm transition-colors",
               active ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
