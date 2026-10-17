@@ -34,3 +34,13 @@ Ambiguities resolved during the build, newest last. Format: what was decided, an
 
 **D-016 — Requested colleges need an admin.** Admins set the verified email domain on `/admin`, which also verifies existing students whose emails match. A rejected request unlinks its students, who then pick another college.
 
+**D-017 — Auth links are verified by the app (`/auth/confirm`).** Supabase's default links use PKCE, which only works in the browser that requested the email; students often open mail on another device or in an in-app browser. `/auth/confirm` accepts `token_hash` (any device), PKCE `code`, and `#fragment` tokens (via `/auth/finish`), and the sign-in page accepts the 6-digit code as a fallback. The email templates in docs/AUTH_SETUP.md make the cross-device path the default.
+
+**D-018 — Passwords are optional.** The email link stays the default (it proves the college address). Password sign-up/sign-in and reset exist for students whose mail apps mangle links; Supabase still confirms the email before the first session.
+
+**D-019 — The browser has no table access except Realtime reads.** All reads and writes run in server code; `0005_api_lockdown.sql` revokes the grants Supabase adds by default. This closed real holes (every email readable with the public key, users able to make themselves admin). New tables are private by default.
+
+**D-020 — No `loading.tsx` on routes that can 404.** A route-level Suspense boundary makes Next stream a 200 before the page calls `notFound()`. Detail pages render directly; a top progress bar gives navigation feedback instead.
+
+**D-021 — Guide = checklist from real data + per-page tours.** Checklist items tick off from database state, not clicks, so they're accurate wherever the user did the thing. Tours are non-blocking, skip steps whose targets aren't on screen, auto-run once per page type (stored in `profiles.guide`, with a per-session guard against restarts on remount), and can be deep-linked from checklist items.
+
