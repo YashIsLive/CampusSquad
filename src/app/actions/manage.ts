@@ -6,6 +6,7 @@ import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
+import { assertWithinLimit } from "@/lib/rate-limit";
 import { isOrgAdmin } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { finalizeAttendance as finalizeAttendanceTx, recomputeReliability } from "@/lib/attendance";
@@ -45,6 +46,7 @@ export const postAnnouncement = authedAction(
   z.object({ eventId: z.uuid(), body: z.string().trim().min(3, "Write something.").max(2000), email: z.boolean() }),
   async ({ eventId, body, email }, user) => {
     const event = await assertEventAdmin(eventId, user.id);
+    await assertWithinLimit("announcement", user.id);
     const registrants = await db
       .select({ userId: schema.registrations.userId, email: schema.profiles.email })
       .from(schema.registrations)

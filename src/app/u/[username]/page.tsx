@@ -74,7 +74,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
                   <dt className="label-mono text-muted-foreground">College</dt>
                   <dd className="flex items-center gap-1 text-sm">
                     {profile.college.name}
-                    {profile.collegeVerified && <BadgeCheck className="size-4 text-ok" aria-label="Verified student" />}
+                    {profile.collegeVerified && <BadgeCheck className="size-4 text-ok" role="img" aria-label="Verified student" />}
                   </dd>
                 </div>
               )}

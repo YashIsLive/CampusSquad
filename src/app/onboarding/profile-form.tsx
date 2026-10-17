@@ -82,8 +82,8 @@ export function ProfileForm({
         return;
       }
       toast.success("Profile saved");
+      // push fetches fresh server data already; an extra refresh() would re-render the next page twice.
       router.push(next ?? `/u/${res.data.username}`);
-      router.refresh();
     });
   }
 
@@ -157,14 +157,14 @@ export function ProfileForm({
           ))}
         {form.collegeChoice === NEW_COLLEGE && (
           <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="College name" error={err("newCollege")}>
-              <Input value={newCollege.name} onChange={(e) => setNewCollege({ ...newCollege, name: e.target.value })} />
+            <Field label="College name" htmlFor="new-college-name" error={err("newCollege")}>
+              <Input id="new-college-name" value={newCollege.name} onChange={(e) => setNewCollege({ ...newCollege, name: e.target.value })} />
             </Field>
-            <Field label="City">
-              <Input value={newCollege.city} onChange={(e) => setNewCollege({ ...newCollege, city: e.target.value })} />
+            <Field label="City" htmlFor="new-college-city">
+              <Input id="new-college-city" value={newCollege.city} onChange={(e) => setNewCollege({ ...newCollege, city: e.target.value })} />
             </Field>
-            <Field label="State">
-              <Input value={newCollege.state} onChange={(e) => setNewCollege({ ...newCollege, state: e.target.value })} />
+            <Field label="State" htmlFor="new-college-state">
+              <Input id="new-college-state" value={newCollege.state} onChange={(e) => setNewCollege({ ...newCollege, state: e.target.value })} />
             </Field>
           </div>
         )}
@@ -186,7 +186,7 @@ export function ProfileForm({
       </FormSection>
 
       <FormSection title="Skills" description="Pick what you can actually do. Levels: 1 beginner → 5 expert.">
-        <SkillPicker options={skills} value={form.skills} onChange={(v) => set("skills", v)} withLevels />
+        <SkillPicker options={skills} value={form.skills} onChange={(v) => set("skills", v)} withLevels label="Add a skill" />
         {err("skills") && <p className="text-xs text-destructive">{err("skills")}</p>}
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" size="sm" disabled={importing || !form.githubUrl} onClick={importFromGithub}>

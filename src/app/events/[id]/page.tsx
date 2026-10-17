@@ -158,7 +158,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
                 className="flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
               >
                 by <span className="font-medium text-foreground underline decoration-rule decoration-2 underline-offset-4">{event.org.name}</span>
-                {event.org.verified && <BadgeCheck className="size-4 text-ok" aria-label="Verified organization" />}
+                {event.org.verified && <BadgeCheck className="size-4 text-ok" role="img" aria-label="Verified organization" />}
                 {event.org.college && <span className="hidden sm:inline">· {event.org.college.name}</span>}
               </Link>
               {event.domainTags.length > 0 && (

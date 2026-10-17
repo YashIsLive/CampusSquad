@@ -9,7 +9,15 @@ if (!connectionString) throw new Error("DATABASE_URL is not set");
 const globalForDb = globalThis as unknown as { pgClient?: postgres.Sql };
 
 // `prepare: false` is required for Supabase's transaction-mode pooler (port 6543).
-const client = globalForDb.pgClient ?? postgres(connectionString, { prepare: false, max: 10 });
+// Serverless functions each hold their own pool, so keep it small in production.
+const client =
+  globalForDb.pgClient ??
+  postgres(connectionString, {
+    prepare: false,
+    max: Number(process.env.DB_POOL_MAX ?? (process.env.NODE_ENV === "production" ? 3 : 10)),
+    idle_timeout: 20,
+    connect_timeout: 10,
+  });
 if (process.env.NODE_ENV !== "production") globalForDb.pgClient = client;
 
 export const db = drizzle(client, { schema });

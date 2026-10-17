@@ -5,6 +5,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
+import { assertWithinLimit } from "@/lib/rate-limit";
 import { isOrgAdmin } from "@/lib/auth";
 
 const orgSchema = z.object({
@@ -25,6 +26,7 @@ export const createOrganization = authedAction(orgSchema, async (input, user) =>
   if (!user.collegeVerified || !user.collegeId) {
     fail("Only verified students can create an organization. Sign in with your college email to get verified.");
   }
+  await assertWithinLimit("org", user.id);
   const taken = await db.query.organizations.findFirst({ where: eq(schema.organizations.slug, input.slug) });
   if (taken) fail("That URL is taken. Try another.");
 

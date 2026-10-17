@@ -5,6 +5,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
+import { assertWithinLimit } from "@/lib/rate-limit";
 import type { CurrentUser } from "@/lib/auth";
 import { crossCollegeAllowed } from "@/lib/eligibility";
 import { matchScore } from "@/lib/match-score";
@@ -186,6 +187,7 @@ export const applyToVacancy = authedAction(
     const team = await loadTeam(vacancy.teamId);
     assertEventNotOver(team.event);
     if (team.leaderId === user.id) fail("You can't apply to your own team.");
+    await assertWithinLimit("apply", user.id);
     if (vacancy.screeningQuestion && !screeningAnswer) fail("Answer the leader's question.");
 
     const onTeam = await db.query.teamMembers.findFirst({
@@ -359,6 +361,7 @@ export const inviteToTeam = authedAction(
     const team = await loadTeamAsLeader(teamId, user);
     assertEventNotOver(team.event);
     if (userId === user.id) fail("You're already on this team.");
+    await assertWithinLimit("invite", user.id);
     const target = await db.query.profiles.findFirst({ where: eq(schema.profiles.id, userId) });
     if (!target) fail("User not found.");
     const onTeam = await db.query.teamMembers.findFirst({

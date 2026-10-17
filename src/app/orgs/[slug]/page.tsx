@@ -72,7 +72,7 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
         <div className="flex-1">
           <h1 className="flex flex-wrap items-center gap-2 text-3xl font-extrabold sm:text-4xl">
             {org.name}
-            {org.verified && <BadgeCheck className="size-5 text-signal-ink" aria-label="Verified organization" />}
+            {org.verified && <BadgeCheck className="size-5 text-signal-ink" role="img" aria-label="Verified organization" />}
           </h1>
           <p className="text-sm text-muted-foreground">
             {[org.type[0].toUpperCase() + org.type.slice(1), org.college?.name, `${followers?.n ?? 0} followers`]

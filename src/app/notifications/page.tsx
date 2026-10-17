@@ -57,7 +57,12 @@ export default async function NotificationsPage() {
                   {n.payload.body && <p className="text-sm whitespace-pre-line text-muted-foreground">{n.payload.body}</p>}
                   <p className="mt-0.5 text-xs text-muted-foreground">{relative(n.createdAt, now)}</p>
                 </div>
-                {!n.readAt && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
+                {!n.readAt && (
+                  <>
+                    <span aria-hidden="true" className="mt-1.5 size-2 shrink-0 rounded-full bg-signal" />
+                    <span className="sr-only">Unread</span>
+                  </>
+                )}
               </div>
             );
             return (

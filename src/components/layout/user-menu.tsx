@@ -14,11 +14,10 @@ import {
 export function UserMenu({ user }: { user: { name: string; username: string; avatarUrl: string | null; isAdmin: boolean } }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        className="rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-        aria-label="Account menu"
-      >
-        <UserAvatar name={user.name} src={user.avatarUrl} className="size-8" />
+      {/* Name comes from content (initials + hidden text) so voice control can say what it sees. */}
+      <DropdownMenuTrigger className="rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
+        <UserAvatar name={user.name} src={user.avatarUrl} className="size-9" />
+        <span className="sr-only">Account menu</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuItem render={<Link href={`/u/${user.username}`} />}>My profile</DropdownMenuItem>

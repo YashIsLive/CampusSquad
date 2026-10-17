@@ -22,6 +22,24 @@ function visibleTarget(id: string): HTMLElement | null {
 
 const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+// Remember within this browser session that a tour auto-ran, so a remount (e.g. a router refresh
+// that arrives with stale "not seen" props) never restarts it.
+const sessionKey = (tour: TourKey) => `cs-tour-autoran:${tour}`;
+function autoRanThisSession(tour: TourKey) {
+  try {
+    return sessionStorage.getItem(sessionKey(tour)) === "1";
+  } catch {
+    return false;
+  }
+}
+function markAutoRan(tour: TourKey) {
+  try {
+    sessionStorage.setItem(sessionKey(tour), "1");
+  } catch {
+    // Storage unavailable (private mode): the server-side "seen" flag still applies on next load.
+  }
+}
+
 /**
  * Spotlight tour for one page. Non-blocking: the page stays usable, the current target is ringed
  * and everything else dimmed. Starts automatically the first time (unless `seen`), from a
@@ -74,7 +92,10 @@ export function PageTour({ tour, seen }: { tour: TourKey; seen: boolean }) {
           params.delete("step");
           const qs = params.toString();
           history.replaceState(history.state, "", window.location.pathname + (qs ? `?${qs}` : ""));
-        } else if (!seen) start();
+        } else if (!seen && !autoRanThisSession(tour)) {
+          markAutoRan(tour);
+          start();
+        }
       },
       fromLink ? 350 : 900,
     );
@@ -111,6 +132,16 @@ export function PageTour({ tour, seen }: { tour: TourKey; seen: boolean }) {
     if (step) cardRef.current?.focus({ preventScroll: true });
   }, [step]);
 
+  // Escape closes the tour wherever focus is (the page stays usable while it's open).
+  useEffect(() => {
+    if (!steps) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !document.querySelector("[role=dialog][data-open], [role=menu]")) close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [steps, close]);
+
   if (!steps || !step || typeof document === "undefined") return null;
 
   const last = index === steps.length - 1;
@@ -142,7 +173,6 @@ export function PageTour({ tour, seen }: { tour: TourKey; seen: boolean }) {
         aria-describedby="tour-body"
         tabIndex={-1}
         onKeyDown={(e) => {
-          if (e.key === "Escape") close();
           if (e.key === "ArrowRight") next();
           if (e.key === "ArrowLeft") back();
         }}

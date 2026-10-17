@@ -35,17 +35,17 @@ export function CollegeReview({
         Requested by {college.students} student{college.students === 1 ? "" : "s"}. Check the domain against the college&apos;s official website.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Name">
-          <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} required />
+        <Field label="Name" htmlFor={`${college.id}-name`}>
+          <Input id={`${college.id}-name`} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} required />
         </Field>
-        <Field label="Email domain" hint="Students with this domain (or a subdomain) get verified.">
-          <Input value={v.emailDomain} onChange={(e) => setV({ ...v, emailDomain: e.target.value })} placeholder="college.ac.in" required />
+        <Field label="Email domain" htmlFor={`${college.id}-domain`} hint="Students with this domain (or a subdomain) get verified.">
+          <Input id={`${college.id}-domain`} value={v.emailDomain} onChange={(e) => setV({ ...v, emailDomain: e.target.value })} placeholder="college.ac.in" required />
         </Field>
-        <Field label="City">
-          <Input value={v.city} onChange={(e) => setV({ ...v, city: e.target.value })} required />
+        <Field label="City" htmlFor={`${college.id}-city`}>
+          <Input id={`${college.id}-city`} value={v.city} onChange={(e) => setV({ ...v, city: e.target.value })} required />
         </Field>
-        <Field label="State">
-          <Input value={v.state} onChange={(e) => setV({ ...v, state: e.target.value })} required />
+        <Field label="State" htmlFor={`${college.id}-state`}>
+          <Input id={`${college.id}-state`} value={v.state} onChange={(e) => setV({ ...v, state: e.target.value })} required />
         </Field>
       </div>
       <div className="flex justify-end gap-2">

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { subscribeAsUser } from "@/lib/supabase/client";
 
 /**
  * Re-renders the current server page whenever matching rows change (Supabase Realtime + RLS).
@@ -21,19 +21,17 @@ export function RealtimeRefresh({
 }) {
   const router = useRouter();
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const ch = supabase
-      .channel(channel)
-      .on("postgres_changes", { event: events, schema: "public", table, ...(filter ? { filter } : {}) }, () => {
+    const unsubscribe = subscribeAsUser((supabase) =>
+      supabase.channel(channel).on("postgres_changes", { event: events, schema: "public", table, ...(filter ? { filter } : {}) }, () => {
         // Coalesce bursts (an accept touches several rows).
         clearTimeout(timer);
         timer = setTimeout(() => router.refresh(), 250);
-      })
-      .subscribe();
+      }),
+    );
     return () => {
       clearTimeout(timer);
-      void supabase.removeChannel(ch);
+      unsubscribe();
     };
   }, [channel, table, filter, events, router]);
   return null;

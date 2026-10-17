@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
+import { assertWithinLimit } from "@/lib/rate-limit";
 
 async function assertMember(teamId: string, userId: string) {
   const m = await db.query.teamMembers.findFirst({
@@ -18,6 +19,7 @@ export const sendMessage = authedAction(
   z.object({ teamId: z.uuid(), body: z.string().trim().min(1).max(2000) }),
   async ({ teamId, body }, user) => {
     await assertMember(teamId, user.id);
+    await assertWithinLimit("message", user.id);
     const [m] = await db
       .insert(schema.messages)
       .values({ teamId, senderId: user.id, body })

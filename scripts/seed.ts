@@ -29,6 +29,12 @@ if (!url || !serviceKey || !dbUrl) {
   throw new Error("Set NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and DIRECT_URL in .env.local");
 }
 
+// Refuse to touch anything that looks like production unless explicitly forced.
+const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+if (site && !/localhost|127\.0\.0\.1/.test(site) && !process.argv.includes("--force")) {
+  throw new Error(`NEXT_PUBLIC_SITE_URL is ${site}. Seeding (and especially --reset) is for local/dev databases. Re-run with --force if you really mean it.`);
+}
+
 const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
 const client = postgres(dbUrl, { prepare: false, max: 1 });
 const db = drizzle(client, { schema: s });

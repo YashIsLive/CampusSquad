@@ -36,6 +36,13 @@
       "when": 1792255400078,
       "tag": "0004_guide",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792256014409,
+      "tag": "0005_api_lockdown",
+      "breakpoints": true
     }
   ]
 }

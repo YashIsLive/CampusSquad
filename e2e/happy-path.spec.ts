@@ -1,4 +1,5 @@
-import { expect, test, type Browser } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { signInAs } from "./helpers";
 
 /**
  * Sign in → find event → apply → leader accepts.
@@ -6,14 +7,6 @@ import { expect, test, type Browser } from "@playwright/test";
  * COEP AI Hackathon; Dev (PICT, team leader) accepts; Aarav sees the acceptance.
  * Requires a freshly seeded DB (`npm run db:seed -- --reset`).
  */
-
-async function signInAs(browser: Browser, handle: string) {
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  await page.goto(`/api/test-login?u=${handle}&next=/`);
-  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
-  return { context, page };
-}
 
 test("solo student applies to a role and the leader accepts", async ({ browser }) => {
   // --- Aarav finds the event and applies ---

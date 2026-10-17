@@ -94,10 +94,10 @@ export function PostVacancyButton({
               <Input id="role" value={roleTitle} onChange={(e) => setRoleTitle(e.target.value)} placeholder="React Native developer" required />
             </Field>
             <Field label="Required skills" error={errors.requiredSkillIds?.[0]}>
-              <SkillPicker options={skills} value={required} onChange={setRequired} max={6} />
+              <SkillPicker options={skills} value={required} onChange={setRequired} max={6} label="Add a required skill" />
             </Field>
             <Field label="Nice to have">
-              <SkillPicker options={skills} value={nice} onChange={setNice} max={6} />
+              <SkillPicker options={skills} value={nice} onChange={setNice} max={6} label="Add a nice-to-have skill" />
             </Field>
             <Field label="What they'll do" htmlFor="desc">
               <Textarea id="desc" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} />

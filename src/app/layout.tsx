@@ -4,6 +4,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { NavProgress } from "@/components/layout/nav-progress";
+import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
 import { siteUrl } from "@/lib/format";
 import "./globals.css";
@@ -40,6 +42,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
+        <Suspense>
+          <NavProgress />
+        </Suspense>
         <SiteHeader user={user} />
         <main id="main" tabIndex={-1} className="flex flex-1 flex-col outline-none">
           {children}

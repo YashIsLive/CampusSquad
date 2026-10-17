@@ -20,6 +20,7 @@ export function SkillPicker({
   withLevels = false,
   placeholder = "Search skills…",
   max = 25,
+  label = "Search skills",
 }: {
   options: SkillOption[];
   value: PickedSkill[];
@@ -27,6 +28,8 @@ export function SkillPicker({
   withLevels?: boolean;
   placeholder?: string;
   max?: number;
+  /** Accessible name for the search box. */
+  label?: string;
 }) {
   const [query, setQuery] = useState("");
   const byId = useMemo(() => new Map(options.map((o) => [o.id, o])), [options]);
@@ -91,6 +94,7 @@ export function SkillPicker({
               if (matches[0]) add(matches[0].id);
             }
           }}
+          aria-label={label}
           placeholder={value.length >= max ? `Maximum ${max} skills` : placeholder}
           disabled={value.length >= max}
           className="h-9"

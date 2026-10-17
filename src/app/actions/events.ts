@@ -5,6 +5,7 @@ import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
+import { assertWithinLimit } from "@/lib/rate-limit";
 import { isOrgAdmin } from "@/lib/auth";
 import { DOMAINS, fromLocalInput } from "@/lib/format";
 import { notifyFollowersOnFirstPublish } from "@/lib/publish";
@@ -72,6 +73,7 @@ async function orgForEvent(orgId: string, userId: string) {
 
 export const createEvent = authedAction(eventSchema, async ({ publish, ...input }, user) => {
   const org = await orgForEvent(input.orgId, user.id);
+  await assertWithinLimit("event", user.id);
   if (input.eligibilityScope !== "india" && !org.college) {
     fail("This organization isn't tied to a college, so the event must be open to all India.");
   }

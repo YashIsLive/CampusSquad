@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { toast } from "sonner";
 import type { RealtimePostgresInsertPayload } from "@supabase/supabase-js";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { subscribeAsUser } from "@/lib/supabase/client";
 
 type NotificationRow = { id: string; payload: { title: string; body?: string; href?: string } };
 
@@ -23,10 +23,8 @@ export function NotificationBell({ userId, initialUnread }: { userId: string; in
   }
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-    const channel = supabase
-      .channel(`notifications:${userId}`)
-      .on(
+    return subscribeAsUser((supabase) =>
+      supabase.channel(`notifications:${userId}`).on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
         (msg: RealtimePostgresInsertPayload<NotificationRow>) => {
@@ -38,23 +36,20 @@ export function NotificationBell({ userId, initialUnread }: { userId: string; in
             action: href ? { label: "Open", onClick: () => router.push(href) } : undefined,
           });
         },
-      )
-      .subscribe();
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+      ),
+    );
   }, [userId, router]);
 
   return (
     <Link
       href="/notifications"
       data-tour="notifications"
-      aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
       className="relative grid size-10 place-items-center rounded-full hover:bg-secondary sm:size-9"
     >
-      <Bell className="size-5" />
+      <Bell aria-hidden="true" className="size-5" />
+      <span className="sr-only">Notifications{unread > 0 ? `, ${unread} unread` : ""}</span>
       {unread > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-white">
+        <span aria-hidden="true" className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-white">
           {unread > 9 ? "9+" : unread}
         </span>
       )}

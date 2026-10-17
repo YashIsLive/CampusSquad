@@ -5,7 +5,7 @@ import { Send } from "lucide-react";
 import { toast } from "sonner";
 import type { RealtimePostgresInsertPayload } from "@supabase/supabase-js";
 import { sendMessage } from "@/app/actions/workspace";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { subscribeAsUser } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/user-avatar";
@@ -25,11 +25,9 @@ export function TeamChat({ teamId, me, initial, members }: { teamId: string; me:
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
     const byId = new Map(members.map((m) => [m.id, m]));
-    const ch = supabase
-      .channel(`team-chat:${teamId}`)
-      .on(
+    return subscribeAsUser((supabase) =>
+      supabase.channel(`team-chat:${teamId}`).on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `team_id=eq.${teamId}` },
         (msg: RealtimePostgresInsertPayload<MessageRow>) => {
@@ -48,11 +46,8 @@ export function TeamChat({ teamId, me, initial, members }: { teamId: string; me:
                 ],
           );
         },
-      )
-      .subscribe();
-    return () => {
-      void supabase.removeChannel(ch);
-    };
+      ),
+    );
   }, [teamId, members]);
 
   useEffect(() => {
@@ -93,10 +88,10 @@ export function TeamChat({ teamId, me, initial, members }: { teamId: string; me:
           return (
             <div key={m.id} className={cn("flex gap-2", mine && "flex-row-reverse")}>
               {!mine && <UserAvatar name={m.sender.name} src={m.sender.avatarUrl} className="size-7" />}
-              <div className={cn("max-w-[80%] rounded-2xl px-3 py-1.5 text-sm", mine ? "bg-primary text-signal-ink-foreground" : "bg-muted", m.pending && "opacity-60")}>
-                {!mine && <p className="text-xs font-medium opacity-70">{m.sender.name}</p>}
+              <div className={cn("max-w-[80%] rounded-2xl px-3 py-1.5 text-sm", mine ? "bg-ink text-paper" : "bg-secondary text-foreground", m.pending && "opacity-70")}>
+                {!mine && <p className="text-xs font-semibold">{m.sender.name}</p>}
                 <p className="break-words whitespace-pre-wrap">{m.body}</p>
-                <p className="mt-0.5 text-[10px] opacity-60">{timeFmt.format(new Date(m.createdAt))}</p>
+                <p className={cn("mt-0.5 text-[11px]", mine ? "text-paper/80" : "text-muted-foreground")}>{timeFmt.format(new Date(m.createdAt))}</p>
               </div>
             </div>
           );
