@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/nav-bits";
 import { notFound, redirect } from "next/navigation";
 import { asc, desc, eq, inArray, sql } from "drizzle-orm";
-import { BadgeCheck, ExternalLink } from "lucide-react";
+import { BadgeCheck, ExternalLink, MessageSquare } from "lucide-react";
 import { db, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
 import { isUuid } from "@/lib/queries";
@@ -61,11 +61,30 @@ export default async function ApplicationsPage({ params }: PageProps<"/teams/[id
         .groupBy(schema.registrations.userId)
     : [];
   const historyBy = new Map(history.map((h) => [h.userId, h]));
+
+  // Conversation sizes, and which ones have an unread reply for the leader.
+  const appIds = apps.map((a) => a.id);
+  const [threadStats, unread] = await Promise.all([
+    appIds.length
+      ? db
+          .select({ applicationId: schema.applicationMessages.applicationId, total: sql<number>`count(*)::int` })
+          .from(schema.applicationMessages)
+          .where(inArray(schema.applicationMessages.applicationId, appIds))
+          .groupBy(schema.applicationMessages.applicationId)
+      : [],
+    db
+      .select({ href: sql<string>`${schema.notifications.payload}->>'href'` })
+      .from(schema.notifications)
+      .where(sql`${schema.notifications.userId} = ${user.id} and ${schema.notifications.type} = 'application_message' and ${schema.notifications.readAt} is null`),
+  ]);
+  const threadBy = new Map(threadStats.map((t) => [t.applicationId, t.total]));
+  const unreadHrefs = new Set(unread.map((u) => u.href));
   const teamFull = team.members.length >= team.event.teamMax;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:py-8">
       <RealtimeRefresh channel={`apps:${team.id}`} table="applications" filter={`vacancy_id=in.(${vacancyIds.join(",") || "00000000-0000-0000-0000-000000000000"})`} />
+      <RealtimeRefresh channel={`apps-notes:${user.id}`} table="notifications" filter={`user_id=eq.${user.id}`} />
       <header>
         <Breadcrumbs
           items={[
@@ -171,6 +190,20 @@ export default async function ApplicationsPage({ params }: PageProps<"/teams/[id
                           {a.applicant.linkedinUrl && (
                             <Button size="xs" variant="ghost" render={<a href={a.applicant.linkedinUrl} target="_blank" rel="noreferrer" />}>
                               LinkedIn <ExternalLink />
+                            </Button>
+                          )}
+                          {a.status !== "withdrawn" && (
+                            <Button
+                              size="xs"
+                              variant={unreadHrefs.has(`/applications/${a.id}`) ? "default" : "outline"}
+                              render={<Link href={`/applications/${a.id}`} />}
+                            >
+                              <MessageSquare />
+                              {unreadHrefs.has(`/applications/${a.id}`)
+                                ? "New reply"
+                                : threadBy.get(a.id)
+                                  ? `Messages (${threadBy.get(a.id)})`
+                                  : "Message"}
                             </Button>
                           )}
                           {!decided && (

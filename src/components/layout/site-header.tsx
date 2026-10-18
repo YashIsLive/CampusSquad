@@ -4,6 +4,7 @@ import { and, count, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { CurrentUser } from "@/lib/auth";
 import { runReminders } from "@/lib/reminders";
+import { reviewableColleges } from "@/lib/verification";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
@@ -13,6 +14,7 @@ import { GuideMenu } from "@/components/guide/guide-menu";
 
 export async function SiteHeader({ user }: { user: CurrentUser | null }) {
   let unread = 0;
+  let reviewer = false;
   if (user) {
     // Lazily create this user's due reminders (deadline + event start). Idempotent and cheap.
     after(() => runReminders({ userId: user.id }).catch((e) => console.error("reminders", e)));
@@ -21,6 +23,8 @@ export async function SiteHeader({ user }: { user: CurrentUser | null }) {
       .from(schema.notifications)
       .where(and(eq(schema.notifications.userId, user.id), isNull(schema.notifications.readAt)));
     unread = row?.n ?? 0;
+    const colleges = await reviewableColleges(user);
+    reviewer = colleges === "all" || colleges.length > 0;
   }
 
   return (
@@ -38,7 +42,9 @@ export async function SiteHeader({ user }: { user: CurrentUser | null }) {
               </Button>
               <GuideMenu />
               <NotificationBell userId={user.id} initialUnread={unread} />
-              <UserMenu user={{ name: user.name, username: user.username, avatarUrl: user.avatarUrl, isAdmin: user.isAdmin }} />
+              <UserMenu
+                user={{ name: user.name, username: user.username, avatarUrl: user.avatarUrl, isAdmin: user.isAdmin, verified: user.collegeVerified, reviewer }}
+              />
             </>
           ) : (
             <Button render={<Link href="/login" />} size="sm">

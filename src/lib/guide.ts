@@ -84,10 +84,10 @@ export async function getChecklist(user: CurrentUser): Promise<{ track: GuideTra
         {
           id: "org",
           title: "Create your club page",
-          why: user.collegeVerified ? "Events are posted by a club, department or community." : "Needs a verified college email first.",
+          why: user.collegeVerified ? "Events are posted by a club, department or community." : "Verify your campus first: college email, student ID or classmate vouches.",
           done: adminOrgs.length > 0,
-          href: adminOrgs[0] ? `/orgs/${adminOrgs[0].slug}` : "/orgs/new",
-          cta: "Create club",
+          href: adminOrgs[0] ? `/orgs/${adminOrgs[0].slug}` : user.collegeVerified ? "/orgs/new" : "/verify",
+          cta: user.collegeVerified ? "Create club" : "Get verified",
         },
         {
           id: "event",

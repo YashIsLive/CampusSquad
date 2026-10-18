@@ -325,3 +325,25 @@
     animation-delay: 0s !important;
   }
 }
+
+/* Page tour */
+@keyframes tour-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes tour-swap {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes tour-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--signal) 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}

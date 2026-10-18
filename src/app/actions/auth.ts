@@ -9,7 +9,8 @@ import { siteUrl } from "@/lib/format";
 import { destinationAfterSignIn, markEmailProven } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allowSignup, clientIp } from "@/lib/signup-guard";
-import { emailAuthEnabled } from "@/lib/auth-config";
+import { emailAuthEnabled, isUndeliverable } from "@/lib/auth-config";
+import { isTrustedDevice, trustThisDevice } from "@/lib/trusted-device";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -47,6 +48,7 @@ export async function sendMagicLink(input: { email: string; next?: string }): Pr
   if (!emailAuthEnabled()) return { ok: false, error: "Email sign-in isn't available yet. Use Google or a password." };
   const parsed = z.object({ email, next: z.string().optional() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
+  if (isUndeliverable(parsed.data.email)) return { ok: false, error: "That's a demo address and can't receive email. Use the password or demo sign-in." };
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithOtp({
     email: parsed.data.email,
@@ -57,16 +59,18 @@ export async function sendMagicLink(input: { email: string; next?: string }): Pr
 }
 
 /** The one-time code (6–10 digits, per the Supabase project setting) from the same email — works even when the link opens in another app. */
-export async function verifyEmailCode(input: { email: string; code: string; next?: string }): Promise<Result> {
+export async function verifyEmailCode(input: { email: string; code: string; next?: string; trustDevice?: boolean }): Promise<Result> {
   if (!emailAuthEnabled()) return { ok: false, error: "Email sign-in isn't available yet. Use Google or a password." };
   const parsed = z
     .object({ email, code: z.string().trim().regex(/^\d{6,10}$/, "Enter the code from the email."), next: z.string().optional() })
     .safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.verifyOtp({ email: parsed.data.email, token: parsed.data.code, type: "email" });
+  const { data, error } = await supabase.auth.verifyOtp({ email: parsed.data.email, token: parsed.data.code, type: "email" });
   if (error) return { ok: false, error: authErrorMessage(error) };
   await markEmailProven();
+  // The code proves this browser belongs to the address owner: skip the code here for a while.
+  if (data.user && input.trustDevice !== false) await trustThisDevice(data.user.id);
   redirect(await destinationAfterSignIn(safeNext(parsed.data.next)));
 }
 
@@ -77,7 +81,7 @@ export async function signUpWithPassword(input: { email: string; password: strin
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   const next = parsed.data.next ?? "/onboarding";
 
-  if (emailAuthEnabled()) {
+  if (emailAuthEnabled() && !isUndeliverable(parsed.data.email)) {
     // Email sender configured: classic sign-up with a confirmation email.
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.signUp({
@@ -117,12 +121,30 @@ export async function signUpWithPassword(input: { email: string; password: strin
   redirect(await destinationAfterSignIn(safeNext(next)));
 }
 
-export async function signInWithPassword(input: { email: string; password: string; next?: string }): Promise<Result> {
+/**
+ * Email + password. On a browser that has already proven the address (see lib/trusted-device),
+ * that's all it takes. On a new browser — when email is set up — the password is checked, then a
+ * one-time code is emailed and the session only starts once it's entered (`deviceCheck`).
+ */
+export async function signInWithPassword(input: { email: string; password: string; next?: string }): Promise<Result & { deviceCheck?: boolean }> {
   const parsed = z.object({ email, password: z.string().min(1, "Enter your password."), next: z.string().optional() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
   if (error) return { ok: false, error: authErrorMessage(error) };
+
+  // Seed accounts (*.seed.test) can't receive mail, so they skip the device check locally.
+  const deviceCheckApplies = emailAuthEnabled() && !isUndeliverable(parsed.data.email);
+  if (deviceCheckApplies && !(await isTrustedDevice(data.user.id))) {
+    // Right password, unknown browser: don't keep this session; confirm by email first.
+    await supabase.auth.signOut({ scope: "local" });
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email: parsed.data.email,
+      options: { shouldCreateUser: false, emailRedirectTo: await confirmUrl(parsed.data.next) },
+    });
+    if (otpError) return { ok: false, error: authErrorMessage(otpError) };
+    return { ok: true, deviceCheck: true };
+  }
   redirect(await destinationAfterSignIn(safeNext(parsed.data.next)));
 }
 
@@ -130,6 +152,7 @@ export async function sendPasswordReset(input: { email: string }): Promise<Resul
   if (!emailAuthEnabled()) return { ok: false, error: "Email sign-in isn't available yet. Use Google or a password." };
   const parsed = z.object({ email }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
+  if (isUndeliverable(parsed.data.email)) return { ok: true }; // same answer as for unknown addresses
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: await confirmUrl("/auth/reset-password"),

@@ -11,7 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function UserMenu({ user }: { user: { name: string; username: string; avatarUrl: string | null; isAdmin: boolean } }) {
+export function UserMenu({
+  user,
+}: {
+  user: { name: string; username: string; avatarUrl: string | null; isAdmin: boolean; verified: boolean; reviewer: boolean };
+}) {
   return (
     <DropdownMenu>
       {/* Name comes from content (initials + hidden text) so voice control can say what it sees. */}
@@ -24,9 +28,11 @@ export function UserMenu({ user }: { user: { name: string; username: string; ava
         <DropdownMenuItem render={<Link href="/onboarding" />}>Edit profile</DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/me/events" />}>My events</DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/me/applications" />}>Teams & applications</DropdownMenuItem>
+        {!user.verified && <DropdownMenuItem render={<Link href="/verify" />}>Get verified</DropdownMenuItem>}
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/events/new" />}>Post an event</DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/orgs/new" />}>Create organization</DropdownMenuItem>
+        {user.reviewer && <DropdownMenuItem render={<Link href="/verify/review" />}>Review student IDs</DropdownMenuItem>}
         {user.isAdmin && <DropdownMenuItem render={<Link href="/admin" />}>Admin</DropdownMenuItem>}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => void signOut()}>Sign out</DropdownMenuItem>

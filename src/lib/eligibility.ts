@@ -38,7 +38,7 @@ export function isEligible(
         return { ok: false, reason: "Only students of the host college can register." };
       }
       if (!user.collegeVerified) {
-        return { ok: false, reason: "Verify your college email to register for this campus-only event." };
+        return { ok: false, reason: "Verify your campus to register for this campus-only event — college email, student ID or classmate vouches." };
       }
       return { ok: true };
     case "city":

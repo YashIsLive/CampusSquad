@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { BadgeCheck, ExternalLink } from "lucide-react";
 import { db, schema } from "@/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { EmptyState } from "@/components/empty-state";
 import { Stamp } from "@/components/noticeboard";
+import { VOUCHES_NEEDED, countValidVouches } from "@/lib/verification";
+import { VouchButton } from "./vouch-button";
 
 const LEVEL = ["", "Beginner", "Basic", "Comfy", "Strong", "Expert"];
 
@@ -52,6 +54,20 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
       limit: 20,
     }),
   ]);
+
+  // A verified student at the same college can vouch for an unverified classmate.
+  const canVouch = Boolean(
+    viewer && viewer.id !== profile.id && viewer.collegeVerified && viewer.collegeId && !profile.collegeVerified && profile.collegeId === viewer.collegeId,
+  );
+  const [vouchCount, alreadyVouched] =
+    canVouch || (viewer?.id === profile.id && !profile.collegeVerified && profile.collegeId)
+      ? await Promise.all([
+          countValidVouches(profile.id, profile.collegeId!),
+          viewer
+            ? db.query.vouches.findFirst({ where: and(eq(schema.vouches.voucherId, viewer.id), eq(schema.vouches.userId, profile.id)) })
+            : null,
+        ])
+      : [0, null];
 
   const skills = [...profile.skills].sort((a, b) => b.endorsedCount - a.endorsedCount || b.level - a.level);
   const isMe = viewer?.id === profile.id;
@@ -116,6 +132,33 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
           </div>
         )}
       </section>
+
+      {canVouch && profile.college && (
+        <section aria-label="Vouch" className="flex flex-col gap-3 rounded-lg border border-dashed border-ink/30 bg-card p-4 sm:flex-row sm:items-center">
+          <p className="flex-1 text-sm">
+            {alreadyVouched ? (
+              <>You vouched for {profile.name.split(" ")[0]}. {VOUCHES_NEEDED - vouchCount > 0 && `${VOUCHES_NEEDED - vouchCount} more needed.`}</>
+            ) : (
+              <>
+                Do you know {profile.name.split(" ")[0]} from {profile.college.name}? {VOUCHES_NEEDED} vouches from verified classmates verify
+                them ({vouchCount} so far).
+              </>
+            )}
+          </p>
+          {!alreadyVouched && <VouchButton userId={profile.id} name={profile.name || profile.username} college={profile.college.name} />}
+        </section>
+      )}
+      {isMe && !profile.collegeVerified && (
+        <section aria-label="Verification" className="flex flex-col gap-3 rounded-lg border border-dashed border-ink/30 bg-card p-4 sm:flex-row sm:items-center">
+          <p className="flex-1 text-sm">
+            Your campus isn&apos;t verified yet{profile.collegeId ? ` (${vouchCount} of ${VOUCHES_NEEDED} vouches)` : ""}. Use your student ID or
+            ask classmates to vouch.
+          </p>
+          <Button size="sm" render={<Link href="/verify" />}>
+            Get verified
+          </Button>
+        </section>
+      )}
 
       <section aria-labelledby="skills-heading">
         <h2 id="skills-heading" className="mb-3 text-xl font-bold">

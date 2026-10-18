@@ -82,6 +82,8 @@ export const notificationType = pgEnum("notification_type", [
   "new_event",
   "team_nudge",
   "event_reminder",
+  "application_message",
+  "verification",
 ]);
 export const reminderKind = pgEnum("reminder_kind", ["h72", "h24", "h2"]);
 
@@ -108,6 +110,8 @@ export const profiles = pgTable(
     avatarUrl: text("avatar_url"),
     collegeId: uuid("college_id").references(() => colleges.id),
     collegeVerified: boolean("college_verified").notNull().default(false),
+    /** How the campus was proven. Kept in sync with college_verified by a DB trigger (null when unverified). */
+    collegeVerifiedVia: text("college_verified_via").$type<"email" | "id_card" | "vouch" | "admin">(),
     /** False for instant password sign-ups (address never proven); Google and email-link sign-ins prove it. */
     emailVerified: boolean("email_verified").notNull().default(true),
     year: smallint("year"),
@@ -475,6 +479,74 @@ export const messages = pgTable(
   (t) => [index("messages_team_created_idx").on(t.teamId, t.createdAt)],
 );
 
+/** Leader ↔ applicant conversation about one application. */
+export const applicationMessages = pgTable(
+  "application_messages",
+  {
+    id: id(),
+    applicationId: uuid("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    senderId: uuid("sender_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("application_messages_app_created_idx").on(t.applicationId, t.createdAt),
+    check("application_messages_body_check", sql`char_length(${t.body}) BETWEEN 1 AND 2000`),
+  ],
+);
+
+/** Campus verification by student ID card, for colleges without student email addresses. */
+export const verificationRequests = pgTable(
+  "verification_requests",
+  {
+    id: id(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    collegeId: uuid("college_id")
+      .notNull()
+      .references(() => colleges.id, { onDelete: "cascade" }),
+    /** Object path in the private `id-cards` bucket; cleared once the request is decided. */
+    idCardPath: text("id_card_path"),
+    status: text("status").$type<"pending" | "approved" | "rejected" | "cancelled">().notNull().default("pending"),
+    note: text("note"),
+    reviewerId: uuid("reviewer_id").references(() => profiles.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("verification_requests_one_pending").on(t.userId).where(sql`${t.status} = 'pending'`),
+    index("verification_requests_college_status_idx").on(t.collegeId, t.status),
+    check("verification_requests_status_check", sql`${t.status} IN ('pending', 'approved', 'rejected', 'cancelled')`),
+  ],
+);
+
+/** A verified student vouching that another student attends the same college. */
+export const vouches = pgTable(
+  "vouches",
+  {
+    voucherId: uuid("voucher_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    collegeId: uuid("college_id")
+      .notNull()
+      .references(() => colleges.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.voucherId, t.userId] }),
+    index("vouches_user_college_idx").on(t.userId, t.collegeId),
+    check("vouches_not_self", sql`${t.voucherId} <> ${t.userId}`),
+  ],
+);
+
 export const teamTasks = pgTable("team_tasks", {
   id: id(),
   teamId: uuid("team_id")
@@ -651,9 +723,10 @@ export const vacancySkillsRelations = relations(vacancySkills, ({ one }) => ({
   skill: one(skills, { fields: [vacancySkills.skillId], references: [skills.id] }),
 }));
 
-export const applicationsRelations = relations(applications, ({ one }) => ({
+export const applicationsRelations = relations(applications, ({ one, many }) => ({
   vacancy: one(vacancies, { fields: [applications.vacancyId], references: [vacancies.id] }),
   applicant: one(profiles, { fields: [applications.applicantId], references: [profiles.id] }),
+  messages: many(applicationMessages),
 }));
 
 export const availabilityPostsRelations = relations(availabilityPosts, ({ one }) => ({
@@ -664,6 +737,16 @@ export const availabilityPostsRelations = relations(availabilityPosts, ({ one })
 export const invitesRelations = relations(invites, ({ one }) => ({
   team: one(teams, { fields: [invites.teamId], references: [teams.id] }),
   user: one(profiles, { fields: [invites.userId], references: [profiles.id] }),
+}));
+
+export const applicationMessagesRelations = relations(applicationMessages, ({ one }) => ({
+  application: one(applications, { fields: [applicationMessages.applicationId], references: [applications.id] }),
+  sender: one(profiles, { fields: [applicationMessages.senderId], references: [profiles.id] }),
+}));
+
+export const verificationRequestsRelations = relations(verificationRequests, ({ one }) => ({
+  user: one(profiles, { fields: [verificationRequests.userId], references: [profiles.id] }),
+  college: one(colleges, { fields: [verificationRequests.collegeId], references: [colleges.id] }),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({

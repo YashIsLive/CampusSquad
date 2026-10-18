@@ -25,7 +25,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const next = safeNext(typeof sp.next === "string" ? sp.next : null);
   const modeParam = typeof sp.mode === "string" ? sp.mode : "";
   const emailEnabled = emailAuthEnabled();
-  const mode = modeParam === "signup" || modeParam === "signin" || modeParam === "forgot" ? modeParam : emailEnabled ? "link" : "signin";
+  const mode = modeParam === "signup" || modeParam === "signin" || modeParam === "forgot" || (modeParam === "link" && emailEnabled) ? modeParam : "signin";
   const error = typeof sp.error === "string" ? sp.error : null;
   if (await getCurrentUser()) redirect(next);
   const google = await isGoogleEnabled();
@@ -39,7 +39,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <h1 className="mt-1 text-4xl font-extrabold">{mode === "signup" ? "Join your campus board." : "Pick up where your campus is."}</h1>
           <p className="mt-2 text-muted-foreground">
             Continue with your <strong className="font-semibold text-foreground">college Google account</strong> and you&apos;re
-            verified for your campus automatically — no forms, no ID upload. Or make an account with a password in seconds.
+            verified for your campus automatically. Or use email and a password. No college email? Verify later with your
+            student ID or two classmates.
           </p>
         </div>
 

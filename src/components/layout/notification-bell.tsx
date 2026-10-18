@@ -29,8 +29,10 @@ export function NotificationBell({ userId, initialUnread }: { userId: string; in
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
         (msg: RealtimePostgresInsertPayload<NotificationRow>) => {
           const n = msg.new;
-          setUnread((u) => u + 1);
           const href = n.payload.href;
+          // Already looking at it (e.g. the conversation it's about): no badge bump, no pop-up.
+          if (href && window.location.pathname === href.split("?")[0]) return;
+          setUnread((u) => u + 1);
           toast(n.payload.title, {
             description: n.payload.body,
             action: href ? { label: "Open", onClick: () => router.push(href) } : undefined,

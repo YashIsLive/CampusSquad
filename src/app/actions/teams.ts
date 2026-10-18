@@ -209,16 +209,27 @@ export const applyToVacancy = authedAction(
       sameCollege,
     });
 
+    const previous = await db.query.applications.findFirst({
+      where: and(eq(schema.applications.vacancyId, vacancyId), eq(schema.applications.applicantId, user.id)),
+      columns: { id: true, status: true },
+    });
+    if (previous && previous.status !== "withdrawn") {
+      fail(previous.status === "rejected" ? "The leader already decided on your application for this role." : "You've already applied for this role.");
+    }
+
     await db.transaction(async (tx) => {
       // Applying registers you for the event (enforces deadline + eligibility).
       await ensureRegistration(tx, team.event, user);
-      await tx.insert(schema.applications).values({
-        vacancyId,
-        applicantId: user.id,
-        message,
-        screeningAnswer: screeningAnswer || null,
-        matchScore: score,
-      });
+      const fields = { message, screeningAnswer: screeningAnswer || null, matchScore: score };
+      if (previous) {
+        // Re-applying after a withdrawal reopens the same application (one per role).
+        await tx
+          .update(schema.applications)
+          .set({ ...fields, status: "pending", decidedAt: null, createdAt: new Date() })
+          .where(eq(schema.applications.id, previous.id));
+      } else {
+        await tx.insert(schema.applications).values({ vacancyId, applicantId: user.id, ...fields });
+      }
       await tx.insert(schema.notifications).values({
         userId: team.leaderId,
         type: "application_new",
@@ -293,23 +304,6 @@ export const acceptApplication = authedAction(z.object({ applicationId: z.uuid()
   revalidatePath("/events", "layout");
   return result;
 });
-
-export const messageApplicant = authedAction(
-  z.object({ applicationId: z.uuid(), body: z.string().trim().min(2).max(500) }),
-  async ({ applicationId, body }, user) => {
-    const app = await loadApplicationAsLeader(applicationId, user);
-    await db.insert(schema.notifications).values({
-      userId: app.applicantId,
-      type: "application_new",
-      payload: {
-        title: `Message from ${user.name} (${app.vacancy.team.name})`,
-        body,
-        href: "/me/applications",
-      },
-    });
-    return null;
-  },
-);
 
 // ---------- availability ("looking for a team") ----------
 

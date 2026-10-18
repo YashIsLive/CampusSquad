@@ -71,7 +71,7 @@ CampusSquad gives each campus one feed, matches students to teams by skill, and 
 - Teams post **open roles** with required and nice-to-have skills, hours/week and college rules
 - Every role shows **your match score**, computed from your skill levels
 - Solo students post a "looking for a team" card that leaders can invite from
-- Apply with a screening answer; leaders shortlist, accept or message
+- Apply with a screening answer; leaders shortlist or accept, and **message applicants, who can reply** in a live conversation
 - Accepting is **one database transaction**, so a team can never go over its size limit
 
 </td>
@@ -135,8 +135,8 @@ Most students will open this from a WhatsApp link, so the phone layout is the ma
 sheet, a sticky register bar, link previews for every event, and an **installable PWA**.
 
 ### And the rest
-- **Sign-in:** Google (campus accounts get verified automatically), password, or email link / one-time code
-- **Campus verification** by email domain; students can request a new college and an admin approves it
+- **Sign-in:** Google, or email + password with a **one-time code on new devices** (trusted for 30 days), or an email link
+- **Campus verification** three ways: college email domain, a **student ID photo** reviewed by an admin or a verified club lead (then deleted), or **vouches from two verified classmates**. Students can request a new college and an admin approves it
 - **Clubs and communities** with admins and followers, who get notified when a new event goes live
 - **First-run guide:** a checklist driven by what you've actually done, plus spotlight tours of each page
 - **Skill suggestions** pulled from a student's public GitHub repos
@@ -184,7 +184,8 @@ npm run dev                  # http://localhost:3000
 | `DATABASE_URL` | Project Settings → Database → Connection string → **Transaction pooler** (port 6543) | app queries |
 | `DIRECT_URL` | same → **Session pooler** (port 5432) | migrations, seed, integration tests |
 | `NEXT_PUBLIC_SITE_URL` | your URL (`http://localhost:3000` locally) | share links, link previews, email links |
-| `AUTH_EMAIL_ENABLED` | `1` once custom SMTP is set up ([guide](docs/AUTH_SETUP.md)) | email sign-in links/codes and confirmation emails |
+| `AUTH_EMAIL_ENABLED` | `1` once custom SMTP is set up ([guide](docs/AUTH_SETUP.md)) | email sign-in links/codes, confirmation emails, new-device codes |
+| `AUTH_DEVICE_SECRET` | optional, any long random string | signs "remember this device" cookies; change it to make every browser confirm again |
 | `RESEND_API_KEY`, `EMAIL_FROM` | optional, [resend.com](https://resend.com) | announcement and reminder emails (skipped if unset) |
 | `CRON_SECRET` | any random string | protects `/api/cron/deadline-reminders` |
 | `GITHUB_TOKEN` | optional, a GitHub token with no scopes | raises the GitHub API limit for skill suggestions |
@@ -228,8 +229,8 @@ To make a real account an admin: `npm run make-admin -- you@college.edu` (add `-
 ## Tests
 
 ```bash
-npm test             # Vitest: 43 unit and database integration tests
-npm run test:e2e     # Playwright: 22 end-to-end tests, including axe accessibility checks
+npm test             # Vitest: 61 unit and database integration tests
+npm run test:e2e     # Playwright: 25 end-to-end tests, including axe accessibility checks
 ```
 
 <details>
@@ -246,6 +247,7 @@ npm run test:e2e     # Playwright: 22 end-to-end tests, including axe accessibil
 | `e2e/teams-realtime.spec.ts` | **live** chat and checklist between two browsers; invite → accept → join |
 | `e2e/organizer.spec.ts` | post an event and notify followers, tracked links, CSV export, announcements, check-in, admin approval |
 | `e2e/guide.spec.ts` | the first-run checklist and page tours |
+| `e2e/conversations-verification.spec.ts` | leader ↔ applicant conversation, live both ways; verification by classmate vouches and by student ID review |
 | `e2e/a11y-and-mobile.mobile.spec.ts` | phone layout, plus **axe WCAG 2.1 AA** on public and signed-in pages |
 
 Integration tests need `DIRECT_URL` and the Supabase keys; without them they're skipped. End-to-end tests reseed the

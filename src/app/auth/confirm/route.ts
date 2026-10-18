@@ -3,6 +3,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authErrorMessage, safeNext } from "@/lib/auth-errors";
 import { destinationAfterSignIn, markEmailProven, syncProviderVerification } from "@/lib/auth";
+import { trustThisDevice } from "@/lib/trusted-device";
 
 const OTP_TYPES = new Set<EmailOtpType>(["email", "magiclink", "signup", "recovery", "invite", "email_change"]);
 
@@ -28,17 +29,20 @@ export async function GET(request: NextRequest) {
   const supabase = await createSupabaseServerClient();
 
   if (tokenHash && type && OTP_TYPES.has(type)) {
-    const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+    const { data, error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
     if (error) return fail(authErrorMessage(error));
-    // Clicking a link sent to the address proves the student owns it.
+    // Clicking a link sent to the address proves the student owns it — and this browser.
     await markEmailProven();
+    if (data.user) await trustThisDevice(data.user.id);
     return NextResponse.redirect(new URL(type === "recovery" ? "/auth/reset-password" : await destinationAfterSignIn(next), url.origin));
   }
 
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) return fail(authErrorMessage(error));
     await syncProviderVerification();
+    // Google (or a same-browser email link) proves the address; remember this browser.
+    if (data.user) await trustThisDevice(data.user.id);
     return NextResponse.redirect(new URL(await destinationAfterSignIn(next), url.origin));
   }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { desc, eq } from "drizzle-orm";
+import { MessageSquare } from "lucide-react";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
 import { relative } from "@/lib/format";
@@ -42,12 +43,30 @@ export default async function MyApplicationsPage() {
   ]);
 
   const pendingInvites = invites.filter((i) => i.status === "pending");
+
+  const appIds = applications.map((a) => a.id);
+  const [threadCounts, unread] = await Promise.all([
+    appIds.length
+      ? db
+          .select({ applicationId: schema.applicationMessages.applicationId, total: sql<number>`count(*)::int` })
+          .from(schema.applicationMessages)
+          .where(inArray(schema.applicationMessages.applicationId, appIds))
+          .groupBy(schema.applicationMessages.applicationId)
+      : [],
+    db
+      .select({ href: sql<string>`${schema.notifications.payload}->>'href'` })
+      .from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, user.id), eq(schema.notifications.type, "application_message"), isNull(schema.notifications.readAt))),
+  ]);
+  const countBy = new Map(threadCounts.map((t) => [t.applicationId, t.total]));
+  const unreadHrefs = new Set(unread.map((u) => u.href));
   const now = new Date();
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 sm:py-10">
       {/* Applicants see accept/reject the moment the leader decides. */}
       <RealtimeRefresh channel={`my-apps:${user.id}`} table="applications" filter={`applicant_id=eq.${user.id}`} events="UPDATE" />
+      <RealtimeRefresh channel={`my-app-notes:${user.id}`} table="notifications" filter={`user_id=eq.${user.id}`} />
       <h1 className="text-3xl font-extrabold sm:text-4xl">Teams & applications</h1>
 
       {pendingInvites.length > 0 && (
@@ -122,7 +141,21 @@ export default async function MyApplicationsPage() {
                     {a.matchScore}% match · applied {relative(a.createdAt, now)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {a.status !== "withdrawn" && (
+                    <Button
+                      size="sm"
+                      variant={unreadHrefs.has(`/applications/${a.id}`) ? "default" : "outline"}
+                      render={<Link href={`/applications/${a.id}`} />}
+                    >
+                      <MessageSquare />
+                      {unreadHrefs.has(`/applications/${a.id}`)
+                        ? "New message"
+                        : countBy.get(a.id)
+                          ? `Messages (${countBy.get(a.id)})`
+                          : "Message leader"}
+                    </Button>
+                  )}
                   <Badge variant={STATUS_VARIANT[a.status]} className="capitalize">
                     {a.status}
                   </Badge>

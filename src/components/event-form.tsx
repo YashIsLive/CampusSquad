@@ -203,7 +203,7 @@ export function EventForm({
           hint="If official registration is on Unstop/Devfolio. Students can still find teammates here."
           error={err("externalUrl")}
         >
-          <Input id="externalUrl" type="url" value={v.externalUrl ?? ""} onChange={(e) => set("externalUrl", e.target.value)} placeholder="https://unstop.com/…" />
+          <Input id="externalUrl" inputMode="url" autoCapitalize="off" spellCheck={false} value={v.externalUrl ?? ""} onChange={(e) => set("externalUrl", e.target.value)} placeholder="https://unstop.com/…" />
         </Field>
       </FormSection>
 

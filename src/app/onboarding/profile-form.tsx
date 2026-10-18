@@ -21,6 +21,7 @@ export function ProfileForm({
   userId,
   email,
   emailVerified,
+  verifiedCollegeId,
   next,
   colleges,
   skills,
@@ -30,6 +31,8 @@ export function ProfileForm({
   email: string;
   /** False for instant password accounts: their address isn't proven, so no campus badge yet. */
   emailVerified: boolean;
+  /** The college the user is already verified at (by any method), if any. */
+  verifiedCollegeId: string | null;
   next: string | null;
   colleges: College[];
   skills: SkillOption[];
@@ -148,7 +151,11 @@ export function ProfileForm({
           </NativeSelect>
         </Field>
         {chosen &&
-          (willVerify ? (
+          (chosen.id === verifiedCollegeId ? (
+            <p className="flex items-center gap-1.5 text-sm text-ok">
+              <BadgeCheck className="size-4" /> You&apos;re verified at {chosen.name}.
+            </p>
+          ) : willVerify ? (
             <p className="flex items-center gap-1.5 text-sm text-ok">
               <BadgeCheck className="size-4" /> Your email ({email}) matches {chosen.emailDomain} — you&apos;ll be verified.
             </p>
@@ -156,9 +163,9 @@ export function ProfileForm({
             <p className="text-sm text-muted-foreground">
               {chosen.emailDomain
                 ? domainMatches
-                  ? `To get the Verified badge, sign in once with Google using ${email} — that proves the address. Everything else works now.`
-                  : `Sign in with Google using your @${chosen.emailDomain} account to get verified. You can still use everything else.`
-                : "This college has no verified email domain yet, so you'll show as unverified."}
+                  ? `To get the Verified badge, sign in once with Google using ${email}, or verify with your student ID after saving. Everything else works now.`
+                  : "After saving, verify with your student ID or two classmates' vouches (no college email needed). Everything else works now."
+                : "After saving, verify with your student ID or two classmates' vouches. Everything else works now."}
             </p>
           ))}
         {form.collegeChoice === NEW_COLLEGE && (
@@ -199,18 +206,18 @@ export function ProfileForm({
             <FolderGit2 /> {importing ? "Reading your repos…" : "Suggest from my GitHub"}
           </Button>
           <span className="text-xs text-muted-foreground">
-            {form.githubUrl ? "Uses the languages of your public repos." : "Add your GitHub URL below to enable this."}
+            {form.githubUrl ? "Uses the languages of your public repos." : "Add your GitHub below to enable this."}
           </span>
         </div>
       </FormSection>
 
       <FormSection title="Proof of work">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="GitHub" htmlFor="github" error={err("githubUrl")}>
-            <Input id="github" type="url" placeholder="https://github.com/you" value={form.githubUrl} onChange={(e) => set("githubUrl", e.target.value)} />
+          <Field label="GitHub" htmlFor="github" hint="Username or profile link." error={err("githubUrl")}>
+            <Input id="github" inputMode="url" autoCapitalize="off" spellCheck={false} placeholder="github.com/you" value={form.githubUrl} onChange={(e) => set("githubUrl", e.target.value)} />
           </Field>
           <Field label="LinkedIn" htmlFor="linkedin" error={err("linkedinUrl")}>
-            <Input id="linkedin" type="url" placeholder="https://linkedin.com/in/you" value={form.linkedinUrl} onChange={(e) => set("linkedinUrl", e.target.value)} />
+            <Input id="linkedin" inputMode="url" autoCapitalize="off" spellCheck={false} placeholder="linkedin.com/in/you" value={form.linkedinUrl} onChange={(e) => set("linkedinUrl", e.target.value)} />
           </Field>
         </div>
         <label className="flex items-center justify-between gap-4 text-sm">

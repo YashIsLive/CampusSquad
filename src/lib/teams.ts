@@ -27,7 +27,7 @@ export async function joinTeamTx(
   const already = await tx.query.teamMembers.findFirst({
     where: and(eq(schema.teamMembers.eventId, eventId), eq(schema.teamMembers.userId, userId)),
   });
-  if (already) fail("They're already on a team for this event.");
+  if (already) fail("Already on a team for this event.");
 
   await tx.insert(schema.teamMembers).values({ teamId, userId, eventId, roleTitle });
 

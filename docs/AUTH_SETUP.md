@@ -1,6 +1,6 @@
 # Making sign-up work for real students
 
-The app's code handles every auth path (email link, one-time code, password, Google, reset).
+The app's code handles every auth path (password with new-device check, email link, one-time code, Google, reset).
 Three settings live in the **Supabase dashboard** and can't be set from code. Do all three before
 inviting real users.
 
@@ -79,12 +79,29 @@ appending `&token_hash=…` keeps the destination the student was heading to.
 See the README → *Google sign-in*. The Google button appears automatically once the provider is
 enabled.
 
+## How sign-in behaves once email is on
+
+- **Create account** (email + password): the student types the one-time code from the email (or taps
+  its link) once. That confirms the address and remembers the browser.
+- **Sign in** (email + password) on a browser that already confirmed the address: straight in.
+- **Sign in on a new browser**: the password is checked, then a one-time code is emailed; the
+  session only starts after the code. "Remember this device for 30 days" (on by default) skips the
+  code there afterwards. A leaked password alone can't sign anyone in elsewhere.
+- **Email link**, **Google**: always prove the address, so they also remember the browser.
+
+The device memory is a signed, httpOnly cookie (`src/lib/trusted-device.ts`). Set
+`AUTH_DEVICE_SECRET` and change it to make every browser confirm again.
+
+Addresses ending in `.seed.test` (demo and test accounts) are never emailed.
+
 ## Check it
 
 1. Open the site in a private window → **Sign in** → enter a non-team email → **Email me a sign-in link**.
 2. Open the email **on your phone** and tap the link → you should land on profile setup.
 3. Try the one-time code instead on another attempt. (Its length — 6 to 10 digits — is set under
    **Authentication → Providers → Email → Email OTP Length**; the app accepts any of them.)
-4. **Password** tab → **Forgot password?** → the reset link should open "Set a new password".
+4. **Sign in** → **Forgot password?** → the reset link should open "Set a new password".
+5. Sign in with a password in a different browser → you're asked for a code once; sign out and back
+   in there → no code.
 
 If a step fails, the sign-in page shows the reason (rate limit, sender not set up, expired link).

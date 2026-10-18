@@ -65,6 +65,24 @@ describe.skipIf(!enabled)("Supabase REST API is locked down", () => {
     expect(others.data).toEqual([]);
   });
 
+  it("verification data and other people's conversations stay private", async () => {
+    expect(denied(await attacker.from("verification_requests").select("*").limit(5))).toBe(true);
+    expect(denied(await attacker.from("vouches").select("*").limit(5))).toBe(true);
+    // Vouching or self-verifying through the API is impossible.
+    expect(denied(await attacker.from("vouches").insert({ voucher_id: userId, user_id: randomUUID(), college_id: randomUUID() }).select())).toBe(true);
+    expect(denied(await attacker.from("profiles").update({ college_verified: true, college_verified_via: "id_card" }).eq("id", userId).select())).toBe(true);
+    // Conversations: readable for Realtime, but only the two parties' rows (none here).
+    const threads = await attacker.from("application_messages").select("id").limit(5);
+    expect(threads.error).toBeNull();
+    expect(threads.data).toEqual([]);
+    expect(
+      denied(await attacker.from("application_messages").insert({ application_id: randomUUID(), sender_id: userId, body: "x" }).select()),
+    ).toBe(true);
+    // ID card photos: no listing or reading through Storage.
+    const files = await attacker.storage.from("id-cards").list("", { limit: 5 });
+    expect(files.data ?? []).toEqual([]);
+  });
+
   it("Realtime tables stay readable for your own rows", async () => {
     expect((await attacker.from("notifications").select("id").eq("user_id", userId)).error).toBeNull();
     expect((await attacker.from("applications").select("id").eq("applicant_id", userId)).error).toBeNull();

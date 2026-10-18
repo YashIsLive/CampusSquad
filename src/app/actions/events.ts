@@ -5,6 +5,7 @@ import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
+import { imageUrl, optionalWebUrl } from "@/lib/links";
 import { assertWithinLimit } from "@/lib/rate-limit";
 import { isOrgAdmin } from "@/lib/auth";
 import { DOMAINS, fromLocalInput } from "@/lib/format";
@@ -42,12 +43,8 @@ const eventSchema = z
     feeText: optionalText(100),
     prizeText: optionalText(300),
     rulesMd: optionalText(10000),
-    posterUrl: z.url().nullable(),
-    externalUrl: z
-      .string()
-      .trim()
-      .transform((v) => v || null)
-      .pipe(z.url("Enter a full URL (https://…)").nullable()),
+    posterUrl: imageUrl.nullable(),
+    externalUrl: optionalWebUrl(),
     beginnerFriendly: z.boolean(),
     publish: z.boolean(),
   })

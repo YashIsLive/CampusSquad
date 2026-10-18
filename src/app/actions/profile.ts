@@ -7,13 +7,7 @@ import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
 import { emailMatchesDomain } from "@/lib/college";
 import { githubUsername, skillsFromRepos } from "@/lib/github";
-
-const optionalUrl = z
-  .string()
-  .trim()
-  .max(300)
-  .transform((v) => v || null)
-  .pipe(z.url("Enter a full URL starting with https://").nullable());
+import { imageUrl, normalizeGithubUrl, optionalGithubUrl, optionalLinkedinUrl } from "@/lib/links";
 
 const profileSchema = z
   .object({
@@ -34,13 +28,13 @@ const profileSchema = z
     year: z.coerce.number().int().min(1).max(6).nullable(),
     branch: z.string().trim().max(80).transform((v) => v || null),
     bio: z.string().trim().max(500).transform((v) => v || null),
-    githubUrl: optionalUrl,
-    linkedinUrl: optionalUrl,
+    githubUrl: optionalGithubUrl,
+    linkedinUrl: optionalLinkedinUrl,
     openToCrossCollege: z.boolean(),
     skills: z
       .array(z.object({ skillId: z.uuid(), level: z.number().int().min(1).max(5) }))
       .max(25, "Pick up to 25 skills."),
-    avatarUrl: z.url().nullable().optional(),
+    avatarUrl: imageUrl.nullable().optional(),
   })
   .refine((v) => !(v.collegeId && v.newCollege), { message: "Pick a college or request a new one, not both." });
 
@@ -58,6 +52,7 @@ export const saveProfile = authedAction(
     await db.transaction(async (tx) => {
       let collegeId = input.collegeId;
       let verified = false;
+      let via: "email" | "id_card" | "vouch" | "admin" | null = null;
 
       if (input.newCollege) {
         // Requested colleges start unverified and without an email domain, so nobody gets a badge
@@ -71,7 +66,11 @@ export const saveProfile = authedAction(
         const college = await tx.query.colleges.findFirst({ where: eq(schema.colleges.id, collegeId) });
         if (!college) fail("That college doesn't exist.");
         // An unproven address (instant password sign-up) can't earn the campus badge.
-        verified = user.emailVerified && Boolean(college.emailDomain && emailMatchesDomain(user.email, college.emailDomain));
+        const domainProof = user.emailVerified && Boolean(college.emailDomain && emailMatchesDomain(user.email, college.emailDomain));
+        // Staying at the same college keeps a verification earned another way (ID card, vouches).
+        const kept = collegeId === user.collegeId && user.collegeVerified;
+        verified = kept || domainProof;
+        via = kept ? (user.collegeVerifiedVia ?? "email") : domainProof ? "email" : null;
       }
 
       await tx
@@ -81,6 +80,7 @@ export const saveProfile = authedAction(
           username: input.username,
           collegeId,
           collegeVerified: verified,
+          collegeVerifiedVia: via,
           year: input.year,
           branch: input.branch,
           bio: input.bio,
@@ -120,9 +120,10 @@ export const saveProfile = authedAction(
 
 /** Reads the user's public GitHub repos and suggests skills from their languages. */
 export const suggestSkillsFromGithub = authedAction(
-  z.object({ githubUrl: z.url("Enter your GitHub profile URL first.") }),
+  z.object({ githubUrl: z.string().trim().min(1, "Enter your GitHub username or profile link first.") }),
   async ({ githubUrl }) => {
-    const username = githubUsername(githubUrl);
+    const normalized = normalizeGithubUrl(githubUrl);
+    const username = normalized && githubUsername(normalized);
     if (!username) fail("That doesn't look like a GitHub profile URL (https://github.com/username).");
     const res = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner&sort=pushed`, {
       headers: {

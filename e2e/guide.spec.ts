@@ -17,11 +17,14 @@ test("a brand-new student gets the checklist and an automatic tour, once", async
     await expect(checklist.getByRole("progressbar", { name: "Getting started progress" })).toBeVisible();
     await expect(checklist.getByRole("link", { name: /Find a club/ })).toBeVisible();
 
-    // The tour starts by itself and walks through the page.
-    const tour = page.getByRole("dialog", { name: "Your campus first" });
+    // The tour offers itself with an intro, then walks through the page.
+    const intro = page.getByRole("dialog", { name: "Welcome to CampusSquad" });
+    await expect(intro).toBeVisible();
+    await intro.getByRole("button", { name: "Show me around" }).click();
+    const tour = page.getByRole("dialog", { name: "Start with your campus" });
     await expect(tour).toBeVisible();
     await tour.getByRole("button", { name: "Next" }).click();
-    await expect(page.getByRole("dialog", { name: "Search anything" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Search events and clubs" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("page-tour")).toHaveCount(0);
 
@@ -31,7 +34,8 @@ test("a brand-new student gets the checklist and an automatic tour, once", async
     await expect(page.getByTestId("page-tour")).toHaveCount(0);
     await page.getByRole("button", { name: "Help and guided tours" }).click();
     await page.getByRole("menuitem", { name: "Tour this page" }).click();
-    await expect(page.getByRole("dialog", { name: "Your campus first" })).toBeVisible();
+    // Replays skip the intro.
+    await expect(page.getByRole("dialog", { name: "Start with your campus" })).toBeVisible();
 
     // Following a club ticks the checklist off.
     await page.keyboard.press("Escape");

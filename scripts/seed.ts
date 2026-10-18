@@ -199,7 +199,7 @@ async function main() {
 
   // Re-link any real users whose email matches a seeded college domain.
   await db.execute(sql`
-    UPDATE public.profiles p SET college_id = public.college_for_email(p.email), college_verified = true
+    UPDATE public.profiles p SET college_id = public.college_for_email(p.email), college_verified = p.email_verified
     WHERE public.college_for_email(p.email) IS NOT NULL`);
 
   console.log("Creating 30 seed users…");
@@ -208,10 +208,15 @@ async function main() {
     const email = `${u.handle}@${u.college}${SEED_DOMAIN_SUFFIX}`;
     const id = await createAuthUser(email, u.name);
     userIds[u.handle] = id;
+    // A real account may already own the handle (real users survive --reset); step aside if so.
+    const taken = await db.query.profiles.findFirst({
+      where: (p, { and, eq, ne }) => and(eq(p.username, u.handle), ne(p.id, id)),
+      columns: { id: true },
+    });
     await db
       .update(s.profiles)
       .set({
-        username: u.handle,
+        username: taken ? `${u.handle}_demo` : u.handle,
         name: u.name,
         collegeId: collegeByKey[u.college].id,
         // Seed users are treated as verified so every flow is demoable.

@@ -22,10 +22,10 @@ export default async function NewOrgPage() {
         <div className="mt-6">
           <EmptyState
             title="Verification needed"
-            description="Only students verified by their college email can create organizations. Sign in with your college email, or pick your college in your profile if your email already matches."
+            description="Only verified students can create organizations. Verify with your college email, your student ID, or vouches from two classmates."
             action={
-              <Button render={<Link href="/onboarding" />} variant="outline">
-                Check my profile
+              <Button render={<Link href="/verify" />}>
+                Get verified
               </Button>
             }
           />

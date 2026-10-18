@@ -5,6 +5,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
+import { imageUrl } from "@/lib/links";
 import { assertWithinLimit } from "@/lib/rate-limit";
 import { isOrgAdmin } from "@/lib/auth";
 
@@ -19,12 +20,12 @@ const orgSchema = z.object({
     .max(40),
   type: z.enum(schema.orgType.enumValues),
   description: z.string().trim().max(1000).transform((v) => v || null),
-  logoUrl: z.url().nullable(),
+  logoUrl: imageUrl.nullable(),
 });
 
 export const createOrganization = authedAction(orgSchema, async (input, user) => {
   if (!user.collegeVerified || !user.collegeId) {
-    fail("Only verified students can create an organization. Sign in with your college email to get verified.");
+    fail("Only verified students can create an organization. Get verified at /verify (college email, student ID or classmate vouches).");
   }
   await assertWithinLimit("org", user.id);
   const taken = await db.query.organizations.findFirst({ where: eq(schema.organizations.slug, input.slug) });

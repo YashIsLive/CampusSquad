@@ -58,10 +58,13 @@ test.describe("sign-in and sign-up", () => {
     }
   });
 
-  test("email-only options stay hidden until email is enabled", async ({ page }) => {
+  test("password comes first; email options appear only when email is set up", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("tab", { name: "Email link" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Forgot password?" })).toHaveCount(0);
+    await expect(page.getByRole("tab", { name: "Sign in" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tab", { name: "Create account" })).toBeVisible();
+    const emailOn = process.env.AUTH_EMAIL_ENABLED === "1";
+    await expect(page.getByRole("button", { name: "Forgot password?" })).toHaveCount(emailOn ? 1 : 0);
+    await expect(page.getByRole("button", { name: /Email me a sign-in link/ })).toHaveCount(emailOn ? 1 : 0);
   });
 
   test("a new account confirms by link, sets up a profile, then continues", async ({ page }) => {

@@ -214,11 +214,16 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
                     )}
                     <div className="mt-auto pt-1">
                       {!user ? (
-                        <Button size="sm" render={<Link href={`/login?next=/events/${event.id}?tab=teams`} />}>
+                        <Button size="sm" render={<Link href={`/login?next=${encodeURIComponent(`/events/${event.id}?tab=teams`)}`} />}>
                           Sign in to apply
                         </Button>
-                      ) : myApp ? (
-                        <Stamp tone={myApp.status === "accepted" ? "ok" : myApp.status === "rejected" ? "signal" : "ink"}>Applied · {myApp.status}</Stamp>
+                      ) : myApp && myApp.status !== "withdrawn" ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Stamp tone={myApp.status === "accepted" ? "ok" : myApp.status === "rejected" ? "signal" : "ink"}>Applied · {myApp.status}</Stamp>
+                          <Link href={`/applications/${myApp.id}`} className="text-xs underline underline-offset-4">
+                            Message leader
+                          </Link>
+                        </div>
                       ) : blocked ? (
                         <p className="text-xs text-muted-foreground">{blocked}</p>
                       ) : (

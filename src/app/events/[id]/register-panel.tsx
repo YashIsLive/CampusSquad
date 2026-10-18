@@ -65,7 +65,7 @@ export function RegisterPanel(props: {
         )}
 
         {!signedIn ? (
-          <Button size="lg" render={<Link href={`/login?next=/events/${eventId}`} />}>
+          <Button size="lg" render={<Link href={`/login?next=${encodeURIComponent(`/events/${eventId}`)}`} />}>
             Sign in to register <ArrowRight />
           </Button>
         ) : registered ? (
