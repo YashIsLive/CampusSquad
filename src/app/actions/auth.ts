@@ -56,11 +56,11 @@ export async function sendMagicLink(input: { email: string; next?: string }): Pr
   return { ok: true };
 }
 
-/** The 6-digit code from the same email — works even when the link opens in another app. */
+/** The one-time code (6–10 digits, per the Supabase project setting) from the same email — works even when the link opens in another app. */
 export async function verifyEmailCode(input: { email: string; code: string; next?: string }): Promise<Result> {
   if (!emailAuthEnabled()) return { ok: false, error: "Email sign-in isn't available yet. Use Google or a password." };
   const parsed = z
-    .object({ email, code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code from the email."), next: z.string().optional() })
+    .object({ email, code: z.string().trim().regex(/^\d{6,10}$/, "Enter the code from the email."), next: z.string().optional() })
     .safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   const supabase = await createSupabaseServerClient();

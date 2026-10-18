@@ -1,6 +1,6 @@
 # Making sign-up work for real students
 
-The app's code handles every auth path (email link, 6-digit code, password, Google, reset).
+The app's code handles every auth path (email link, one-time code, password, Google, reset).
 Three settings live in the **Supabase dashboard** and can't be set from code. Do all three before
 inviting real users.
 
@@ -33,7 +33,7 @@ is tiny). 30/hour is a sensible start for one campus.
 The default templates link through Supabase with a one-time code tied to the browser that asked
 for the email. Students often open mail on their phone, or in Gmail's in-app browser, and get
 "link opened in a different browser". These templates send a token the app verifies itself
-(`/auth/confirm`), so the link works anywhere — and they include a 6-digit code the sign-in page
+(`/auth/confirm`), so the link works anywhere — and they include a one-time code the sign-in page
 accepts as a fallback.
 
 **Authentication → Emails → Templates**
@@ -83,7 +83,8 @@ enabled.
 
 1. Open the site in a private window → **Sign in** → enter a non-team email → **Email me a sign-in link**.
 2. Open the email **on your phone** and tap the link → you should land on profile setup.
-3. Try the 6-digit code instead on another attempt.
+3. Try the one-time code instead on another attempt. (Its length — 6 to 10 digits — is set under
+   **Authentication → Providers → Email → Email OTP Length**; the app accepts any of them.)
 4. **Password** tab → **Forgot password?** → the reset link should open "Set a new password".
 
 If a step fails, the sign-in page shows the reason (rate limit, sender not set up, expired link).

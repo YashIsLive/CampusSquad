@@ -29,7 +29,7 @@ export function authErrorMessage(err: AuthLikeError | string | null | undefined)
   if (code === "otp_expired" || msg.includes("expired")) return "That link or code has expired. Request a new one.";
   if (msg.includes("token has expired or is invalid") || code === "otp_invalid") return "That code isn't right, or it has expired.";
   if (msg.includes("code verifier") || msg.includes("pkce") || code === "bad_code_verifier") {
-    return "That link only works in the browser you requested it from. Request a new link here, or use the 6-digit code from the email.";
+    return "That link only works in the browser you requested it from. Request a new link here, or use the code from the email.";
   }
   if (code === "provider_disabled" || msg.includes("provider is not enabled")) return "That sign-in method isn't turned on yet.";
   if (code === "signup_disabled" || msg.includes("signups not allowed")) return "New sign-ups are paused right now.";

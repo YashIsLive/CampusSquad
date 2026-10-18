@@ -110,7 +110,7 @@ export function AuthPanel({
                 ? "We sent a link to set a new password."
                 : sent === "signup"
                   ? "Confirm your email with the link we sent, then you're in."
-                  : "We sent a sign-in link. Open it on this device, or type the 6-digit code below."}{" "}
+                  : "We sent a sign-in link. Open it on this device, or type the code from the email below."}{" "}
               It can take a minute — check spam too.
             </p>
           </div>
@@ -118,19 +118,19 @@ export function AuthPanel({
 
         {sent !== "reset" && (
           <form onSubmit={submitCode} className="flex flex-col gap-2">
-            <Field label="6-digit code" htmlFor="otp" hint="Only if the email shows a code." error={error ?? undefined}>
+            <Field label="Code from the email" htmlFor="otp" hint="Only if the email shows a code." error={error ?? undefined}>
               <Input
                 id="otp"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                pattern="\d{6}"
-                maxLength={6}
+                pattern="\d{6,10}"
+                maxLength={10}
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                 className="h-11 text-center font-mono text-lg tracking-[0.5em]"
               />
             </Field>
-            <Button type="submit" variant="ink" disabled={pending || code.length !== 6}>
+            <Button type="submit" variant="ink" disabled={pending || code.length < 6}>
               Verify code
             </Button>
           </form>
