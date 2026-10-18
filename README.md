@@ -1,152 +1,313 @@
+<div align="center">
+
+<img src="docs/screenshots/logo.png" alt="" width="72" height="72">
+
 # CampusSquad
 
-Campus-scoped discovery for tech events (hackathons, quizzes, coding contests, workshops, CTFs) and a skill-matched **team vacancy board**: teams post open roles, students apply, leaders accept.
+**Find the hackathon. Find the team. Show up.**
 
-Product context: [`BLUEPRINT.md`](BLUEPRINT.md) · MVP scope: [`BUILD_PROMPT.md`](BUILD_PROMPT.md) · plan & schema: [`PLAN.md`](PLAN.md) · decisions log: [`DECISIONS.md`](DECISIONS.md)
+Campus tech events (hackathons, coding contests, quizzes, workshops, CTFs) in one feed,<br>
+plus a team board where squads post open roles and students apply with their skills.
 
-**Stack:** Next.js 16 (App Router, TypeScript strict) · Tailwind + shadcn/ui · Supabase (Postgres, Auth, Realtime, Storage) · Drizzle ORM · Zod · Vitest · Playwright.
+[![CI](https://github.com/YashIsLive/hackathon-post-and-team-finder/actions/workflows/ci.yml/badge.svg)](https://github.com/YashIsLive/hackathon-post-and-team-finder/actions/workflows/ci.yml)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%C2%B7%20Auth%20%C2%B7%20Realtime-3ecf8e?logo=supabase&logoColor=white)
+![WCAG 2.1 AA](https://img.shields.io/badge/a11y-WCAG%202.1%20AA-c23c17)
 
-## What's in the MVP
+[Features](#what-it-does) · [Quick start](#quick-start) · [Demo accounts](#demo-accounts) · [Tests](#tests) · [Deploy](#deploy)
 
-| Area | Highlights |
+<br>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/feed-dark.png">
+  <img src="docs/screenshots/feed-light.png" alt="The CampusSquad feed: scope switch (My campus, Near Pune, All India), event type filters, a 'last call' strip of events closing within 48 hours, and event cards grouped by week." width="900">
+</picture>
+
+</div>
+
+## The problem
+
+Campus events live in scattered WhatsApp forwards and Instagram stories. Registration deadlines slip by unseen, and
+students who'd make a great team never meet because they're in different branches or colleges. Organizers can't tell
+which poster or group actually brought people in.
+
+CampusSquad gives each campus one feed, matches students to teams by skill, and gives organizers a real dashboard.
+
+## What it does
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### For students
+- Feed scoped to **My campus · Nearby · All India**, with filters, search (press <kbd>/</kbd>) and a "closing in 48 h" strip
+- Save events, add them to Google Calendar, register solo or as a team
+- A ticket with a **QR check-in code**
+- Reminders 72 h, 24 h and 2 h before the start
+
+</td>
+<td width="50%" valign="top">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/event-dark.png">
+  <img src="docs/screenshots/event-light.png" alt="An event page with poster art, date block, facts grid and a registration ticket with a check-in code.">
+</picture>
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/team-board-dark.png">
+  <img src="docs/screenshots/team-board-light.png" alt="The team board: open roles with required skills, the viewer's match percentage, and Apply buttons.">
+</picture>
+
+</td>
+<td width="50%" valign="top">
+
+### Team board
+- Teams post **open roles** with required and nice-to-have skills, hours/week and college rules
+- Every role shows **your match score**, computed from your skill levels
+- Solo students post a "looking for a team" card that leaders can invite from
+- Apply with a screening answer; leaders shortlist, accept or message
+- Accepting is **one database transaction**, so a team can never go over its size limit
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### Team room
+- **Live** chat and a shared checklist (Supabase Realtime)
+- Deadlines at a glance
+- **Suggested teammates**: solo registrants ranked against your open roles
+- After the event, teammates endorse each other's skills on their profiles
+
+</td>
+<td width="50%" valign="top">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/team-room-dark.png">
+  <img src="docs/screenshots/team-room-light.png" alt="A team room with members, open roles, suggested teammates, deadlines, a checklist and team chat.">
+</picture>
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dashboard-dark.png">
+  <img src="docs/screenshots/dashboard-light.png" alt="The organizer dashboard: views, registrations, teams and solo registrants, a funnel, and registrations by channel and by college.">
+</picture>
+
+</td>
+<td width="50%" valign="top">
+
+### For organizers
+- Post an event in minutes: poster upload, Markdown rules, external registration link
+- **Share kit**: tracked short links per channel, a QR code and a WhatsApp caption
+- **Dashboard**: views → registrations → teams → check-ins, by channel and by college
+- One click to nudge solo registrants to find a team
+- Announcements, CSV export and **phone-camera QR check-in**
+- Attendance feeds a **reliability score** on profiles
+
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td width="32%" valign="top">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/phone-dark.png">
+  <img src="docs/screenshots/phone-light.png" alt="The feed on a phone, with a bottom navigation bar.">
+</picture>
+
+</td>
+<td valign="top">
+
+### Built for phones
+Most students will open this from a WhatsApp link, so the phone layout is the main one: bottom navigation, filter
+sheet, a sticky register bar, link previews for every event, and an **installable PWA**.
+
+### And the rest
+- **Sign-in:** Google (campus accounts get verified automatically), password, or email link / one-time code
+- **Campus verification** by email domain; students can request a new college and an admin approves it
+- **Clubs and communities** with admins and followers, who get notified when a new event goes live
+- **First-run guide:** a checklist driven by what you've actually done, plus spotlight tours of each page
+- **Skill suggestions** pulled from a student's public GitHub repos
+- **Accessible:** keyboard navigable, reduced-motion aware, axe-checked to WCAG 2.1 AA in CI
+
+</td>
+</tr>
+</table>
+
+## Tech stack
+
+| Layer | Choice |
 | --- | --- |
-| Accounts | Email link **or 6-digit code**, password sign-up/sign-in with reset, Google (when enabled); new accounts go straight to onboarding (college, year, branch, skills 1–5, GitHub/LinkedIn, cross-college toggle), college verification by email domain, public profiles at `/u/[username]` |
-| Organizations | Verified students create clubs; owner adds admins by email; follow button |
-| Events (host) | Create/edit/publish/unpublish/close registrations, poster upload, rules in Markdown, external (Unstop/Devfolio) link, **share kit** (tracked short links per channel, QR PNG, WhatsApp caption), **dashboard** (views → registrations → teams → check-ins, by channel and by college), CSV export, announcements, **QR check-in** with the phone camera |
-| Events (student) | Feed with **My campus · Nearby · All India**, filters, search, "closing in 48 h" strip, save + Google Calendar, register solo or with a team, WhatsApp-friendly OG previews |
-| Team formation | Team board per event: open roles + "looking for a team" cards, filters (skill, my college/other colleges, college, hours), rule-based **match score**, apply with screening question, leader review (shortlist / accept / reject / message), **transactional accept**, invites |
-| Realtime | Notification bell, live applications for leaders, live status for applicants, team chat and checklist |
-| Endorsements | After an event ends, teammates endorse each other's skills; counts appear on profiles |
-| Organizer extras | Followers notified when an event first goes live, one-click "nudge solo registrants", automatic reminders 72 h / 24 h / 2 h before the start, finalize attendance (no-shows feed a **reliability score**) |
-| Matching extras | **Suggested teammates** for leaders (solo registrants and "looking" cards ranked against open roles), skill suggestions from a student's public GitHub repos, avatar upload |
-| Admin | `/admin` for platform admins: approve student-requested colleges (sets the email domain and verifies matching students), toggle org verified badges |
-| Installable | PWA manifest + generated icons, so it can be added to a phone's home screen |
-| First-run guide | **Getting-started checklist** driven by real activity (student and organizer tracks), **spotlight tours** of the feed, event, team and organizer pages (auto on first visit, replay from the **?** menu, deep-linkable with `?tour=&step=`) |
+| App | [Next.js 16](https://nextjs.org) App Router, React 19, TypeScript (strict), server actions |
+| UI | Tailwind CSS v4, shadcn/ui on Base UI, lucide icons |
+| Data | [Supabase](https://supabase.com) Postgres + [Drizzle ORM](https://orm.drizzle.team), Zod validation |
+| Auth, live updates, files | Supabase Auth (Google, password, email), Realtime, Storage |
+| Tests | Vitest (unit + DB integration), Playwright + axe-core (end-to-end, accessibility) |
+| Hosting | Vercel + Supabase free tiers; daily cron for reminders |
 
-## Setup
+## Quick start
 
-Prerequisites: Node 20+ and a free [Supabase](https://supabase.com) project.
+You need Node 20+ and a free [Supabase](https://supabase.com) project.
 
 ```bash
+git clone https://github.com/YashIsLive/hackathon-post-and-team-finder.git
+cd hackathon-post-and-team-finder
 npm install
-cp .env.example .env.local   # then fill it in (see below)
-npm run db:migrate           # creates tables, triggers, RLS policies, storage buckets
-npm run db:seed              # demo data: 4 colleges, 30 users, 3 clubs, 8 events, teams, applications
+cp .env.example .env.local   # fill in your Supabase keys (table below)
+npm run db:migrate           # tables, triggers, row-level security, storage buckets
+npm run db:seed              # demo data: 4 colleges, 30 students, 3 clubs, 8 events, teams
 npm run dev                  # http://localhost:3000
 ```
 
-### Environment variables
+<details>
+<summary><b>Environment variables</b></summary>
+
+<br>
 
 | Variable | Where to find it | Used for |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API | Auth, Realtime, Storage |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | same | browser + server Supabase clients |
-| `SUPABASE_SERVICE_ROLE_KEY` | same (secret) | seed script, dev demo login — **server only** |
-| `DATABASE_URL` | Project Settings → Database → Connection string → **Transaction pooler** (port 6543) | app runtime queries |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | same | browser and server Supabase clients |
+| `SUPABASE_SERVICE_ROLE_KEY` | same (secret) | seed script, account creation, demo login. **Server only** |
+| `DATABASE_URL` | Project Settings → Database → Connection string → **Transaction pooler** (port 6543) | app queries |
 | `DIRECT_URL` | same → **Session pooler** (port 5432) | migrations, seed, integration tests |
-| `NEXT_PUBLIC_SITE_URL` | your URL (`http://localhost:3000` locally) | share links, OG/canonical URLs |
-| `RESEND_API_KEY`, `EMAIL_FROM` | optional, [resend.com](https://resend.com) | emails for announcements/reminders (no-op if unset) |
+| `NEXT_PUBLIC_SITE_URL` | your URL (`http://localhost:3000` locally) | share links, link previews, email links |
+| `AUTH_EMAIL_ENABLED` | `1` once custom SMTP is set up ([guide](docs/AUTH_SETUP.md)) | email sign-in links/codes and confirmation emails |
+| `RESEND_API_KEY`, `EMAIL_FROM` | optional, [resend.com](https://resend.com) | announcement and reminder emails (skipped if unset) |
 | `CRON_SECRET` | any random string | protects `/api/cron/deadline-reminders` |
-| `GITHUB_TOKEN` | optional, any GitHub token with no scopes | raises the GitHub API limit for "Suggest from my GitHub" (60 → 5,000 requests/hour) |
-| `E2E_TEST_LOGIN` | set to `1` **only locally** | enables the demo login (see below) |
+| `GITHUB_TOKEN` | optional, a GitHub token with no scopes | raises the GitHub API limit for skill suggestions |
+| `E2E_TEST_LOGIN` | `1` **only locally** | enables the demo login |
 
-### Supabase dashboard settings — needed for real sign-ups
+The app refuses to start in production with missing or unsafe settings (see [`src/env.ts`](src/env.ts)).
 
-**Follow [`docs/AUTH_SETUP.md`](docs/AUTH_SETUP.md).** In short:
+</details>
 
-1. **Custom SMTP** (Project Settings → Authentication → SMTP). Without it Supabase only emails your own team, so nobody else can sign up.
-2. **Email templates** that link to `/auth/confirm?token_hash=…` and include the 6-digit `{{ .Token }}` — links then work on any device.
-3. **URL Configuration:** Site URL = your app URL; Redirect URLs include `https://<your-site>/auth/confirm` and `http://localhost:3000/auth/confirm`.
-4. **Google sign-in (optional):** Authentication → Providers → Google. The button appears automatically once enabled.
+<details>
+<summary><b>Sign-in setup (Google and email)</b></summary>
 
-Realtime is enabled by the migrations (`messages`, `notifications`, `applications`, `team_tasks` are in the `supabase_realtime` publication).
+<br>
 
-### Demo login (local only)
+Password sign-up works out of the box. Google and email need a few Supabase dashboard settings. The full walkthrough is in
+[`docs/AUTH_SETUP.md`](docs/AUTH_SETUP.md). In short:
 
-With `E2E_TEST_LOGIN=1` in `.env.local`, the login page shows a "Demo cast" list that sign you in as seed users without email (Riya the organizer, Aarav the solo student, Neha/Dev the team leaders…). The route refuses to run in production builds and only accepts `*.seed.test` accounts.
+1. **Google:** Authentication → Providers → Google. The button appears on its own once enabled.
+2. **Email:** add custom SMTP (Brevo's free tier works), paste in the provided email templates so links work on any
+   device, add `/auth/confirm` to the redirect URLs, then set `AUTH_EMAIL_ENABLED=1`.
 
-Seed users never receive mail: their addresses end in `.seed.test`. They share a local demo password (`SEED_PASSWORD` in `scripts/seed.ts`, overridable via env) so you can try password sign-in. Seed accounts count as existing users, so page tours don't auto-start for them — use **? → Replay all tours**, or sign up a new account to see the first-run experience.
+</details>
 
-### Admins
+## Demo accounts
 
-Riya is an admin in the seed data. To make a real account an admin (it must have signed in once):
+With `E2E_TEST_LOGIN=1`, the sign-in page lists a **demo cast** you can sign in as with one click:
 
-```bash
-npm run make-admin -- you@example.com
-```
-
-Add `--revoke` to remove the flag. Admins see an **Admin** item in the account menu.
-
-## Database
-
-- Schema: [`src/db/schema.ts`](src/db/schema.ts) (Drizzle). Generated migration: `drizzle/0000_init.sql`.
-- Hand-written migration [`drizzle/0001_integrity_rls.sql`](drizzle/0001_integrity_rls.sql): signup trigger creating `profiles`, integrity triggers, RLS policies, Realtime publication, storage buckets/policies.
-- [`drizzle/0005_api_lockdown.sql`](drizzle/0005_api_lockdown.sql): revokes Supabase REST/GraphQL access to app tables (the app reads and writes only on the server); the browser keeps `SELECT` on the four Realtime tables, filtered by RLS.
-- After changing the schema: `npm run db:generate` then `npm run db:migrate`.
-- Reseed from scratch: `npm run db:seed -- --reset` (deletes seed users and all app data; real users keep their accounts and profiles).
-
-Integrity rules enforced **in the database**:
-
-| Rule | How |
+| Who | What to try |
 | --- | --- |
-| One team per user per event | unique index on `team_members(event_id, user_id)` |
-| Team size ≤ `team_max` | `team_members_guard` trigger (row-locks the team) |
-| Cross-college only if the event allows it | `team_members_guard` + `vacancies_guard` triggers |
-| One application per user per vacancy | unique index on `applications(vacancy_id, applicant_id)` |
-| Endorsements only between teammates, after the event | `endorsements_guard` trigger + unique index |
+| **Riya Kulkarni**, organizer and admin | the event dashboard, share kit, check-in, `/admin` |
+| **Aarav Deshmukh**, solo student | the feed, applying to roles, the "looking for a team" card |
+| **Neha Joshi**, team leader | reviewing applications, the team room, suggested teammates |
+| **Dev Agarwal**, team leader at another college | cross-college teams |
+| **Meera Nair**, applicant | application status updates arriving live |
 
-`team_min` is shown as "incomplete" rather than enforced (see DECISIONS.md D-005).
+Demo users have `*.seed.test` addresses and never receive email. The demo login is disabled in production builds. To
+see the first-run guide, create a fresh account.
+
+To make a real account an admin: `npm run make-admin -- you@college.edu` (add `--revoke` to undo).
 
 ## Tests
 
 ```bash
-npm test             # Vitest: 43 unit + integration tests
-npm run test:e2e     # Playwright: 21 end-to-end tests (reseeds the database first)
+npm test             # Vitest: 43 unit and database integration tests
+npm run test:e2e     # Playwright: 22 end-to-end tests, including axe accessibility checks
 ```
+
+<details>
+<summary><b>What the suites cover</b></summary>
+
+<br>
 
 | Suite | Covers |
 | --- | --- |
-| `tests/*.test.ts` | match score, eligibility, reminders, reliability, GitHub mapping, teammate ranking, feed grouping; **accept-application transaction + DB integrity rules** (rolled back); **API lockdown** (an attacker with the anon key can't read emails, make themselves admin or tamper with data) |
-| `e2e/auth.spec.ts` | protected-page redirect and return, wrong password, password rules, forgot password, new account → onboarding → destination, expired links |
-| `e2e/student.spec.ts` | feed scopes, type filter, `/` shortcut, save → My events, register → ticket → cancel, start a team, post a role |
+| `tests/*.test.ts` | match score, eligibility, reminders, reliability, GitHub skill mapping, teammate ranking, feed grouping; the accept-application transaction and database integrity rules; **API lockdown** (someone holding the public anon key can't read emails, make themselves admin or tamper with data) |
+| `e2e/auth.spec.ts` | redirect to sign-in and back, wrong password, password rules, instant sign-up, duplicate emails, expired links |
+| `e2e/student.spec.ts` | feed scopes and filters, the <kbd>/</kbd> shortcut, save, register, ticket, cancel, start a team, post a role |
 | `e2e/happy-path.spec.ts` | apply to a role → leader accepts → applicant sees it |
 | `e2e/teams-realtime.spec.ts` | **live** chat and checklist between two browsers; invite → accept → join |
-| `e2e/organizer.spec.ts` | post an event → followers notified; tracked-link click counting; CSV export; announcement delivery; check-in by code; admin verifies a college; non-admins get 404 |
-| `e2e/guide.spec.ts` | new student: checklist progress, automatic tour, Escape, no repeat, replay from the ? menu, hide |
-| `e2e/a11y-and-mobile.mobile.spec.ts` | phone layout (bottom nav, filter sheet, sticky register bar); **axe WCAG 2.1 AA** on public and signed-in pages |
+| `e2e/organizer.spec.ts` | post an event and notify followers, tracked links, CSV export, announcements, check-in, admin approval |
+| `e2e/guide.spec.ts` | the first-run checklist and page tours |
+| `e2e/a11y-and-mobile.mobile.spec.ts` | phone layout, plus **axe WCAG 2.1 AA** on public and signed-in pages |
 
-- Integration tests need `DIRECT_URL` (or `TEST_DATABASE_URL`) and the Supabase keys; without them they're skipped (CI still runs the unit tests).
-- E2E reseeds with `npm run db:seed -- --reset` in its global setup (`E2E_RESEED=0` skips it); Playwright starts `npm run dev` with `E2E_TEST_LOGIN=1`. First run: `npx playwright install chromium`. `npx playwright show-report` opens the last report.
+Integration tests need `DIRECT_URL` and the Supabase keys; without them they're skipped. End-to-end tests reseed the
+database first (`E2E_RESEED=0` skips that). First run: `npx playwright install chromium`.
 
-## Deploy (Vercel + Supabase free tiers)
+</details>
 
-1. Push to GitHub and import the repo in Vercel. CI (`.github/workflows/ci.yml`) typechecks, lints, tests, builds and audits every push.
-2. Add the env vars above in Vercel. **Do not** set `E2E_TEST_LOGIN`. `NEXT_PUBLIC_SITE_URL` must be the https production URL. Set `CRON_SECRET`.
-   The build refuses to start with missing or unsafe production settings (see `src/env.ts`).
-3. Run `npm run db:migrate` once against the production database (from your machine with the production `DIRECT_URL`). **Never** seed production — the seed script refuses unless forced.
+## How data stays consistent
+
+The rules that matter are enforced **in Postgres**, not only in the UI:
+
+| Rule | How |
+| --- | --- |
+| One team per student per event | unique index on `team_members(event_id, user_id)` |
+| Team size never exceeds the limit | `team_members_guard` trigger (locks the team row) |
+| Cross-college teams only where the event allows | `team_members_guard` and `vacancies_guard` triggers |
+| One application per role per student | unique index on `applications(vacancy_id, applicant_id)` |
+| Endorsements only between teammates, after the event | `endorsements_guard` trigger |
+
+Every table has row-level security, and the Supabase REST API is locked down
+([`drizzle/0005_api_lockdown.sql`](drizzle/0005_api_lockdown.sql)): the app reads and writes only from the server, and the
+browser can only subscribe to its own live updates. Schema: [`src/db/schema.ts`](src/db/schema.ts).
+
+## Deploy
+
+1. Import the repo in Vercel. CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) typechecks, lints, tests,
+   builds and audits every push.
+2. Add the environment variables. Set `NEXT_PUBLIC_SITE_URL` to your https URL and add a `CRON_SECRET`. **Don't** set
+   `E2E_TEST_LOGIN`.
+3. Run `npm run db:migrate` once against the production database. Never seed production (the seed script refuses).
 4. Do the Supabase steps in [`docs/AUTH_SETUP.md`](docs/AUTH_SETUP.md) with your production URL.
-5. Make yourself admin: sign up, then run `npm run make-admin -- you@college.edu` with the production env.
-6. Point an uptime monitor at `/api/health` (200 when the database is reachable, 503 otherwise).
-7. `vercel.json` schedules `/api/cron/deadline-reminders` daily; Vercel sends `CRON_SECRET` automatically. Reminders also run per user on page load, so 2-hour reminders reach active users on time.
+5. Sign up, then `npm run make-admin -- you@college.edu` with the production environment.
+6. Point an uptime monitor at `/api/health`. [`vercel.json`](vercel.json) schedules the daily reminder job.
 
-### Production checklist
+<details>
+<summary><b>Production checklist</b></summary>
 
-- [x] Security headers + CSP (`next.config.ts`), HSTS, no framing
-- [x] Supabase REST API locked down; RLS on every table; storage writes limited to the owner's folder
-- [x] Server actions validate input (Zod) and check authorization; per-user rate limits (`src/lib/rate-limit.ts`)
-- [x] Auth links work across devices; open redirects blocked; email-link base URL never taken from request headers
-- [x] Real 404s for missing pages; `robots.txt`, `sitemap.xml`; share images for every event
-- [x] WCAG 2.1 AA checks in the E2E suite; reduced motion respected
-- [ ] Custom SMTP + email templates in Supabase (dashboard — see `docs/AUTH_SETUP.md`)
-- [ ] Error tracking (e.g. Sentry) — not included; errors go to Vercel logs
+<br>
+
+- [x] Security headers and CSP, HSTS, no framing
+- [x] REST API locked down; row-level security on every table; uploads limited to the owner's folder
+- [x] Every server action validates input and checks permissions; per-user rate limits
+- [x] Sign-in links work across devices; open redirects blocked
+- [x] Real 404s, `robots.txt`, `sitemap.xml`, link-preview images for every event
+- [x] WCAG 2.1 AA checks in CI; reduced motion respected
+- [ ] Custom SMTP and email templates in Supabase ([guide](docs/AUTH_SETUP.md))
+- [ ] Error tracking (e.g. Sentry); errors currently go to Vercel logs
+
+</details>
 
 ## Project layout
 
 ```
-src/app/            routes (feed, events, manage, teams, orgs, profiles, notifications) + server actions in app/actions
-src/lib/            auth, feed query, eligibility rules, match score, accept-application transaction, reminders
-src/db/             Drizzle schema + client
-drizzle/            SQL migrations
-scripts/seed.ts     demo data
-tests/, e2e/        Vitest and Playwright
+src/app/          pages and server actions (feed, events, teams, clubs, profiles, admin)
+src/lib/          auth, feed query, eligibility, match score, accept-application transaction, reminders
+src/db/           Drizzle schema and client
+drizzle/          SQL migrations (tables, triggers, row-level security, API lockdown)
+scripts/          seed data, make-admin, README screenshots
+tests/, e2e/      Vitest and Playwright suites
 ```
+
+**More docs:** [product blueprint](BLUEPRINT.md) · [design language](DESIGN.md) · [plan and schema](PLAN.md) ·
+[decision log](DECISIONS.md) · [auth setup](docs/AUTH_SETUP.md)
+
+Screenshots are generated from the seed data with `npx tsx scripts/screenshots.ts` while the dev server is running.
