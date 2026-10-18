@@ -22,8 +22,17 @@ const RESEND_SECONDS = 60;
  * One panel for every way in. Email link is the default (no password to forget, and it proves
  * the college email). Passwords are there for people whose mail app opens links elsewhere.
  */
-export function AuthPanel({ next, initialMode = "link" }: { next: string; initialMode?: Mode }) {
-  const [mode, setMode] = useState<Mode>(initialMode);
+export function AuthPanel({
+  next,
+  initialMode = "signin",
+  emailEnabled = false,
+}: {
+  next: string;
+  initialMode?: Mode;
+  /** Email links/codes/reset need an SMTP sender; without one only password modes are offered. */
+  emailEnabled?: boolean;
+}) {
+  const [mode, setMode] = useState<Mode>(!emailEnabled && (initialMode === "link" || initialMode === "forgot") ? "signin" : initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -149,14 +158,18 @@ export function AuthPanel({ next, initialMode = "link" }: { next: string; initia
   return (
     <div className="flex flex-col gap-4">
       {mode !== "forgot" && (
-        <div role="tablist" aria-label="Sign-in method" className="grid grid-cols-2 gap-1 rounded-md bg-secondary p-1">
-          {(
-            [
-              ["link", "Email link"],
-              ["signin", "Password"],
-            ] as const
+        <div role="tablist" aria-label={emailEnabled ? "Sign-in method" : "Sign in or create an account"} className="grid grid-cols-2 gap-1 rounded-md bg-secondary p-1">
+          {(emailEnabled
+            ? ([
+                ["link", "Email link"],
+                ["signin", "Password"],
+              ] as const)
+            : ([
+                ["signin", "Sign in"],
+                ["signup", "Create account"],
+              ] as const)
           ).map(([m, label]) => {
-            const active = m === "link" ? mode === "link" : usesPassword;
+            const active = emailEnabled ? (m === "link" ? mode === "link" : usesPassword) : mode === m;
             return (
               <button
                 key={m}
@@ -180,7 +193,7 @@ export function AuthPanel({ next, initialMode = "link" }: { next: string; initia
             <p className="text-sm text-muted-foreground">We&apos;ll email you a link to set a new one.</p>
           </div>
         )}
-        <Field label={mode === "signup" ? "College email" : "Email"} htmlFor="email" hint={mode === "signup" || mode === "link" ? "Your college address verifies you for your campus." : undefined}>
+        <Field label={mode === "signup" ? "College email" : "Email"} htmlFor="email" hint={mode === "link" ? "Your college address verifies you for your campus." : mode === "signup" ? "Use your college address. For the campus Verified badge, sign in with Google using it." : undefined}>
           <Input
             id="email"
             type="email"
@@ -211,7 +224,7 @@ export function AuthPanel({ next, initialMode = "link" }: { next: string; initia
                 describedBy={error ? "auth-error" : undefined}
               />
             </Field>
-            {mode === "signin" && (
+            {mode === "signin" && emailEnabled && (
               <button
                 type="button"
                 onClick={() => switchMode("forgot")}
@@ -242,7 +255,7 @@ export function AuthPanel({ next, initialMode = "link" }: { next: string; initia
         </Button>
       </form>
 
-      {usesPassword && (
+      {usesPassword && emailEnabled && (
         <p className="text-center text-sm text-muted-foreground">
           {mode === "signin" ? "New here? " : "Already have an account? "}
           <button

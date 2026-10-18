@@ -4,6 +4,12 @@ The app's code handles every auth path (email link, 6-digit code, password, Goog
 Three settings live in the **Supabase dashboard** and can't be set from code. Do all three before
 inviting real users.
 
+## 0. The switch
+
+Email features are off until `AUTH_EMAIL_ENABLED=1` is set (in `.env.local` locally, and in Vercel's
+environment variables in production). While off, students sign up with Google or an instant password
+account and no email is ever sent. Turn it on **after** steps 1–3 below, then restart the server.
+
 ## 1. A real email sender (required)
 
 Supabase's built-in email only delivers to **your project's team members**, a few times an hour.
@@ -13,7 +19,7 @@ Anyone else who signs up gets nothing. Plug in any SMTP provider:
 
 | Provider | Free tier | Notes |
 | --- | --- | --- |
-| [Brevo](https://www.brevo.com) | 300 emails/day | Verify one sender address; no domain needed to start. |
+| [Brevo](https://www.brevo.com) | 300 emails/day | Verify one sender address; no domain needed to start. Host `smtp-relay.brevo.com`, port `587`, username = your Brevo SMTP login, password = an SMTP key (Brevo → SMTP & API → SMTP). |
 | [Resend](https://resend.com) | 3,000/month | Needs a verified domain to email anyone other than yourself. |
 | Gmail (App Password) | ~500/day | Quick for a pilot: Google Account → Security → App passwords. Host `smtp.gmail.com`, port 465. |
 

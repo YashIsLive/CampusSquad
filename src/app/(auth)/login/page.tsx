@@ -10,6 +10,7 @@ import { Stamp } from "@/components/noticeboard";
 import { UserAvatar } from "@/components/user-avatar";
 import { safeNext } from "@/lib/auth-errors";
 import { AuthPanel } from "./auth-panel";
+import { emailAuthEnabled } from "@/lib/auth-config";
 
 const DEMO_USERS = [
   { handle: "riya", name: "Riya Kulkarni", role: "Organizer · COEP AI Club · admin" },
@@ -23,7 +24,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const sp = await searchParams;
   const next = safeNext(typeof sp.next === "string" ? sp.next : null);
   const modeParam = typeof sp.mode === "string" ? sp.mode : "";
-  const mode = modeParam === "signup" || modeParam === "signin" || modeParam === "forgot" ? modeParam : "link";
+  const emailEnabled = emailAuthEnabled();
+  const mode = modeParam === "signup" || modeParam === "signin" || modeParam === "forgot" ? modeParam : emailEnabled ? "link" : "signin";
   const error = typeof sp.error === "string" ? sp.error : null;
   if (await getCurrentUser()) redirect(next);
   const google = await isGoogleEnabled();
@@ -36,8 +38,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <p className="label-mono text-muted-foreground">{mode === "signup" ? "Create your account" : "Sign in or sign up"}</p>
           <h1 className="mt-1 text-4xl font-extrabold">{mode === "signup" ? "Join your campus board." : "Pick up where your campus is."}</h1>
           <p className="mt-2 text-muted-foreground">
-            Use your <strong className="font-semibold text-foreground">college email</strong> and you&apos;re verified for your campus
-            automatically — no forms, no ID upload.
+            Continue with your <strong className="font-semibold text-foreground">college Google account</strong> and you&apos;re
+            verified for your campus automatically — no forms, no ID upload. Or make an account with a password in seconds.
           </p>
         </div>
 
@@ -60,7 +62,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
               </div>
             </>
           )}
-          <AuthPanel next={next} initialMode={mode} />
+          <AuthPanel next={next} initialMode={mode} emailEnabled={emailEnabled} />
         </div>
 
         {demo && (

@@ -44,3 +44,5 @@ Ambiguities resolved during the build, newest last. Format: what was decided, an
 
 **D-021 — Guide = checklist from real data + per-page tours.** Checklist items tick off from database state, not clicks, so they're accurate wherever the user did the thing. Tours are non-blocking, skip steps whose targets aren't on screen, auto-run once per page type (stored in `profiles.guide`, with a per-session guard against restarts on remount), and can be deep-linked from checklist items.
 
+**D-022 — Email is a switch (`AUTH_EMAIL_ENABLED`).** Until an SMTP sender exists, sign-up is Google or an instant password account created server-side (no email sent, per-IP throttled). Those addresses aren't proven, so `profiles.email_verified = false` and no campus badge from the domain; signing in with Google, or (once email is on) following an email link or entering a code, proves the address and applies the badge. With the switch on, password sign-ups confirm by email like any other.
+

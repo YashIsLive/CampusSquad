@@ -5,7 +5,6 @@ test.describe("sign-in and sign-up", () => {
   test("protected pages send you to sign in, then back", async ({ page }) => {
     await page.goto("/me/events");
     await expect(page).toHaveURL(/\/login\?next=%2Fme%2Fevents/);
-    await page.getByRole("tab", { name: "Password" }).click();
     await page.getByLabel("Email").fill("riya@coep.seed.test");
     await page.getByLabel("Password", { exact: true }).fill(SEED_PASSWORD);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
@@ -27,16 +26,42 @@ test.describe("sign-in and sign-up", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Join your campus board.");
     await page.getByLabel("College email").fill("someone@coep.seed.test");
     await page.getByLabel("Password", { exact: true }).fill("abcdefgh");
-    await page.getByRole("button", { name: "Create account" }).click();
+    await page.getByRole("button", { name: "Create account" }).last().click();
     await expect(page.getByRole("main").getByRole("alert")).toContainText("letter and one number");
   });
 
-  test("forgot-password mode is reachable and reversible", async ({ page }) => {
-    await page.goto("/login?mode=signin");
-    await page.getByRole("button", { name: "Forgot password?" }).click();
-    await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
-    await page.getByRole("button", { name: "Back to sign in" }).click();
-    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+  test("instant sign-up: no email, straight to profile setup, unverified until Google", async ({ page }) => {
+    const email = `instant-${Date.now()}@coep.seed.test`;
+    await page.goto("/login");
+    await page.getByRole("tab", { name: "Create account" }).click();
+    await page.getByLabel("College email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill("Instant-pass-42");
+    await page.getByRole("button", { name: "Create account" }).last().click();
+    await expect(page).toHaveURL(/\/onboarding/);
+    await expect(page.getByRole("heading", { level: 1, name: "Set up your profile" })).toBeVisible();
+
+    const { data } = await admin().auth.admin.listUsers({ perPage: 200 });
+    const created = data.users.find((u) => u.email === email);
+    expect(created, "account was created").toBeTruthy();
+    try {
+      // Same email again → clear message, not a second account.
+      const other = await page.context().browser()!.newContext();
+      const p2 = await other.newPage();
+      await p2.goto("/login?mode=signup");
+      await p2.getByLabel("College email").fill(email);
+      await p2.getByLabel("Password", { exact: true }).fill("Instant-pass-42");
+      await p2.getByRole("button", { name: "Create account" }).last().click();
+      await expect(p2.getByRole("main").getByRole("alert")).toContainText("already exists");
+      await other.close();
+    } finally {
+      if (created) await admin().auth.admin.deleteUser(created.id);
+    }
+  });
+
+  test("email-only options stay hidden until email is enabled", async ({ page }) => {
+    await page.goto("/login");
+    await expect(page.getByRole("tab", { name: "Email link" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Forgot password?" })).toHaveCount(0);
   });
 
   test("a new account confirms by link, sets up a profile, then continues", async ({ page }) => {

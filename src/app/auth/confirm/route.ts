@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authErrorMessage, safeNext } from "@/lib/auth-errors";
-import { destinationAfterSignIn } from "@/lib/auth";
+import { destinationAfterSignIn, markEmailProven, syncProviderVerification } from "@/lib/auth";
 
 const OTP_TYPES = new Set<EmailOtpType>(["email", "magiclink", "signup", "recovery", "invite", "email_change"]);
 
@@ -30,12 +30,15 @@ export async function GET(request: NextRequest) {
   if (tokenHash && type && OTP_TYPES.has(type)) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
     if (error) return fail(authErrorMessage(error));
+    // Clicking a link sent to the address proves the student owns it.
+    await markEmailProven();
     return NextResponse.redirect(new URL(type === "recovery" ? "/auth/reset-password" : await destinationAfterSignIn(next), url.origin));
   }
 
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) return fail(authErrorMessage(error));
+    await syncProviderVerification();
     return NextResponse.redirect(new URL(await destinationAfterSignIn(next), url.origin));
   }
 

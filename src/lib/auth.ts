@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -37,6 +37,39 @@ export async function isOrgAdmin(userId: string, orgId: string) {
       and(eq(m.orgId, orgId), eq(m.userId, userId), inArray(m.role, ["owner", "admin"])),
   });
   return Boolean(row);
+}
+
+/**
+ * After an OAuth sign-in: if the account has a Google identity, its email is proven, so mark it
+ * verified and (re)apply campus verification from the email domain. This is how an instant
+ * password account earns its badge — sign in once with Google using the same college address.
+ */
+export async function syncProviderVerification() {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getUser();
+  const user = data.user;
+  if (!user?.email || !user.identities?.some((i) => i.provider === "google")) return;
+  await markEmailProven(user.id);
+}
+
+/**
+ * The signed-in user just proved they control their address (Google, an email link or code):
+ * mark it verified and grant campus verification if the domain belongs to a college.
+ */
+export async function markEmailProven(userId?: string) {
+  let id = userId;
+  if (!id) {
+    const supabase = await createSupabaseServerClient();
+    const { data } = await supabase.auth.getClaims();
+    id = data?.claims?.sub;
+  }
+  if (!id) return;
+  await db.execute(sql`
+    update public.profiles p set
+      email_verified = true,
+      college_id = coalesce(public.college_for_email(p.email), p.college_id),
+      college_verified = p.college_verified or public.college_for_email(p.email) is not null
+    where p.id = ${id}`);
 }
 
 /**

@@ -30,6 +30,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
       <ProfileForm
         userId={user.id}
         email={user.email}
+        emailVerified={user.emailVerified}
         next={next}
         colleges={colleges.map((c) => ({ id: c.id, name: c.name, city: c.city, emailDomain: c.emailDomain }))}
         skills={skills.map((s) => ({ id: s.id, name: s.name, category: s.category }))}

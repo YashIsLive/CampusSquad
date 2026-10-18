@@ -6,7 +6,10 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authErrorMessage, safeNext } from "@/lib/auth-errors";
 import { siteUrl } from "@/lib/format";
-import { destinationAfterSignIn } from "@/lib/auth";
+import { destinationAfterSignIn, markEmailProven } from "@/lib/auth";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { allowSignup, clientIp } from "@/lib/signup-guard";
+import { emailAuthEnabled } from "@/lib/auth-config";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -41,6 +44,7 @@ function firstIssue(err: z.ZodError) {
 // ---------- Email link / code ----------
 
 export async function sendMagicLink(input: { email: string; next?: string }): Promise<Result> {
+  if (!emailAuthEnabled()) return { ok: false, error: "Email sign-in isn't available yet. Use Google or a password." };
   const parsed = z.object({ email, next: z.string().optional() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   const supabase = await createSupabaseServerClient();
@@ -54,6 +58,7 @@ export async function sendMagicLink(input: { email: string; next?: string }): Pr
 
 /** The 6-digit code from the same email — works even when the link opens in another app. */
 export async function verifyEmailCode(input: { email: string; code: string; next?: string }): Promise<Result> {
+  if (!emailAuthEnabled()) return { ok: false, error: "Email sign-in isn't available yet. Use Google or a password." };
   const parsed = z
     .object({ email, code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code from the email."), next: z.string().optional() })
     .safeParse(input);
@@ -61,6 +66,7 @@ export async function verifyEmailCode(input: { email: string; code: string; next
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.verifyOtp({ email: parsed.data.email, token: parsed.data.code, type: "email" });
   if (error) return { ok: false, error: authErrorMessage(error) };
+  await markEmailProven();
   redirect(await destinationAfterSignIn(safeNext(parsed.data.next)));
 }
 
@@ -69,16 +75,46 @@ export async function verifyEmailCode(input: { email: string; code: string; next
 export async function signUpWithPassword(input: { email: string; password: string; next?: string }): Promise<Result & { needsConfirmation?: boolean }> {
   const parsed = z.object({ email, password, next: z.string().optional() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signUp({
+  const next = parsed.data.next ?? "/onboarding";
+
+  if (emailAuthEnabled()) {
+    // Email sender configured: classic sign-up with a confirmation email.
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      options: { emailRedirectTo: await confirmUrl(next) },
+    });
+    if (error) return { ok: false, error: authErrorMessage(error) };
+    if (!data.session) return { ok: true, needsConfirmation: true };
+    redirect(await destinationAfterSignIn(safeNext(next)));
+  }
+
+  // No email sender yet: create the account directly (no email sent) and sign in at once.
+  // The address isn't proven, so the profile is marked email_unverified and gets no campus
+  // badge until the student also signs in with Google (see DECISIONS.md D-022).
+  const ip = await clientIp();
+  if (!allowSignup(ip)) return { ok: false, error: "Too many new accounts from this network. Try again in a few minutes." };
+
+  const admin = createSupabaseAdminClient();
+  const { error: createError } = await admin.auth.admin.createUser({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { emailRedirectTo: await confirmUrl(parsed.data.next ?? "/onboarding") },
+    email_confirm: true,
+    user_metadata: { email_unverified: true },
   });
+  if (createError) {
+    const msg = createError.message.toLowerCase();
+    if (msg.includes("already") || createError.code === "email_exists") {
+      return { ok: false, error: "An account with this email already exists. Sign in instead." };
+    }
+    return { ok: false, error: authErrorMessage(createError) };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
   if (error) return { ok: false, error: authErrorMessage(error) };
-  // With "Confirm email" on, there's no session until they click the link.
-  if (!data.session) return { ok: true, needsConfirmation: true };
-  redirect(safeNext(parsed.data.next ?? "/onboarding"));
+  redirect(await destinationAfterSignIn(safeNext(next)));
 }
 
 export async function signInWithPassword(input: { email: string; password: string; next?: string }): Promise<Result> {
@@ -91,6 +127,7 @@ export async function signInWithPassword(input: { email: string; password: strin
 }
 
 export async function sendPasswordReset(input: { email: string }): Promise<Result> {
+  if (!emailAuthEnabled()) return { ok: false, error: "Email sign-in isn't available yet. Use Google or a password." };
   const parsed = z.object({ email }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   const supabase = await createSupabaseServerClient();

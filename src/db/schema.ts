@@ -108,6 +108,8 @@ export const profiles = pgTable(
     avatarUrl: text("avatar_url"),
     collegeId: uuid("college_id").references(() => colleges.id),
     collegeVerified: boolean("college_verified").notNull().default(false),
+    /** False for instant password sign-ups (address never proven); Google and email-link sign-ins prove it. */
+    emailVerified: boolean("email_verified").notNull().default(true),
     year: smallint("year"),
     branch: text("branch"),
     bio: text("bio"),

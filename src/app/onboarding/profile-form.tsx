@@ -20,6 +20,7 @@ const NEW_COLLEGE = "__new__";
 export function ProfileForm({
   userId,
   email,
+  emailVerified,
   next,
   colleges,
   skills,
@@ -27,6 +28,8 @@ export function ProfileForm({
 }: {
   userId: string;
   email: string;
+  /** False for instant password accounts: their address isn't proven, so no campus badge yet. */
+  emailVerified: boolean;
   next: string | null;
   colleges: College[];
   skills: SkillOption[];
@@ -56,7 +59,8 @@ export function ProfileForm({
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const chosen = colleges.find((c) => c.id === form.collegeChoice);
-  const willVerify = Boolean(chosen?.emailDomain && emailMatchesDomain(email, chosen.emailDomain));
+  const domainMatches = Boolean(chosen?.emailDomain && emailMatchesDomain(email, chosen.emailDomain));
+  const willVerify = emailVerified && domainMatches;
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -151,7 +155,9 @@ export function ProfileForm({
           ) : (
             <p className="text-sm text-muted-foreground">
               {chosen.emailDomain
-                ? `Sign in with your @${chosen.emailDomain} email to get verified. You can still use everything else.`
+                ? domainMatches
+                  ? `To get the Verified badge, sign in once with Google using ${email} — that proves the address. Everything else works now.`
+                  : `Sign in with Google using your @${chosen.emailDomain} account to get verified. You can still use everything else.`
                 : "This college has no verified email domain yet, so you'll show as unverified."}
             </p>
           ))}

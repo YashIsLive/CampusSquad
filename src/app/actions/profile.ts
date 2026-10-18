@@ -70,7 +70,8 @@ export const saveProfile = authedAction(
       } else if (collegeId) {
         const college = await tx.query.colleges.findFirst({ where: eq(schema.colleges.id, collegeId) });
         if (!college) fail("That college doesn't exist.");
-        verified = Boolean(college.emailDomain && emailMatchesDomain(user.email, college.emailDomain));
+        // An unproven address (instant password sign-up) can't earn the campus badge.
+        verified = user.emailVerified && Boolean(college.emailDomain && emailMatchesDomain(user.email, college.emailDomain));
       }
 
       await tx

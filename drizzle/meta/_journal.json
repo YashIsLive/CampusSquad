@@ -43,6 +43,13 @@
       "when": 1792256014409,
       "tag": "0005_api_lockdown",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792319166948,
+      "tag": "0006_email_verified",
+      "breakpoints": true
     }
   ]
 }

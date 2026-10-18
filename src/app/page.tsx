@@ -204,7 +204,7 @@ async function Hero({ events }: { events: Awaited<ReturnType<typeof getFeed>>["e
         </p>
         <div className="flex flex-wrap gap-2">
           <Button size="lg" render={<Link href="/login" />}>
-            Sign in with college email <ArrowRight />
+            Get started <ArrowRight />
           </Button>
           <Button size="lg" variant="outline" render={<a href="#main-feed" />}>
             Browse events
