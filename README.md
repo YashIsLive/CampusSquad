@@ -9,7 +9,7 @@
 Campus tech events (hackathons, coding contests, quizzes, workshops, CTFs) in one feed,<br>
 plus a team board where squads post open roles and students apply with their skills.
 
-[![CI](https://github.com/YashIsLive/hackathon-post-and-team-finder/actions/workflows/ci.yml/badge.svg)](https://github.com/YashIsLive/hackathon-post-and-team-finder/actions/workflows/ci.yml)
+[![CI](https://github.com/YashIsLive/CampusSquad/actions/workflows/ci.yml/badge.svg)](https://github.com/YashIsLive/CampusSquad/actions/workflows/ci.yml)
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%C2%B7%20Auth%20%C2%B7%20Realtime-3ecf8e?logo=supabase&logoColor=white)
@@ -162,8 +162,8 @@ sheet, a sticky register bar, link previews for every event, and an **installabl
 You need Node 20+ and a free [Supabase](https://supabase.com) project.
 
 ```bash
-git clone https://github.com/YashIsLive/hackathon-post-and-team-finder.git
-cd hackathon-post-and-team-finder
+git clone https://github.com/YashIsLive/CampusSquad.git
+cd CampusSquad
 npm install
 cp .env.example .env.local   # fill in your Supabase keys (table below)
 npm run db:migrate           # tables, triggers, row-level security, storage buckets
