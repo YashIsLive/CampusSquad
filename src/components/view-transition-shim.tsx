@@ -9,7 +9,7 @@
  */
 const HIDDEN = "Skipping view transition because document visibility state has become hidden.";
 
-function normalize(error: unknown): unknown {
+export function normalize(error: unknown): unknown {
   if (error instanceof DOMException && error.name === "InvalidStateError" && /hidden|invalid state/i.test(error.message)) {
     return new DOMException(HIDDEN, "InvalidStateError");
   }
