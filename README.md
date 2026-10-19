@@ -142,6 +142,7 @@ sheet, a sticky register bar, link previews for every event, and an **installabl
 - **Clubs and communities** with admins and followers, who get notified when a new event goes live
 - **First-run guide:** a checklist driven by what you've actually done, plus spotlight tours of each page
 - **Skill suggestions** pulled from a student's public GitHub repos
+- **Your data, your call:** download everything we hold, or delete your account, from **Account and privacy**; plain-language [privacy policy](src/app/privacy/page.tsx) and terms
 - **Accessible:** keyboard navigable, reduced-motion aware, axe-checked to WCAG 2.1 AA in CI
 
 </td>
@@ -197,6 +198,7 @@ npm run phone   # builds, then serves on http://<your-computer's-IP>:3001
 | `DIRECT_URL` | same → **Session pooler** (port 5432) | migrations, seed, integration tests |
 | `NEXT_PUBLIC_SITE_URL` | your URL (`http://localhost:3000` locally) | share links, link previews, email links |
 | `AUTH_EMAIL_ENABLED` | `1` once custom SMTP is set up ([guide](docs/AUTH_SETUP.md)) | email sign-in links/codes, confirmation emails, new-device codes |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | an inbox you read | shown on /privacy and /terms for data requests; required on a real deployment |
 | `AUTH_DEVICE_SECRET` | optional, any long random string | signs "remember this device" cookies; change it to make every browser confirm again |
 | `RESEND_API_KEY`, `EMAIL_FROM` | optional, [resend.com](https://resend.com) | announcement and reminder emails (skipped if unset) |
 | `CRON_SECRET` | any random string | protects `/api/cron/deadline-reminders` |

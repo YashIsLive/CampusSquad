@@ -16,6 +16,12 @@ export function SiteFooter() {
           <Link href="/events/new" className="hover:text-foreground">
             Host an event
           </Link>
+          <Link href="/privacy" className="hover:text-foreground">
+            Privacy
+          </Link>
+          <Link href="/terms" className="hover:text-foreground">
+            Terms
+          </Link>
           <Link href="/orgs/new" className="hover:text-foreground">
             Add your club
           </Link>

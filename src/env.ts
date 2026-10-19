@@ -20,6 +20,8 @@ export function assertProductionEnv(env: Record<string, string | undefined> = pr
 
   const site = env.NEXT_PUBLIC_SITE_URL ?? "";
   const local = /localhost|127\.0\.0\.1/.test(site);
+  // The privacy policy and terms point people here for data requests; a real deployment needs it.
+  if (!local && !env.NEXT_PUBLIC_CONTACT_EMAIL) problems.push("NEXT_PUBLIC_CONTACT_EMAIL is not set (shown on /privacy and /terms)");
   // A local production build (`npm run build` on your machine) may keep the dev flag; a real deploy may not.
   if (env.E2E_TEST_LOGIN && !local) problems.push("E2E_TEST_LOGIN must not be set in production (it enables password-less demo login)");
   if (site && !local && !/^https:\/\//.test(site)) {

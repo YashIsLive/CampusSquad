@@ -83,6 +83,7 @@ test("a student ID photo is reviewed by an admin and verifies the student", asyn
   try {
     await closeTourIfOpen(student.page);
     await student.page.goto("/verify");
+    await student.page.getByLabel(/I agree to share this photo/).check();
     // 1×1 PNG stands in for the photo.
     const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
     await student.page.locator('input[type="file"]').setInputFiles({ name: "id.png", mimeType: "image/png", buffer: png });

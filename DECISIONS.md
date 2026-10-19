@@ -52,3 +52,5 @@ Ambiguities resolved during the build, newest last. Format: what was decided, an
 
 **D-025 — Password sign-in remembers devices instead of emailing every time.** With email on, a password on an unknown browser is followed by a one-time email code; after that the browser is trusted for 30 days (signed httpOnly cookie, several accounts per browser). Sign-up confirms the address once. Daily sign-in is just email + password, and a stolen password isn't enough on its own.
 
+**D-026 — Account deletion and data export (DPDP Act 2023).** `/account` lets anyone download everything we hold (JSON) and delete their account. Deletion: teams they lead pass to the longest-standing teammate (notified) or are removed if solo; their avatar and any pending ID photo are deleted from storage; the auth user is deleted and everything else cascades. Announcements keep their text with a null author; invites they sent go. Blocked only while they're the sole admin of a club with upcoming events, so events are never orphaned. Privacy policy and terms are plain-language templates matching what the app actually does; have them reviewed before a public launch.
+

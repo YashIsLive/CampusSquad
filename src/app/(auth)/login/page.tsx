@@ -63,6 +63,17 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           )}
           <AuthPanel next={next} initialMode={mode} emailEnabled={emailEnabled} />
         </div>
+        <p className="-mt-2 text-xs text-muted-foreground">
+          By continuing you agree to our{" "}
+          <Link href="/terms" className="underline underline-offset-2">
+            terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline underline-offset-2">
+            privacy policy
+          </Link>
+          . Got Next is for students aged 18 and over.
+        </p>
 
         {demo && (
           <section aria-labelledby="demo-heading" className="rounded-lg border border-dashed border-rule-strong p-4">

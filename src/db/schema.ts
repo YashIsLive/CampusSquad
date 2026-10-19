@@ -451,7 +451,7 @@ export const invites = pgTable(
       .references(() => profiles.id, { onDelete: "cascade" }),
     invitedBy: uuid("invited_by")
       .notNull()
-      .references(() => profiles.id),
+      .references(() => profiles.id, { onDelete: "cascade" }),
     message: text("message"),
     status: inviteStatus("status").notNull().default("pending"),
     createdAt: createdAt(),
@@ -631,9 +631,8 @@ export const announcements = pgTable("announcements", {
   eventId: uuid("event_id")
     .notNull()
     .references(() => events.id, { onDelete: "cascade" }),
-  authorId: uuid("author_id")
-    .notNull()
-    .references(() => profiles.id),
+  // Null once the author deletes their account; the announcement stays on the event.
+  authorId: uuid("author_id").references(() => profiles.id, { onDelete: "set null" }),
   body: text("body").notNull(),
   createdAt: createdAt(),
 });

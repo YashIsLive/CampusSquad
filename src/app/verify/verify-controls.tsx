@@ -17,6 +17,7 @@ export function IdCardUpload({ userId, replacing }: { userId: string; replacing:
   const input = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [agreed, setAgreed] = useState(replacing);
 
   async function upload(file: File) {
     if (!TYPES.includes(file.type)) return void toast.error("Use a JPG, PNG, WebP or HEIC photo.");
@@ -59,7 +60,16 @@ export function IdCardUpload({ userId, replacing }: { userId: string; replacing:
         // eslint-disable-next-line @next/next/no-img-element -- local preview of the chosen file
         <img src={preview} alt="Your ID card photo" className="max-h-40 w-fit rounded-md border border-rule object-contain" />
       )}
-      <Button type="button" variant={replacing ? "outline" : "default"} disabled={busy} onClick={() => input.current?.click()} className="w-fit">
+      {!replacing && (
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 size-4 accent-[var(--ink)]" />
+          <span>
+            I agree to share this photo with Got Next admins and verified club admins at my college, only to check where I study. It&apos;s
+            deleted once reviewed.
+          </span>
+        </label>
+      )}
+      <Button type="button" variant={replacing ? "outline" : "default"} disabled={busy || !agreed} onClick={() => input.current?.click()} className="w-fit">
         {busy ? <Loader2 className="animate-spin" /> : <IdCard />}
         {busy ? "Uploading…" : replacing ? "Send a different photo" : "Upload student ID photo"}
       </Button>

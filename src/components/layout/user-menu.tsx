@@ -26,6 +26,7 @@ export function UserMenu({
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuItem render={<Link href={`/u/${user.username}`} />}>My profile</DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/onboarding" />}>Edit profile</DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/account" />}>Account and privacy</DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/me/events" />}>My events</DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/me/applications" />}>My teams</DropdownMenuItem>
         {!user.verified && <DropdownMenuItem render={<Link href="/verify" />}>Get verified</DropdownMenuItem>}

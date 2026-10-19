@@ -61,6 +61,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 motion-safe:animate-page-in sm:py-8">
+      {sp.account === "deleted" && !user && (
+        <p role="status" className="rounded-xl border border-ink bg-card px-4 py-3 text-sm">
+          Your account and its data have been deleted. Thanks for playing.
+        </p>
+      )}
       {user ? (
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
