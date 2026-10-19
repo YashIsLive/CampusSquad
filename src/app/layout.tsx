@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { NavProgress } from "@/components/layout/nav-progress";
+import { ViewTransitionShim } from "@/components/view-transition-shim";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
 import { siteUrl } from "@/lib/format";
@@ -42,6 +43,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
+        <ViewTransitionShim />
         <Suspense>
           <NavProgress />
         </Suspense>
