@@ -69,7 +69,7 @@ test("two verified classmates can vouch a student into verification", async ({ b
     }
 
     await student.page.goto(`/u/${student.username}`);
-    await expect(student.page.getByRole("region", { name: "Profile" }).getByText("Verified", { exact: true })).toBeVisible();
+    await expect(student.page.getByRole("region", { name: "Profile" }).getByText("Verified student", { exact: true })).toBeVisible();
     await student.page.goto("/verify");
     await expect(student.page.getByText(/Verified by classmate vouches/)).toBeVisible();
   } finally {

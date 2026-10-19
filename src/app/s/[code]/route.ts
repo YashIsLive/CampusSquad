@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { NextResponse, type NextRequest } from "next/server";
+import { redirectTo } from "@/lib/redirect";
+import type { NextRequest } from "next/server";
 import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { refCookieName } from "@/lib/registration";
@@ -11,7 +12,7 @@ import { refCookieName } from "@/lib/registration";
 export async function GET(request: NextRequest, ctx: RouteContext<"/s/[code]">) {
   const { code } = await ctx.params;
   const link = await db.query.shareLinks.findFirst({ where: eq(schema.shareLinks.shortCode, code) });
-  if (!link) return NextResponse.redirect(new URL("/", request.url));
+  if (!link) return redirectTo("/");
 
   const ua = request.headers.get("user-agent") ?? "";
   // Link-preview bots (WhatsApp, Slack…) fetch the URL too; don't count them as clicks.
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/s/[code]">) 
     });
   }
 
-  const res = NextResponse.redirect(new URL(`/events/${link.eventId}`, request.url));
+  const res = redirectTo(`/events/${link.eventId}`);
   res.cookies.set(refCookieName(link.eventId), link.id, {
     maxAge: 60 * 60 * 24 * 30,
     httpOnly: true,

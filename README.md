@@ -173,6 +173,16 @@ npm run db:seed              # demo data: 4 colleges, 30 students, 3 clubs, 8 ev
 npm run dev                  # http://localhost:3000
 ```
 
+### Try it on your phone
+
+Phones on the same Wi-Fi can open the dev server at `http://<your-computer's-IP>:3000` (run `npm run dev -- -H 0.0.0.0`).
+Dev mode compiles each page the first time you open it, so it feels slow. For a realistic feel, use a production build
+instead:
+
+```bash
+npm run phone   # builds, then serves on http://<your-computer's-IP>:3001
+```
+
 <details>
 <summary><b>Environment variables</b></summary>
 

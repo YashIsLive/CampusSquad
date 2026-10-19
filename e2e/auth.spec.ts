@@ -23,7 +23,7 @@ test.describe("sign-in and sign-up", () => {
   test("password rules are explained before sending", async ({ page }) => {
     await page.goto("/signup");
     await expect(page).toHaveURL(/mode=signup/);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Join your campus board.");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Get in the game.");
     await page.getByLabel("College email").fill("someone@coep.seed.test");
     await page.getByLabel("Password", { exact: true }).fill("abcdefgh");
     await page.getByRole("button", { name: "Create account" }).last().click();

@@ -30,6 +30,8 @@ import { cn } from "@/lib/utils";
 import { RegisterPanel } from "./register-panel";
 import { SaveEventButton } from "./save-button";
 import { TeamsTab } from "./teams-tab";
+import { TeamsPreview } from "./teams-preview";
+import { KitTile } from "@/components/event-kit";
 
 export async function generateMetadata({ params }: PageProps<"/events/[id]">): Promise<Metadata> {
   const { id } = await params;
@@ -96,6 +98,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
         registrations: sql<number>`(select count(*)::int from registrations where event_id = ${event.id})`,
         teams: sql<number>`(select count(*)::int from teams where event_id = ${event.id})`,
         openRoles: sql<number>`(select coalesce(sum(v.slots_open), 0)::int from vacancies v join teams t on t.id = v.team_id where t.event_id = ${event.id} and v.status = 'open')`,
+        updates: sql<number>`(select count(*)::int from announcements where event_id = ${event.id})`,
       })
       .from(sql`(select 1) as _`),
   ]);
@@ -131,6 +134,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
         <div className="flex min-w-0 flex-col gap-6">
           <header className="flex flex-col gap-5" style={{ "--type": `var(--type-${event.type})` } as React.CSSProperties}>
             <div className="flex gap-5">
+              <KitTile type={event.type} date={event.startsAt} size="lg" className="hidden w-28 shrink-0 rounded-2xl border border-ink sm:flex" />
               <div className="flex min-w-0 flex-1 flex-col gap-3">
                 <p className="label-mono flex items-center gap-2">
                   <span aria-hidden="true" className="size-2.5 rounded-full bg-(--type)" />
@@ -228,6 +232,8 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
               badge:
                 t.key === "teams" && stats.openRoles > 0 ? (
                   <span className="rounded-full bg-court px-2 text-xs font-semibold text-[#0f0f0e]">{stats.openRoles} open</span>
+                ) : t.key === "updates" && stats.updates > 0 ? (
+                  <span className="rounded-full bg-secondary px-2 text-xs font-semibold">{stats.updates}</span>
                 ) : undefined,
             }))}
           />
@@ -236,6 +242,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
             {tab === "overview" && (
               <div className="flex flex-col gap-6">
                 <p className="max-w-[68ch] text-[0.975rem] leading-relaxed whitespace-pre-line">{event.description}</p>
+                {isTeamEvent && !closed && <TeamsPreview eventId={event.id} teamMax={event.teamMax} />}
                 {event.rulesMd && (
                   <section aria-labelledby="rules" className="rounded-xl border border-rule bg-card p-5">
                     <h2 id="rules" className="mb-2 text-lg font-bold">

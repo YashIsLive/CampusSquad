@@ -370,3 +370,75 @@
     box-shadow: 0 0 0 10px transparent;
   }
 }
+
+/* ---------- Event "kits": each type's colour + a pattern, like a team jersey ---------- */
+:root {
+  --type-fg-hackathon: #0f0f0e;
+  --type-fg-quiz: #0f0f0e;
+  --type-fg-coding_contest: #0f0f0e;
+  --type-fg-workshop: #ffffff;
+  --type-fg-ideathon: #ffffff;
+  --type-fg-ctf: #f3f3f0;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --type-fg-workshop: #0e0e0d;
+    --type-fg-ideathon: #0e0e0d;
+    --type-fg-ctf: #0e0e0d;
+  }
+}
+.kit {
+  --kit-ink: color-mix(in oklab, var(--kit-fg) 16%, transparent);
+  background-color: var(--kit-bg);
+  color: var(--kit-fg);
+  transition: background-position 900ms var(--ease-out);
+}
+.kit-hackathon {
+  background-image: repeating-linear-gradient(-45deg, var(--kit-ink) 0 6px, transparent 6px 14px);
+  background-size: 40px 40px;
+}
+.kit-quiz {
+  background-image: radial-gradient(var(--kit-ink) 2.5px, transparent 3px);
+  background-size: 12px 12px;
+}
+.kit-coding_contest {
+  background-image: linear-gradient(var(--kit-ink) 2px, transparent 2px);
+  background-size: 100% 9px;
+}
+.kit-workshop {
+  background-image: linear-gradient(var(--kit-ink) 1.5px, transparent 1.5px), linear-gradient(90deg, var(--kit-ink) 1.5px, transparent 1.5px);
+  background-size: 14px 14px;
+}
+.kit-ideathon {
+  background-image: repeating-radial-gradient(circle at 100% 100%, var(--kit-ink) 0 2px, transparent 2px 10px);
+}
+.kit-ctf {
+  background-image: conic-gradient(var(--kit-ink) 25%, transparent 0 50%, var(--kit-ink) 0 75%, transparent 0);
+  background-size: 16px 16px;
+}
+/* The pattern drifts while you hover the card. */
+.group:hover .kit,
+.group:focus-within .kit {
+  background-position: 28px 14px;
+}
+@keyframes dot-pop {
+  50% {
+    transform: scale(1.35);
+  }
+}
+.group:hover .dot-pop > span,
+.group:focus-within .dot-pop > span {
+  animation: dot-pop 420ms var(--ease-out);
+}
+.group:hover .dot-pop > span:nth-child(2) {
+  animation-delay: 60ms;
+}
+.group:hover .dot-pop > span:nth-child(3) {
+  animation-delay: 120ms;
+}
+.group:hover .dot-pop > span:nth-child(4) {
+  animation-delay: 180ms;
+}
+.group:hover .dot-pop > span:nth-child(5) {
+  animation-delay: 240ms;
+}

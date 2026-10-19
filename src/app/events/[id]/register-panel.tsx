@@ -35,6 +35,8 @@ export function RegisterPanel(props: {
   const [pending, startTransition] = useTransition();
   const [creatingTeam, setCreatingTeam] = useState(false);
   const [teamName, setTeamName] = useState("");
+  // The entry code gets you in at the door; keep it off-screen until you ask for it.
+  const [showCode, setShowCode] = useState(false);
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, success: string) =>
     startTransition(async () => {
@@ -142,7 +144,19 @@ export function RegisterPanel(props: {
           {registered && props.checkinCode ? (
             <div>
               <dt className="text-xs text-muted-foreground">Your entry code</dt>
-              <dd className="font-mono text-lg font-semibold tracking-[0.18em]">{props.checkinCode}</dd>
+              <dd className="flex items-center gap-2">
+                <span className="font-mono text-lg font-semibold tracking-[0.18em]" aria-live="polite">
+                  {showCode ? props.checkinCode : "••••••••••"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowCode((v) => !v)}
+                  aria-label={showCode ? "Hide entry code" : "Show entry code"}
+                  className="text-xs font-semibold underline decoration-court decoration-2 underline-offset-4"
+                >
+                  {showCode ? "Hide" : "Show"}
+                </button>
+              </dd>
             </div>
           ) : (
             <p className="pt-1 text-sm text-muted-foreground">

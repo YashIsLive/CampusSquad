@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { redirectTo } from "@/lib/redirect";
+import type { NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authErrorMessage, safeNext } from "@/lib/auth-errors";
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get("code");
   const next = safeNext(url.searchParams.get("next") ?? (type === "recovery" ? "/auth/reset-password" : "/"));
   const fail = (message: string) =>
-    NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(message)}&next=${encodeURIComponent(next)}`, url.origin));
+    redirectTo(`/login?error=${encodeURIComponent(message)}&next=${encodeURIComponent(next)}`);
 
   const providerError = url.searchParams.get("error_description") ?? url.searchParams.get("error");
   if (providerError) return fail(authErrorMessage(providerError));
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     // Clicking a link sent to the address proves the student owns it — and this browser.
     await markEmailProven();
     if (data.user) await trustThisDevice(data.user.id);
-    return NextResponse.redirect(new URL(type === "recovery" ? "/auth/reset-password" : await destinationAfterSignIn(next), url.origin));
+    return redirectTo(type === "recovery" ? "/auth/reset-password" : await destinationAfterSignIn(next));
   }
 
   if (code) {
@@ -43,8 +44,8 @@ export async function GET(request: NextRequest) {
     await syncProviderVerification();
     // Google (or a same-browser email link) proves the address; remember this browser.
     if (data.user) await trustThisDevice(data.user.id);
-    return NextResponse.redirect(new URL(await destinationAfterSignIn(next), url.origin));
+    return redirectTo(await destinationAfterSignIn(next));
   }
 
-  return NextResponse.redirect(new URL(`/auth/finish?next=${encodeURIComponent(next)}`, url.origin));
+  return redirectTo(`/auth/finish?next=${encodeURIComponent(next)}`);
 }

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
 const hits = new Map<string, number[]>();
+const LOCAL = new Set(["::1", "127.0.0.1", "::ffff:127.0.0.1", "unknown"]);
 
 /** Best-effort client IP (Vercel and most proxies set x-forwarded-for). */
 export async function clientIp() {
@@ -17,6 +18,8 @@ export async function clientIp() {
  * a public launch at scale.
  */
 export function allowSignup(ip: string, now = Date.now()) {
+  // Your own machine during development (tests create many accounts) isn't throttled.
+  if (process.env.NODE_ENV !== "production" && LOCAL.has(ip)) return true;
   const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
   if (recent.length >= MAX_PER_WINDOW) {
     hits.set(ip, recent);

@@ -18,13 +18,16 @@ the one someone's got next.**
 
 - **Colour:** neutral white / near-black, ink type, one accent, **court lime** `--court`, for the main
   action and open spots (always with ink text on top). **Red `--signal` means urgency only** (closing
-  soon, destructive). Event types keep one flat colour each, used as a thin edge, never a fill. No
+  soon, destructive). Event types keep one colour each, worn as their kit (see below). No
   gradients, no glass, no cream paper.
 - **Type:** one family, **Archivo**, at different widths: headlines wide and heavy (`font-stretch`
   108–118%), dates, labels and numbers condensed (`.label-mono`, `.score`), reading text at normal width.
   Geist Mono only for codes people read out (entry codes).
 - **Numbers are a scoreboard:** counts that drive decisions (sign-ups close in, going, open spots) are
   big condensed numerals, in bordered strips.
+- **Event kits:** every event type wears a kit, its colour plus a pattern, like a jersey: hackathons
+  striped, quizzes dotted, coding contests lined, workshops gridded, ideathons ringed, CTFs checkered.
+  The kit is the date tile on cards and on the event page (`KitTile`); the pattern drifts on hover.
 - **Cards are fixtures:** text first (date · type, title, club, plain facts, open spots, deadline). The
   uploaded poster lives on the event page only.
 - **Elevation:** flat. Interactive cards firm up their border to ink and rise 2px on hover; a 2px ink

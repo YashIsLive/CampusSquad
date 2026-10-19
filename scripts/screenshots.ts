@@ -52,7 +52,7 @@ async function main() {
     if (await hide.isVisible()) await hide.click();
     await shot(p, "feed", scheme);
 
-    await p.getByRole("link", { name: /COEP AI Hackathon 2026/ }).first().click();
+    await p.getByRole("heading", { name: "COEP AI Hackathon 2026" }).getByRole("link").first().click();
     await p.waitForURL(/\/events\/[^/?]+$/);
     const eventUrl = p.url();
     await shot(p, "event", scheme);

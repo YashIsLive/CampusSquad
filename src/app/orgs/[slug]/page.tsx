@@ -92,7 +92,7 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
         {upcoming.length === 0 ? (
           <EmptyState compact title="No upcoming events" description="Follow to hear about the next one." />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {upcoming.map((e) => (
               <EventCard key={e.id} event={e} showStatus={isAdmin} />
             ))}
@@ -103,7 +103,7 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
       {past.length > 0 && (
         <section>
           <h2 className="mb-3 text-xl font-bold">Past events</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {past.map((e) => (
               <EventCard key={e.id} event={e} showStatus={isAdmin} />
             ))}

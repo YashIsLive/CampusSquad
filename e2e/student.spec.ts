@@ -42,8 +42,8 @@ test.describe("student: discover, save, register, start a team", () => {
     const ticket = page.getByRole("complementary", { name: "Registration" });
     await ticket.getByRole("button", { name: /Register solo/ }).click();
     await expect(ticket.getByText("You're in")).toBeVisible();
-    await expect(ticket.getByText("Check-in code")).toBeVisible();
-    await expect(ticket.getByText("You don't have a team yet.")).toBeVisible();
+    await expect(ticket.getByText("Your entry code")).toBeVisible();
+    await expect(ticket.getByText("No team yet.")).toBeVisible();
 
     acceptNextConfirm(page);
     await ticket.getByRole("button", { name: "Cancel registration" }).click();

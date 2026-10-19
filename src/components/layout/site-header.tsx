@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { after } from "next/server";
-import { and, count, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { CurrentUser } from "@/lib/auth";
 import { runReminders } from "@/lib/reminders";
@@ -15,6 +15,7 @@ import { GuideMenu } from "@/components/guide/guide-menu";
 export async function SiteHeader({ user }: { user: CurrentUser | null }) {
   let unread = 0;
   let reviewer = false;
+  let adminTodo = 0;
   if (user) {
     // Lazily create this user's due reminders (deadline + event start). Idempotent and cheap.
     after(() => runReminders({ userId: user.id }).catch((e) => console.error("reminders", e)));
@@ -25,6 +26,13 @@ export async function SiteHeader({ user }: { user: CurrentUser | null }) {
     unread = row?.n ?? 0;
     const colleges = await reviewableColleges(user);
     reviewer = colleges === "all" || colleges.length > 0;
+    if (user.isAdmin) {
+      const [todo] = await db.execute<{ n: number }>(sql`select
+        (select count(*) from colleges where not verified)
+        + (select count(*) from verification_requests where status = 'pending')
+        + (select count(*) from organizations where not verified) as n`);
+      adminTodo = Number(todo?.n ?? 0);
+    }
   }
 
   return (
@@ -40,6 +48,19 @@ export async function SiteHeader({ user }: { user: CurrentUser | null }) {
               <Button render={<Link href="/events/new" />} size="sm" className="hidden sm:inline-flex">
                 Post an event
               </Button>
+              {user.isAdmin && (
+                <Link
+                  href="/admin"
+                  className="hidden items-center gap-1.5 rounded-full border border-ink/25 px-3 py-1.5 text-sm font-semibold hover:border-ink sm:inline-flex"
+                >
+                  Admin
+                  {adminTodo > 0 && (
+                    <span className="rounded-full bg-court px-1.5 text-xs text-[#0f0f0e]" aria-label={`${adminTodo} waiting`}>
+                      {adminTodo}
+                    </span>
+                  )}
+                </Link>
+              )}
               <GuideMenu />
               <NotificationBell userId={user.id} initialUnread={unread} />
               <UserMenu

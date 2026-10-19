@@ -192,7 +192,7 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
                         <h3 className="font-display text-xl leading-tight font-bold">{v.roleTitle}</h3>
                         <p className="text-sm text-muted-foreground">{team.leader.college?.name ?? "No college listed"}</p>
                       </div>
-                      {score !== null && <MatchMeter score={score} label="your match" />}
+                      {score !== null && <MatchMeter score={score} label="match" />}
                     </div>
                     {team.ideaPitch && <p className="border-l-2 border-ink/30 pl-3 text-sm">{team.ideaPitch}</p>}
                     {v.description && <p className="text-sm text-muted-foreground">{v.description}</p>}

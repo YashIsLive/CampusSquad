@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { rejectCollege, setOrgVerified, verifyCollege } from "@/app/actions/admin";
+import { rejectCollege, setAdmin, setOrgVerified, setStudentVerified, takeDownEvent, verifyCollege } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -91,5 +91,66 @@ export function OrgVerifyToggle({ orgId, verified }: { orgId: string; verified: 
         }
       />
     </label>
+  );
+}
+
+/** Row actions on the People section: verify a student by hand, grant or remove admin. */
+export function PersonActions({ userId, name, verified, admin, self }: { userId: string; name: string; verified: boolean; admin: boolean; self: boolean }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const run = (fn: () => Promise<{ ok: boolean; error?: string }>, done: string) =>
+    startTransition(async () => {
+      const res = await fn();
+      if (!res.ok) return void toast.error(res.error);
+      toast.success(done);
+      router.refresh();
+    });
+  return (
+    <div className="flex flex-wrap justify-end gap-1.5">
+      <Button
+        size="xs"
+        variant={verified ? "ghost" : "outline"}
+        disabled={pending}
+        onClick={() => run(() => setStudentVerified({ userId, verified: !verified }), verified ? `${name} is no longer verified` : `${name} is verified`)}
+      >
+        {verified ? "Unverify" : "Verify"}
+      </Button>
+      {!(self && admin) && (
+        <Button
+          size="xs"
+          variant={admin ? "destructive" : "ghost"}
+          disabled={pending}
+          onClick={() => {
+            if (confirm(admin ? `Remove admin access from ${name}?` : `Make ${name} a platform admin? They'll be able to verify colleges, clubs and students.`))
+              run(() => setAdmin({ userId, admin: !admin }), admin ? "Admin access removed" : `${name} is now an admin`);
+          }}
+        >
+          {admin ? "Remove admin" : "Make admin"}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export function TakeDownButton({ eventId, title }: { eventId: string; title: string }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  return (
+    <Button
+      size="xs"
+      variant="destructive"
+      disabled={pending}
+      onClick={() => {
+        if (!confirm(`Take "${title}" off the site? It goes back to a draft its organizers can fix and republish.`)) return;
+        startTransition(async () => {
+          const res = await takeDownEvent({ eventId });
+          if (!res.ok) return void toast.error(res.error);
+          toast.success("Event taken down");
+          router.refresh();
+        });
+      }}
+    >
+      Take down
+    </Button>
   );
 }

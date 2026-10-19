@@ -4,6 +4,9 @@ import { assertProductionEnv } from "./src/env";
 assertProductionEnv();
 
 const isDev = process.env.NODE_ENV !== "production";
+// Only force HTTPS when the site is actually served over HTTPS. A production build tried on a
+// phone over plain http://192.168.x.x would otherwise have every script upgraded to https and break.
+const httpsSite = (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://");
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseHost = supabaseUrl ? new URL(supabaseUrl).hostname : undefined;
 const supabase = supabaseHost ? `https://${supabaseHost}` : "https://*.supabase.co";
@@ -20,19 +23,20 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${supabase} https://avatars.githubusercontent.com https://lh3.googleusercontent.com`,
   "font-src 'self' data:",
-  `connect-src 'self' ${supabase} ${supabaseWs}${isDev ? " ws://localhost:* http://localhost:*" : ""}`,
+  // Dev: the HMR socket lives on whatever host you opened (localhost, or your LAN IP from a phone).
+  `connect-src 'self' ${supabase} ${supabaseWs}${isDev ? " ws: http:" : ""}`,
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   `form-action 'self' ${supabase} https://accounts.google.com`,
   "object-src 'none'",
-  ...(isDev ? [] : ["upgrade-insecure-requests"]),
+  ...(httpsSite ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
-  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  ...(httpsSite ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }] : []),
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -45,6 +49,9 @@ const nextConfig: NextConfig = {
   // Cache Components is off on purpose: almost every page is per-user and auth-dependent.
   // See DECISIONS.md (D-002).
   poweredByHeader: false,
+  // Let phones and laptops on the same Wi-Fi use the dev server (http://192.168.x.x:3000).
+  // Without this, Next blocks the page's scripts from other hosts and buttons do nothing.
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*", "*.local"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

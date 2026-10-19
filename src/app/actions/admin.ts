@@ -39,7 +39,8 @@ export const verifyCollege = authedAction(
       const members = await tx
         .select({ id: schema.profiles.id, email: schema.profiles.email })
         .from(schema.profiles)
-        .where(eq(schema.profiles.collegeId, collegeId));
+        // Only addresses the student has proven they own (not instant password sign-ups).
+        .where(and(eq(schema.profiles.collegeId, collegeId), eq(schema.profiles.emailVerified, true)));
       const matching = members.filter((m) => emailMatchesDomain(m.email, emailDomain));
       for (const m of matching) {
         await tx.update(schema.profiles).set({ collegeVerified: true }).where(eq(schema.profiles.id, m.id));
@@ -58,7 +59,7 @@ export const rejectCollege = authedAction(z.object({ collegeId: z.uuid() }), asy
   if (!college) fail("College not found.");
   if (college.verified) fail("Verified colleges can't be rejected here.");
   const inUse = await db.query.organizations.findFirst({ where: eq(schema.organizations.collegeId, collegeId) });
-  if (inUse) fail("An organization is linked to this college.");
+  if (inUse) fail("A club is linked to this college.");
   await db.transaction(async (tx) => {
     await tx.update(schema.profiles).set({ collegeId: null, collegeVerified: false }).where(eq(schema.profiles.collegeId, collegeId));
     await tx.delete(schema.colleges).where(eq(schema.colleges.id, collegeId));
@@ -77,3 +78,38 @@ export const setOrgVerified = authedAction(
     return null;
   },
 );
+
+/** Grant or remove platform admin. You can't remove your own (ask another admin). */
+export const setAdmin = authedAction(z.object({ userId: z.uuid(), admin: z.boolean() }), async ({ userId, admin }, user) => {
+  assertAdmin(user);
+  if (userId === user.id && !admin) fail("You can't remove your own admin access. Ask another admin.");
+  await db.update(schema.profiles).set({ isAdmin: admin }).where(eq(schema.profiles.id, userId));
+  revalidatePath("/admin");
+  return null;
+});
+
+/** Verify (or un-verify) a student's college by hand, e.g. after checking with the college. */
+export const setStudentVerified = authedAction(
+  z.object({ userId: z.uuid(), verified: z.boolean() }),
+  async ({ userId, verified }, user) => {
+    assertAdmin(user);
+    const profile = await db.query.profiles.findFirst({ where: eq(schema.profiles.id, userId), columns: { collegeId: true } });
+    if (!profile) fail("Student not found.");
+    if (verified && !profile.collegeId) fail("They haven't picked a college yet.");
+    await db
+      .update(schema.profiles)
+      .set(verified ? { collegeVerified: true, collegeVerifiedVia: "admin" } : { collegeVerified: false })
+      .where(eq(schema.profiles.id, userId));
+    revalidatePath("/admin");
+    return null;
+  },
+);
+
+/** Take an event off the public site (back to draft), e.g. spam or a duplicate. Its organizers can still see it. */
+export const takeDownEvent = authedAction(z.object({ eventId: z.uuid() }), async ({ eventId }, user) => {
+  assertAdmin(user);
+  await db.update(schema.events).set({ status: "draft" }).where(eq(schema.events.id, eventId));
+  revalidatePath("/admin");
+  revalidatePath("/", "layout");
+  return null;
+});

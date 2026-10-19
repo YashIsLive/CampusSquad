@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { ViewTransition, type ReactNode } from "react";
 import type { schema } from "@/db";
+import { KitTile } from "@/components/event-kit";
 import { MetaLine, Slots, Stamp } from "@/components/noticeboard";
-import { EVENT_TYPE_LABEL, MODE_LABEL, TIME_ZONE, relative } from "@/lib/format";
+import { EVENT_TYPE_LABEL, MODE_LABEL, relative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type EventRow = typeof schema.events.$inferSelect;
@@ -17,11 +18,9 @@ export type CardEvent = Pick<
 export const posterVT = (id: string) => `poster-${id}`;
 export const titleVT = (id: string) => `title-${id}`;
 
-const fixtureDate = new Intl.DateTimeFormat("en-IN", { timeZone: TIME_ZONE, weekday: "short", day: "numeric", month: "short" });
-
 /**
- * One event, written like a fixture: when, what, where — and how many team spots are still open.
- * Text first; the poster lives on the event page.
+ * One event as a fixture ticket: the date in the type's kit on the left, the facts on the right,
+ * and the team spots still open along the bottom.
  */
 export function EventCard({
   event,
@@ -49,39 +48,37 @@ export function EventCard({
 
   return (
     <article
-      className={cn("group lift relative flex flex-col overflow-hidden rounded-xl border border-rule bg-card", over && "opacity-70")}
+      className={cn("group lift relative grid grid-cols-[5.25rem_1fr] overflow-hidden rounded-2xl border border-rule bg-card", over && "opacity-70")}
       data-tour={tourTarget ? "event-card" : undefined}
-      style={{ "--i": index, "--type": `var(--type-${event.type})` } as React.CSSProperties}
+      style={{ "--i": index } as React.CSSProperties}
     >
-      {/* Type colour runs down the left edge, like a team's kit colour on a fixture list. */}
-      <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-(--type)" />
+      <KitTile type={event.type} date={event.startsAt} className="border-r border-rule" />
 
-      <div className="flex flex-1 flex-col gap-3 py-4 pr-4 pl-5">
-        <div className="flex min-h-8 items-start justify-between gap-2">
-          <p className="label-mono pt-1.5">
-            <time dateTime={event.startsAt.toISOString()}>{fixtureDate.format(event.startsAt)}</time>
-            <span className="text-muted-foreground"> · {EVENT_TYPE_LABEL[event.type]}</span>
+      <div className="flex min-w-0 flex-col gap-2.5 p-4">
+        <div className="flex min-h-7 items-start justify-between gap-2">
+          <p className="label-mono pt-1 text-muted-foreground">
+            {EVENT_TYPE_LABEL[event.type]}
             {showStatus && event.status !== "published" && <span className="ml-1.5 rounded-sm bg-ink px-1 text-paper">{event.status}</span>}
           </p>
           {action && (
-            <div className="relative z-10 -mt-1 -mr-1.5" data-tour={tourTarget ? "save" : undefined}>
+            <div className="relative z-10 -mt-1.5 -mr-1.5" data-tour={tourTarget ? "save" : undefined}>
               {action}
             </div>
           )}
         </div>
 
-        <div>
-          <h3 className="text-xl leading-[1.15] font-bold">
+        <div className="-mt-1">
+          <h3 className="text-xl leading-[1.12] font-bold">
             <Link
               href={`/events/${event.id}`}
-              className="outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:outline-2 focus-visible:after:outline-ink"
+              className="outline-none after:absolute after:inset-0 after:rounded-2xl focus-visible:after:outline-2 focus-visible:after:outline-ink"
             >
               <ViewTransition name={titleVT(event.id)} share="morph" default="none">
                 <span>{event.title}</span>
               </ViewTransition>
             </Link>
           </h3>
-          <p className="mt-1 truncate text-sm text-muted-foreground">{event.org.name}</p>
+          <p className="mt-0.5 truncate text-sm text-muted-foreground">{event.org.name}</p>
         </div>
 
         <MetaLine
@@ -93,16 +90,16 @@ export function EventCard({
           ]}
         />
 
-        <div className="mt-auto flex items-center justify-between gap-3 border-t border-rule pt-3 text-sm">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 pt-1 text-sm">
           {team && spots > 0 && !over ? (
-            <span className="flex items-center gap-2">
-              <Slots filled={0} total={Math.min(spots, 5)} />
-              <span className="font-medium">
+            <span className="flex items-center gap-2 rounded-full bg-court/45 py-0.5 pr-2.5 pl-1.5">
+              <Slots filled={0} total={Math.min(spots, 5)} className="dot-pop" />
+              <span className="font-semibold">
                 {spots} open spot{spots === 1 ? "" : "s"}
               </span>
             </span>
           ) : (
-            <span className="text-muted-foreground">{over ? "Finished" : team ? "No open spots yet" : "Just you"}</span>
+            <span className="text-muted-foreground">{over ? "Finished" : team ? "No open spots yet" : "On your own"}</span>
           )}
           {over ? null : closed ? (
             <span className="text-muted-foreground">Sign-ups closed</span>

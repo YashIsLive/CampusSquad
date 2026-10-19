@@ -1,3 +1,4 @@
+import { redirectTo } from "@/lib/redirect";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -34,5 +35,5 @@ export async function GET(request: NextRequest) {
     token_hash: data.properties.hashed_token,
   });
   if (verifyError) return new NextResponse(verifyError.message, { status: 500 });
-  return NextResponse.redirect(new URL(next.startsWith("/") ? next : "/", url.origin));
+  return redirectTo(next);
 }

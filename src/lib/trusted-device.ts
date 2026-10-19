@@ -61,7 +61,7 @@ export async function trustThisDevice(userId: string) {
     .map((t) => t.token);
   jar.set(COOKIE, [...others, fresh].join("~"), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://"),
     sameSite: "lax",
     path: "/",
     maxAge: TRUST_DAYS * 24 * 3600,
@@ -71,6 +71,6 @@ export async function trustThisDevice(userId: string) {
 export async function forgetThisDevice(userId: string) {
   const jar = await cookies();
   const rest = parse(jar.get(COOKIE)?.value).filter((t) => t.userId !== userId);
-  if (rest.length) jar.set(COOKIE, rest.map((t) => t.token).join("~"), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: TRUST_DAYS * 24 * 3600 });
+  if (rest.length) jar.set(COOKIE, rest.map((t) => t.token).join("~"), { httpOnly: true, secure: (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://"), sameSite: "lax", path: "/", maxAge: TRUST_DAYS * 24 * 3600 });
   else jar.delete(COOKIE);
 }

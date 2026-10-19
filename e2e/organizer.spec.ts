@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { signInAs } from "./helpers";
+import { admin, signInAs } from "./helpers";
 
 test.describe("organizer", () => {
   test("post an event; followers are notified", async ({ browser }) => {
@@ -16,6 +16,8 @@ test.describe("organizer", () => {
     await expect(aarav.page.getByText(`COEP AI Club posted: ${title}`)).toBeVisible();
     await riya.context.close();
     await aarav.context.close();
+    // Don't leave test events on the real feed.
+    await admin().from("events").delete().eq("title", title);
   });
 
   test("share link tracks clicks; registrants export; announcement; check-in", async ({ browser }) => {
@@ -56,7 +58,9 @@ test.describe("organizer", () => {
 
     // Check-in with Aarav's code from his ticket.
     await aarav.page.goto(manageUrl.replace("/manage", ""));
-    const code = (await aarav.page.getByRole("complementary", { name: "Registration" }).locator("dd.font-mono").textContent())!.trim();
+    const pass = aarav.page.getByRole("complementary", { name: "Registration" });
+    await pass.getByRole("button", { name: "Show entry code" }).click(); // the code stays hidden until asked for
+    const code = (await pass.locator("span.font-mono").textContent())!.trim();
     await riya.page.goto(`${manageUrl}?section=checkin`);
     await riya.page.getByPlaceholder("Or type the 10-character code").fill(code);
     await riya.page.getByRole("button", { name: "Check in", exact: true }).click();
@@ -69,9 +73,11 @@ test.describe("organizer", () => {
   test("admin verifies a requested college", async ({ browser }) => {
     const riya = await signInAs(browser, "riya", "/admin");
     await expect(riya.page.getByRole("heading", { level: 1, name: "Admin" })).toBeVisible();
+    // The overview lists it under "Needs you"; the form lives in the Colleges section.
+    await riya.page.getByRole("link", { name: /college requests? to approve/ }).click();
     await riya.page.getByLabel("Email domain").fill("vit.edu");
     await riya.page.getByRole("button", { name: "Verify college" }).click();
-    await expect(riya.page.getByText("No pending requests")).toBeVisible();
+    await expect(riya.page.getByText("No requests waiting")).toBeVisible();
     await riya.context.close();
   });
 

@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { EventCard } from "@/components/event-card";
 import { TeamSheet } from "@/components/team-sheet";
+import { SpotsRail } from "@/components/spots-rail";
+import { TYPE_ICON } from "@/components/event-kit";
+import { spotsForYou } from "@/lib/spots";
 import { SaveEventButton } from "@/app/events/[id]/save-button";
 import { cn } from "@/lib/utils";
 import { FeedFilters } from "./feed-filters";
@@ -21,7 +24,13 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const sp = await searchParams;
   const user = await getCurrentUser();
   const filters = parseFeedFilters(sp);
-  const { scope, events, closingSoon } = await getFeed(user, filters);
+  const [{ scope, events, closingSoon }, spots, skillCount] = await Promise.all([
+    getFeed(user, filters),
+    user ? spotsForYou(user) : Promise.resolve([]),
+    user
+      ? db.$count(schema.userSkills, eq(schema.userSkills.userId, user.id))
+      : Promise.resolve(0),
+  ]);
 
   const savedIds = new Set(
     user && events.length
@@ -72,6 +81,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       {user && <GettingStarted user={user} />}
       {user && <PageTour tour="feed" seen={Boolean(user.guide.tours?.feed)} />}
 
+      {user && !filtered && <SpotsRail spots={spots} hasSkills={skillCount > 0} />}
+
       <div id="events" className="flex scroll-mt-20 flex-col gap-3">
         <nav aria-label="Where" data-tour="scope" className="flex w-full gap-1 rounded-full border border-rule bg-card p-1 sm:w-fit">
           {scopes.map((s) =>
@@ -116,13 +127,18 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           <ul className="no-scrollbar flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:px-0">
             {closingSoon.map((e) => (
               <li key={e.id} className="snap-start">
-                <Link
-                  href={`/events/${e.id}`}
-                  className="lift flex w-72 flex-col gap-0.5 rounded-xl border border-rule bg-card px-4 py-3"
-                  style={{ borderLeft: `4px solid var(--type-${e.type})` }}
-                >
-                  <span className="truncate font-bold">{e.title}</span>
-                  <span className="text-sm font-medium text-signal-ink">Closes {relative(e.regDeadline)}</span>
+                <Link href={`/events/${e.id}`} className="group lift flex w-72 items-stretch overflow-hidden rounded-xl border border-rule bg-card">
+                  <span
+                    aria-hidden="true"
+                    className={`kit kit-${e.type} grid w-14 shrink-0 place-items-center border-r border-rule`}
+                    style={{ "--kit-bg": `var(--type-${e.type})`, "--kit-fg": `var(--type-fg-${e.type})` } as React.CSSProperties}
+                  >
+                    <TypeIcon type={e.type} />
+                  </span>
+                  <span className="flex min-w-0 flex-col justify-center gap-0.5 px-3 py-3">
+                    <span className="truncate font-bold">{e.title}</span>
+                    <span className="text-sm font-medium text-signal-ink">Closes {relative(e.regDeadline)}</span>
+                  </span>
                 </Link>
               </li>
             ))}
@@ -165,7 +181,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   {g.items.length} event{g.items.length === 1 ? "" : "s"}
                 </span>
               </h2>
-              <div className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="stagger grid gap-4 md:grid-cols-2">
                 {g.items.map((e) => (
                   <EventCard
                     key={e.id}
@@ -292,4 +308,9 @@ async function Hero() {
       </ol>
     </section>
   );
+}
+
+function TypeIcon({ type }: { type: keyof typeof TYPE_ICON }) {
+  const Icon = TYPE_ICON[type];
+  return <Icon className="size-5" strokeWidth={2.4} />;
 }
