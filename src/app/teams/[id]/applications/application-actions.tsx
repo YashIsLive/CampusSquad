@@ -48,7 +48,7 @@ export function ApplicationActions({
       <Button
         size="sm"
         disabled={pending || !canAccept}
-        title={canAccept ? undefined : "This role or your team is already full"}
+        title={canAccept ? undefined : "This spot or your team is already full"}
         onClick={() => run(() => acceptApplication({ applicationId }), `${name} joined your team 🎉`)}
       >
         Accept

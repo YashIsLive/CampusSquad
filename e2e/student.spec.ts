@@ -5,11 +5,11 @@ test.describe("student: discover, save, register, start a team", () => {
   test("feed scopes, search, type filter and the / shortcut", async ({ browser }) => {
     const { page, context } = await signInAs(browser, "harsh");
     // MIT-WPU student: campus feed shows MIT-WPU events.
-    await expect(page.getByRole("heading", { level: 1, name: "Happening on campus" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "At your college" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Flutter Forward Quiz" }).first()).toBeVisible();
 
-    await page.getByRole("navigation", { name: "Where" }).getByRole("link", { name: "All India" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Happening across India" })).toBeVisible();
+    await page.getByRole("navigation", { name: "Where" }).getByRole("link", { name: "All of India" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Across India" })).toBeVisible();
     await expect(page.getByRole("link", { name: "PICT CodeSprint #12" }).first()).toBeVisible();
 
     await page.getByRole("group", { name: "Event type" }).getByRole("button", { name: "Hackathons" }).click();
@@ -41,7 +41,7 @@ test.describe("student: discover, save, register, start a team", () => {
 
     const ticket = page.getByRole("complementary", { name: "Registration" });
     await ticket.getByRole("button", { name: /Register solo/ }).click();
-    await expect(ticket.getByText("Your ticket")).toBeVisible();
+    await expect(ticket.getByText("You're in")).toBeVisible();
     await expect(ticket.getByText("Check-in code")).toBeVisible();
     await expect(ticket.getByText("You don't have a team yet.")).toBeVisible();
 
@@ -60,13 +60,13 @@ test.describe("student: discover, save, register, start a team", () => {
     await dialog.getByRole("button", { name: "Create team" }).click();
 
     await expect(page.getByRole("heading", { level: 1, name: "Prompt Pirates" })).toBeVisible();
-    await page.getByRole("button", { name: "Post a role" }).click();
+    await page.getByRole("button", { name: "Add an open spot" }).click();
     const roleDialog = page.getByRole("dialog");
-    await roleDialog.getByLabel("Role title").fill("Backend developer");
+    await roleDialog.getByLabel("Who you need").fill("Backend developer");
     const required = roleDialog.getByPlaceholder("Search skills…").first();
     await required.fill("Node");
     await required.press("Enter");
-    await roleDialog.getByRole("button", { name: "Post role" }).click();
+    await roleDialog.getByRole("button", { name: "Post spot" }).click();
     await expect(page.getByText("Backend developer")).toBeVisible();
     await context.close();
   });

@@ -5,8 +5,7 @@ import { signInWithGoogle } from "@/app/actions/auth";
 import { getCurrentUser } from "@/lib/auth";
 import { isGoogleEnabled } from "@/lib/auth-providers";
 import { Button } from "@/components/ui/button";
-import { BrandMark } from "@/components/brand";
-import { Stamp } from "@/components/noticeboard";
+import { TeamSheet } from "@/components/team-sheet";
 import { UserAvatar } from "@/components/user-avatar";
 import { safeNext } from "@/lib/auth-errors";
 import { AuthPanel } from "./auth-panel";
@@ -14,7 +13,7 @@ import { emailAuthEnabled } from "@/lib/auth-config";
 
 const DEMO_USERS = [
   { handle: "riya", name: "Riya Kulkarni", role: "Organizer · COEP AI Club · admin" },
-  { handle: "aarav", name: "Aarav Deshmukh", role: "Solo student looking for a team" },
+  { handle: "aarav", name: "Aarav Deshmukh", role: "Free agent, no team yet" },
   { handle: "neha", name: "Neha Joshi", role: "Team leader · Signal Shifters" },
   { handle: "dev", name: "Dev Agarwal", role: "Team leader · Kachra Kart, PICT" },
   { handle: "meera", name: "Meera Nair", role: "Applicant · PICT" },
@@ -35,12 +34,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     <div className="mx-auto grid w-full max-w-5xl flex-1 items-center gap-10 px-4 py-10 motion-safe:animate-page-in lg:grid-cols-[1fr_1fr] lg:py-16">
       <div className="flex w-full max-w-md flex-col gap-6 justify-self-center lg:justify-self-start">
         <div>
-          <p className="label-mono text-muted-foreground">{mode === "signup" ? "Create your account" : "Sign in or sign up"}</p>
-          <h1 className="mt-1 text-4xl font-extrabold">{mode === "signup" ? "Join your campus board." : "Pick up where your campus is."}</h1>
-          <p className="mt-2 text-muted-foreground">
-            Continue with your <strong className="font-semibold text-foreground">college Google account</strong> and you&apos;re
-            verified for your campus automatically. Or use email and a password. No college email? Verify later with your
-            student ID or two classmates.
+          <h1 className="text-5xl leading-[0.95] font-black">{mode === "signup" ? "Get in the game." : "Welcome back."}</h1>
+          <p className="mt-3 text-muted-foreground">
+            Use your <strong className="font-semibold text-foreground">college Google account</strong> and we&apos;ll know your
+            college straight away. Or use an email and password. No college email? You can prove your college later with your
+            student ID.
           </p>
         </div>
 
@@ -50,7 +48,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           </p>
         )}
 
-        <div className="flex flex-col gap-4 rounded-lg border border-ink/20 bg-card p-5">
+        <div className="flex flex-col gap-4 rounded-xl border border-ink bg-card p-5">
           {google && (
             <>
               <form action={signInWithGoogle.bind(null, next)}>
@@ -99,46 +97,22 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   );
 }
 
-/** Illustration of what verification gets you: a campus pass, stamped by your email domain. */
+/** What you're signing up for: a team with a spot that has your name on it. */
 function StudentPass() {
   return (
-    <figure aria-hidden="true" className="relative hidden justify-self-center lg:block">
-      <div className="w-[22rem] rotate-2 rounded-xl border border-ink/25 bg-card p-5 shadow-[6px_8px_0_0_rgba(26,23,20,0.10)] motion-safe:animate-rise">
-        <div className="flex items-center justify-between border-b border-dashed border-rule pb-3">
-          <span className="flex items-center gap-2">
-            <BrandMark className="size-6" />
-            <span className="label-mono font-semibold">Campus pass</span>
-          </span>
-          <span className="label-mono text-muted-foreground">2026–27</span>
-        </div>
-        <div className="flex gap-4 pt-4">
-          <div className="grid size-20 place-items-center rounded-md bg-type-workshop font-display text-2xl font-extrabold text-[#f4efe4]">AD</div>
-          <dl className="grid flex-1 content-start gap-1.5">
-            <div>
-              <dt className="label-mono text-muted-foreground">Name</dt>
-              <dd className="font-display text-lg leading-tight font-bold">Aarav Deshmukh</dd>
-            </div>
-            <div>
-              <dt className="label-mono text-muted-foreground">College</dt>
-              <dd className="text-sm">COEP Technological University</dd>
-            </div>
-          </dl>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-1">
-          {["Python · 3", "Pandas · 3", "ML · 2"].map((s) => (
-            <span key={s} className="rounded-sm border border-ink/30 px-1.5 text-xs">
-              {s}
-            </span>
-          ))}
-        </div>
-        <div className="mt-4 flex items-end justify-between border-t border-dashed border-rule pt-3">
-          <span className="label-mono text-muted-foreground">aarav@coeptech.ac.in</span>
-          <Stamp tone="ok" className="bg-card text-sm">
-            Verified
-          </Stamp>
-        </div>
-      </div>
-      <figcaption className="label-mono mt-6 text-center text-muted-foreground">Your email domain is your campus ID</figcaption>
+    <figure aria-hidden="true" className="relative hidden w-[23rem] justify-self-center lg:block">
+      <TeamSheet
+        className="motion-safe:animate-rise"
+        name="Byte Club"
+        subtitle="Teams of 2–4 · COEP AI Hackathon"
+        size={4}
+        members={[
+          { id: "1", name: "Riya Kulkarni", detail: "Team lead · React, Node.js" },
+          { id: "2", name: "Kabir Patil", detail: "Backend · Go, PostgreSQL" },
+        ]}
+        openings={[{ id: "3", role: "You?", detail: "ML engineer · Python, PyTorch" }]}
+      />
+      <figcaption className="mt-4 text-center text-sm text-muted-foreground">Somebody&apos;s always got next.</figcaption>
     </figure>
   );
 }

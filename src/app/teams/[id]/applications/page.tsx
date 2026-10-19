@@ -93,7 +93,7 @@ export default async function ApplicationsPage({ params }: PageProps<"/teams/[id
             { label: "Applications" },
           ]}
         />
-        <h1 className="text-3xl font-extrabold sm:text-4xl">Applications</h1>
+        <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Applications</h1>
         <p className="text-sm text-muted-foreground">
           Sorted by match score. New applications appear live. {teamFull && "Your team is full."}
         </p>
@@ -101,8 +101,8 @@ export default async function ApplicationsPage({ params }: PageProps<"/teams/[id
 
       {team.vacancies.length === 0 ? (
         <EmptyState
-          title="No roles posted yet"
-          action={<Button render={<Link href={`/teams/${team.id}`} />}>Post a role</Button>}
+          title="No open spots yet"
+          action={<Button render={<Link href={`/teams/${team.id}`} />}>Add an open spot</Button>}
         />
       ) : (
         team.vacancies.map((v) => {
@@ -129,7 +129,7 @@ export default async function ApplicationsPage({ params }: PageProps<"/teams/[id
                     const h = historyBy.get(a.applicantId);
                     const decided = !["pending", "shortlisted"].includes(a.status);
                     return (
-                      <li key={a.id} className={cn("flex flex-col gap-3 rounded-lg border border-rule bg-card p-4", decided && "opacity-70")}>
+                      <li key={a.id} className={cn("flex flex-col gap-3 rounded-xl border border-rule bg-card p-4", decided && "opacity-70")}>
                         <div className="flex items-start gap-3">
                           <UserAvatar name={a.applicant.name} src={a.applicant.avatarUrl} className="size-10" />
                           <div className="min-w-0 flex-1">

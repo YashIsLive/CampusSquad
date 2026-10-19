@@ -11,7 +11,7 @@ import { formatDateTime, relative } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
-import { UserAvatar } from "@/components/user-avatar";
+import { TeamSheet } from "@/components/team-sheet";
 import { MemberActions, TeamSettings, VacancyActions } from "./team-controls";
 import { PostVacancyButton } from "./post-vacancy";
 import { TeamChat } from "./team-chat";
@@ -94,10 +94,8 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
           ]}
         />
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-3xl font-extrabold sm:text-4xl">{team.name}</h1>
-          <Badge variant="secondary">
-            {size}/{event.teamMax} members
-          </Badge>
+          <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">{team.name}</h1>
+
           {incomplete && (
             <Badge variant="destructive" className="gap-1">
               <AlertTriangle className="size-3" /> Needs {event.teamMin - size} more to meet the minimum
@@ -118,78 +116,77 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="flex min-w-0 flex-col gap-6">
-          <section data-tour="members">
-            <h2 className="mb-3 text-xl font-bold">Members</h2>
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {team.members.map((m) => (
-                <li key={m.userId} className="flex items-start gap-3 rounded-lg border border-rule bg-card p-3">
-                  <UserAvatar name={m.user.name} src={m.user.avatarUrl} className="size-9" />
-                  <div className="min-w-0 flex-1">
-                    <Link href={`/u/${m.user.username}`} className="font-medium hover:underline">
-                      {m.user.name}
-                    </Link>
-                    <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                      {m.userId === team.leaderId ? "Leader" : (m.roleTitle ?? "Member")} · {m.user.college?.name ?? "No college"}
-                      {m.user.collegeVerified && <BadgeCheck className="size-3.5 text-ok" />}
-                    </p>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {m.user.skills
-                        .sort((a, b) => b.level - a.level)
-                        .slice(0, 4)
-                        .map((s) => s.skill.name)
-                        .join(" · ")}
-                    </p>
-                  </div>
-                  {!over && m.userId !== team.leaderId && (isLeader || m.userId === user?.id) && (
-                    <MemberActions teamId={team.id} userId={m.userId} self={m.userId === user?.id} />
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section>
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="text-xl font-bold">Open roles</h2>
+          <div data-tour="members" className="flex flex-col gap-3">
+            <div className="flex items-center justify-end gap-2">
               {isLeader && !over && <PostVacancyButton teamId={team.id} skills={skills} capacityLeft={capacityLeft} allowCross={event.allowCrossCollege} />}
             </div>
-            {team.vacancies.filter((v) => isLeader || v.status === "open").length === 0 ? (
-              <EmptyState
-                compact
-                title={isLeader ? "No roles posted" : "Not recruiting right now"}
-                description={isLeader ? "Post a role with the skills you're missing — applicants are ranked by match." : undefined}
-              />
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {team.vacancies
-                  .filter((v) => isLeader || v.status === "open")
-                  .map((v) => (
-                    <li key={v.id} className="flex flex-col gap-2 rounded-lg border border-rule bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="font-medium">
-                          {v.roleTitle}{" "}
-                          <Badge variant={v.status === "open" ? "secondary" : "outline"} className="ml-1 capitalize">
-                            {v.status === "open" ? `${v.slotsOpen}/${v.slotsTotal} open` : v.status}
-                          </Badge>
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {v.skills.map((s) => (s.required ? s.skill.name : `${s.skill.name} (nice)`)).join(" · ")}
-                          {v.commitmentHours ? ` · ${v.commitmentHours} h/week` : ""}
-                          {v.scope === "intra" ? " · same college" : ""}
-                        </p>
-                      </div>
-                      {isLeader ? (
-                        v.status === "open" && <VacancyActions vacancyId={v.id} teamId={team.id} pending={pendingBy.get(v.id) ?? 0} />
-                      ) : (
-                        <Button size="sm" variant="outline" render={<Link href={`/events/${event.id}?tab=teams`} />}>
-                          Apply on the team board
-                        </Button>
-                      )}
-                    </li>
-                  ))}
-              </ul>
+            <TeamSheet
+              name="Lineup"
+              subtitle={`Teams of ${event.teamMin}–${event.teamMax} at ${event.title}`}
+              size={event.teamMax}
+              members={team.members.map((m) => ({
+                id: m.userId,
+                name: m.user.name,
+                avatarUrl: m.user.avatarUrl,
+                href: `/u/${m.user.username}`,
+                detail: (
+                  <span className="flex items-center gap-1">
+                    {m.userId === team.leaderId ? "Team lead" : (m.roleTitle ?? "Member")} · {m.user.college?.name ?? "No college"}
+                    {m.user.collegeVerified && <BadgeCheck className="size-3.5 text-ok" />}
+                    {m.user.skills.length > 0 && (
+                      <span className="hidden sm:inline">
+                        {" · "}
+                        {[...m.user.skills]
+                          .sort((a, b) => b.level - a.level)
+                          .slice(0, 3)
+                          .map((s) => s.skill.name)
+                          .join(", ")}
+                      </span>
+                    )}
+                  </span>
+                ),
+                trailing:
+                  !over && m.userId !== team.leaderId && (isLeader || m.userId === user?.id) ? (
+                    <MemberActions teamId={team.id} userId={m.userId} self={m.userId === user?.id} />
+                  ) : undefined,
+              }))}
+              openings={team.vacancies
+                .filter((v) => v.status === "open")
+                .map((v) => ({
+                  id: v.id,
+                  role: `${v.roleTitle}${v.slotsOpen > 1 ? ` (${v.slotsOpen} spots)` : ""}`,
+                  detail: [
+                    v.skills.map((s) => (s.required ? s.skill.name : `${s.skill.name} (bonus)`)).join(", "),
+                    v.commitmentHours ? `${v.commitmentHours} h/week` : null,
+                    v.scope === "intra" ? "same college" : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · "),
+                  trailing: isLeader ? (
+                    <VacancyActions vacancyId={v.id} teamId={team.id} pending={pendingBy.get(v.id) ?? 0} />
+                  ) : !isMember ? (
+                    <Button size="sm" variant="ink" render={<Link href={`/events/${event.id}?tab=teams`} />}>
+                      I&apos;ve got it
+                    </Button>
+                  ) : undefined,
+                }))}
+            />
+            {isLeader && team.vacancies.every((v) => v.status !== "open") && !over && size < event.teamMax && (
+              <p className="text-sm text-muted-foreground">
+                Free spots stay quiet until you post them. Add a spot with the skills you need, and people at this event can say they&apos;ve
+                got it.
+              </p>
             )}
-          </section>
+            {isLeader && team.vacancies.some((v) => v.status !== "open") && (
+              <p className="text-sm text-muted-foreground">
+                Closed spots:{" "}
+                {team.vacancies
+                  .filter((v) => v.status !== "open")
+                  .map((v) => `${v.roleTitle} (${v.status})`)
+                  .join(", ")}
+              </p>
+            )}
+          </div>
 
           {isLeader && !over && size < event.teamMax && (
             <SuggestedTeammates
@@ -214,12 +211,12 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
 
         {isMember ? (
           <aside className="flex flex-col gap-4">
-            <section className="rounded-lg border border-rule bg-card p-4">
+            <section className="rounded-xl border border-rule bg-card p-4">
               <h2 className="mb-2 flex items-center gap-1.5 text-lg font-bold">
                 <CalendarClock className="size-4" /> Deadlines
               </h2>
               <ul className="flex flex-col gap-1.5 text-sm">
-                <Deadline label="Registration closes" at={event.regDeadline} now={now} />
+                <Deadline label="Sign-ups close" at={event.regDeadline} now={now} />
                 <Deadline label="Event starts" at={event.startsAt} now={now} />
                 <Deadline label="Event ends" at={event.endsAt} now={now} />
               </ul>
@@ -241,8 +238,8 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
           <aside>
             <EmptyState
               compact
-              title="Team workspace is private"
-              description="Chat, checklist and files are visible to members only."
+              title="Members only"
+              description="The team's chat and checklist are private to the people on it."
             />
           </aside>
         )}

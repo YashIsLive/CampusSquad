@@ -14,8 +14,8 @@ import { Field } from "@/components/form";
 import { Stamp } from "@/components/noticeboard";
 
 /**
- * Registration as a paper ticket: actions above the perforation, the stub below
- * (date, admission, and — once registered — your check-in code).
+ * Signing up, in one panel: the next step on top; the date, who it's for and — once you're in —
+ * your entry code underneath.
  */
 export function RegisterPanel(props: {
   eventId: string;
@@ -45,22 +45,22 @@ export function RegisterPanel(props: {
     });
 
   return (
-    <section aria-labelledby="ticket-heading" className="relative">
-      <div className="flex flex-col gap-3 rounded-t-lg border border-b-0 border-ink/25 bg-card p-4">
+    <section aria-labelledby="ticket-heading" className="relative overflow-hidden rounded-xl border border-ink bg-card">
+      <div className="flex flex-col gap-3 p-4">
         <div className="flex items-start justify-between gap-2">
-          <h2 id="ticket-heading" className="label-mono text-muted-foreground">
-            {registered ? "Your ticket" : "Registration"}
+          <h2 id="ticket-heading" className="text-xl font-extrabold">
+            {registered ? "You're in" : "Registration"}
           </h2>
           {registered && <Stamp tone={props.checkedIn ? "ok" : "ink"}>{props.checkedIn ? "Checked in" : "Registered"}</Stamp>}
         </div>
 
         {externalUrl && (
           <div className="flex flex-col gap-2 rounded-md bg-secondary p-3">
-            <p className="text-sm">Official registration is on the organizer&apos;s site.</p>
+            <p className="text-sm">The organizers take sign-ups on their own site.</p>
             <Button variant="ink" render={<a href={externalUrl} target="_blank" rel="noreferrer" />}>
-              Register on official site <ExternalLink />
+              Register on their site <ExternalLink />
             </Button>
-            <p className="text-xs text-muted-foreground">Join here too, to find teammates.</p>
+            <p className="text-xs text-muted-foreground">Sign up here too if you want to find teammates.</p>
           </div>
         )}
 
@@ -74,20 +74,21 @@ export function RegisterPanel(props: {
               (team ? (
                 <Link
                   href={`/teams/${team.id}`}
-                  className="group/team flex items-center justify-between rounded-md border border-rule bg-paper px-3 py-2.5 text-sm hover:border-ink"
+                  className="group/team flex items-center justify-between rounded-lg border border-rule bg-paper px-3 py-2.5 text-sm hover:border-ink"
                 >
                   <span>
-                    <span className="label-mono block text-muted-foreground">{team.isLeader ? "You lead" : "Your team"}</span>
+                    <span className="block text-xs text-muted-foreground">{team.isLeader ? "You lead" : "Your team"}</span>
                     <strong className="font-display text-base">{team.name}</strong>
                   </span>
                   <ArrowRight className="size-4 transition-transform group-hover/team:translate-x-0.5" />
                 </Link>
               ) : (
-                <div className="flex flex-col gap-2 rounded-md border border-dashed border-signal/60 bg-signal-soft/50 p-3 text-sm">
-                  <p className="font-medium">You don&apos;t have a team yet.</p>
+                <div className="flex flex-col gap-2 rounded-lg bg-court/40 p-3 text-sm">
+                  <p className="font-semibold">No team yet.</p>
+                  <p className="text-foreground/80">Take an open spot on a team, or start your own and say who you need.</p>
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" render={<Link href={`/events/${eventId}?tab=teams`} scroll={false} />}>
-                      Browse open roles
+                    <Button size="sm" variant="ink" render={<Link href={`/events/${eventId}?tab=teams`} scroll={false} />}>
+                      See open spots
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => setCreatingTeam(true)}>
                       Start a team
@@ -121,38 +122,31 @@ export function RegisterPanel(props: {
                 <Button size="lg" variant="outline" disabled={pending} onClick={() => setCreatingTeam(true)}>
                   Register &amp; start a team
                 </Button>
-                <p className="text-xs text-muted-foreground">Solo? You can join a team later from the Teams tab.</p>
+                <p className="text-xs text-muted-foreground">On your own for now? You can join a team later.</p>
               </>
             )}
           </>
         )}
       </div>
 
-      {/* Perforation with punched notches. */}
-      <div aria-hidden="true" className="relative h-0">
-        <div className="mx-3 border-t-2 border-dashed border-rule-strong" />
-        <span className="absolute top-0 -left-2.5 size-5 -translate-y-1/2 rounded-full border border-ink/25 bg-paper [clip-path:inset(0_0_0_50%)]" />
-        <span className="absolute top-0 -right-2.5 size-5 -translate-y-1/2 rounded-full border border-ink/25 bg-paper [clip-path:inset(0_50%_0_0)]" />
-      </div>
-
-      <div className="grid grid-cols-[1fr_auto] items-end gap-3 rounded-b-lg border border-t-0 border-ink/25 bg-card p-4">
-        <dl className="grid gap-1.5">
+      <div className="grid grid-cols-[1fr_auto] items-end gap-3 border-t border-ink bg-secondary/50 p-4">
+        <dl className="grid gap-2">
           <div>
-            <dt className="label-mono text-muted-foreground">Date</dt>
+            <dt className="text-xs text-muted-foreground">When</dt>
             <dd className="text-sm font-medium">{stub.date}</dd>
           </div>
           <div>
-            <dt className="label-mono text-muted-foreground">Admit</dt>
+            <dt className="text-xs text-muted-foreground">Who</dt>
             <dd className="text-sm font-medium">{stub.who}</dd>
           </div>
           {registered && props.checkinCode ? (
             <div>
-              <dt className="label-mono text-muted-foreground">Check-in code</dt>
-              <dd className="font-mono text-base font-semibold tracking-[0.18em]">{props.checkinCode}</dd>
+              <dt className="text-xs text-muted-foreground">Your entry code</dt>
+              <dd className="font-mono text-lg font-semibold tracking-[0.18em]">{props.checkinCode}</dd>
             </div>
           ) : (
-            <p className="label-mono pt-1 text-muted-foreground">
-              {stub.registered} going{isTeamEvent && ` · ${stub.teams} teams`}
+            <p className="pt-1 text-sm text-muted-foreground">
+              {stub.registered} going{isTeamEvent && ` · ${stub.teams} team${stub.teams === 1 ? "" : "s"}`}
             </p>
           )}
         </dl>
@@ -163,7 +157,7 @@ export function RegisterPanel(props: {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-display text-xl font-bold">Start a team</DialogTitle>
-            <DialogDescription>You&apos;ll lead it. Next, post the roles you&apos;re missing so people can apply.</DialogDescription>
+            <DialogDescription>You&apos;ll lead it. Next, add the spots you need filled so people can join.</DialogDescription>
           </DialogHeader>
           <form
             className="flex flex-col gap-3"
@@ -205,8 +199,8 @@ function CheckinQr({ code }: { code: string }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-xs">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl font-bold">Check-in code</DialogTitle>
-            <DialogDescription>Show this at the entrance. Turn your brightness up.</DialogDescription>
+            <DialogTitle className="font-display text-xl font-bold">Your entry code</DialogTitle>
+            <DialogDescription>Show this at the door. Turn your screen brightness up.</DialogDescription>
           </DialogHeader>
           <div className="rounded-md bg-white p-3">
             {/* eslint-disable-next-line @next/next/no-img-element -- generated data URL */}

@@ -22,7 +22,7 @@ export const metadata: Metadata = { title: "Manage event" };
 
 const SECTIONS = [
   { key: "dashboard", label: "Dashboard" },
-  { key: "registrants", label: "Registrants" },
+  { key: "registrants", label: "People" },
   { key: "share", label: "Share kit" },
   { key: "checkin", label: "Check-in" },
 ] as const;
@@ -63,7 +63,7 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
 
   const byLink = new Map<string, number>();
   for (const r of registrants) {
-    const k = r.shareLink?.channelLabel ?? "Direct / CampusSquad feed";
+    const k = r.shareLink?.channelLabel ?? "Direct / Got Next feed";
     byLink.set(k, (byLink.get(k) ?? 0) + 1);
   }
   const byCollege = new Map<string, number>();
@@ -91,7 +91,7 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
               { label: "Manage" },
             ]}
           />
-          <h1 className="text-3xl font-extrabold sm:text-4xl">{event.title}</h1>
+          <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">{event.title}</h1>
           <p className="text-sm text-muted-foreground">
             {event.org.name} · registration closes {formatDateTime(event.regDeadline)}
           </p>
@@ -123,7 +123,7 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
             {isTeamEvent ? (
               <>
                 <Stat label="Teams formed" value={teamStats?.teams ?? 0} hint={teamStats?.incomplete ? `${teamStats.incomplete} below min size` : undefined} />
-                <Stat label="Solo registrants" value={solo}>
+                <Stat label="Without a team" value={solo}>
                   {event.endsAt > new Date() && (
                     <NudgeSoloButton eventId={event.id} solo={solo} nudgedAt={event.soloNudgedAt ? relative(event.soloNudgedAt) : null} />
                   )}
@@ -134,7 +134,7 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
             )}
           </div>
 
-          <section className="rounded-lg border border-rule bg-card p-4">
+          <section className="rounded-xl border border-rule bg-card p-4">
             <h2 className="mb-3 text-xl font-bold">Funnel</h2>
             <ol className="flex flex-col gap-2">
               {funnel.map((f) => {
@@ -172,7 +172,7 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
           {total === 0 ? (
             <EmptyState title="No registrations yet" description="Share your event from the Share kit tab." />
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-rule bg-card">
+            <div className="overflow-x-auto rounded-xl border border-rule bg-card">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                   <tr>
@@ -240,9 +240,9 @@ export default async function ManageEventPage({ params, searchParams }: PageProp
 
 function Stat({ label, value, hint, children }: { label: string; value: number; hint?: string; children?: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-rule bg-card p-4">
+    <div className="rounded-xl border border-rule bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-2xl font-semibold tabular-nums">{value}</p>
+      <p className="score mt-1 text-5xl">{value}</p>
       {hint && <p className="text-xs text-signal-ink">{hint}</p>}
       {children && <div className="mt-2">{children}</div>}
     </div>
@@ -252,7 +252,7 @@ function Stat({ label, value, hint, children }: { label: string; value: number; 
 function Breakdown({ title, rows, total }: { title: string; rows: Array<[string, number]>; total: number }) {
   const sorted = rows.sort((a, b) => b[1] - a[1]);
   return (
-    <section className="rounded-lg border border-rule bg-card p-4">
+    <section className="rounded-xl border border-rule bg-card p-4">
       <h2 className="mb-3 text-xl font-bold">{title}</h2>
       {sorted.length === 0 ? (
         <p className="text-sm text-muted-foreground">No data yet.</p>

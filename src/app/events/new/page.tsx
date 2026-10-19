@@ -19,9 +19,9 @@ export default async function NewEventPage({ searchParams }: PageProps<"/events/
     return (
       <div className="mx-auto w-full max-w-xl px-4 py-10">
         <EmptyState
-          title="Create an organization first"
+          title="Add your club first"
           description="Events are posted by a club, department or community. Create one (you'll be its owner), or ask an existing club's owner to add you as an admin."
-          action={<Button render={<Link href="/orgs/new" />}>Create organization</Button>}
+          action={<Button render={<Link href="/orgs/new" />}>Add your club</Button>}
         />
       </div>
     );
@@ -32,7 +32,7 @@ export default async function NewEventPage({ searchParams }: PageProps<"/events/
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:py-10">
-      <h1 className="text-3xl font-extrabold sm:text-4xl">Post an event</h1>
+      <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Post an event</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Takes about 5 minutes. You&apos;ll get a share kit (links + QR) once it&apos;s published.
       </p>

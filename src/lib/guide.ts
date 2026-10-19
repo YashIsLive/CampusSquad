@@ -156,7 +156,7 @@ export async function getChecklist(user: CurrentUser): Promise<{ track: GuideTra
       {
         id: "team",
         title: "Find a team",
-        why: "Apply to an open role, or post that you're looking — leaders can invite you.",
+        why: "Take an open spot on a team, or list yourself as a free agent so teams can invite you.",
         done: teamOrApp.n > 0,
         href: teamEvent ? `/events/${teamEvent.id}?tab=teams&tour=event&step=roles` : "/",
         cta: "Open a team board",

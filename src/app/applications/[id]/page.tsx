@@ -62,7 +62,7 @@ export default async function ApplicationThreadPage({ params }: PageProps<"/appl
                   { label: applicant.name },
                 ]
               : [
-                  { href: "/me/applications", label: "Teams & applications" },
+                  { href: "/me/applications", label: "My teams" },
                   { label: `${vacancy.roleTitle} at ${team.name}` },
                 ]
           }
@@ -90,7 +90,7 @@ export default async function ApplicationThreadPage({ params }: PageProps<"/appl
       </header>
 
       {/* The application itself opens the conversation. */}
-      <article className="rounded-lg border border-dashed border-rule bg-secondary/40 p-4 text-sm">
+      <article className="rounded-xl border border-rule bg-secondary/50 p-4 text-sm">
         <p className="label-mono mb-1 text-muted-foreground">
           {isLeader ? `${applicant.name.split(" ")[0]}'s application` : "Your application"} · {relative(application.createdAt)}
         </p>

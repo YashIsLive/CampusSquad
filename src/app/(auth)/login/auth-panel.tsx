@@ -178,7 +178,7 @@ export function AuthPanel({
   return (
     <div className="flex flex-col gap-4">
       {mode !== "forgot" && (
-        <div role="tablist" aria-label="Sign in or create an account" className="grid grid-cols-2 gap-1 rounded-md bg-secondary p-1">
+        <div role="tablist" aria-label="Sign in or create an account" className="grid grid-cols-2 gap-1 rounded-full bg-secondary p-1">
           {(
             [
               ["signin", "Sign in"],
@@ -193,7 +193,7 @@ export function AuthPanel({
                 role="tab"
                 aria-selected={active}
                 onClick={() => switchMode(m)}
-                className={cn("h-9 rounded-[5px] text-sm transition-colors", active ? "bg-card font-medium shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                className={cn("h-9 rounded-full text-sm transition-colors", active ? "bg-ink font-semibold text-paper" : "text-muted-foreground hover:text-foreground")}
               >
                 {label}
               </button>

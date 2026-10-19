@@ -22,7 +22,7 @@ export const TOURS: Record<TourKey, Tour> = {
   feed: {
     label: "Explore",
     intro: {
-      title: "Welcome to CampusSquad",
+      title: "Welcome to Got Next",
       body: "This is where every hackathon, contest and workshop near you shows up. Take a 30-second look around?",
     },
     steps: [
@@ -46,9 +46,9 @@ export const TOURS: Record<TourKey, Tour> = {
     steps: [
       { id: "facts", title: "The essentials", body: "When and where, who can join, team size and fee." },
       { id: "ticket", title: "Register here", body: "After you register this becomes your ticket, with a check-in code to show at the door." },
-      { id: "event-tabs", title: "Need a team?", body: "The Teams tab lists open roles from teams at this event, and students looking for a team." },
+      { id: "event-tabs", title: "Need a team?", body: "The Teams tab shows open spots on teams at this event, and free agents: people here without a team." },
       { id: "roles", title: "Roles ranked for you", body: "Each role shows how well your skills match it. A check mark means you have that skill.", tryIt: "Apply with a short pitch; the leader can message you back." },
-      { id: "looking", title: "Or let teams find you", body: "Post a “looking for a team” card and leaders can invite you directly." },
+      { id: "looking", title: "Or let teams find you", body: "List yourself as a free agent and team leads can invite you directly." },
       { id: "calendar", title: "Put it in your calendar", body: "One tap adds the event to Google Calendar." },
     ],
   },

@@ -37,6 +37,13 @@ async function main() {
   for (const scheme of ["light", "dark"] as const) {
     console.log(scheme);
 
+    // Signed out: the landing page.
+    const visitor = await browser.newContext({ viewport: DESKTOP, colorScheme: scheme, deviceScaleFactor: 2, reducedMotion: "reduce" });
+    const vp = await visitor.newPage();
+    await vp.goto(`${BASE}/`);
+    await shot(vp, "landing", scheme);
+    await visitor.close();
+
     // Student: feed, event, team board.
     const student = await signedIn(browser, "aarav", scheme);
     const p = student.page;

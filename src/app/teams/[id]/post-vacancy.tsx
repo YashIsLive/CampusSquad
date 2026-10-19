@@ -54,13 +54,13 @@ export function PostVacancyButton({
   return (
     <>
       <Button size="sm" data-tour="post-role" onClick={() => setOpen(true)}>
-        <Plus /> Post a role
+        <Plus /> Add an open spot
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Post an open role</DialogTitle>
-            <DialogDescription>Applicants are ranked by how many of the required skills they have.</DialogDescription>
+            <DialogTitle>Add an open spot</DialogTitle>
+            <DialogDescription>Say who you need. People who apply are ranked by how many of these skills they have.</DialogDescription>
           </DialogHeader>
           <form
             className="flex flex-col gap-3"
@@ -83,20 +83,20 @@ export function PostVacancyButton({
                   setErrors(res.fieldErrors ?? {});
                   return void toast.error(res.error);
                 }
-                toast.success("Role posted");
+                toast.success("Spot posted");
                 setOpen(false);
                 reset();
                 router.refresh();
               });
             }}
           >
-            <Field label="Role title" htmlFor="role" error={errors.roleTitle?.[0]}>
+            <Field label="Who you need" htmlFor="role" error={errors.roleTitle?.[0]}>
               <Input id="role" value={roleTitle} onChange={(e) => setRoleTitle(e.target.value)} placeholder="React Native developer" required />
             </Field>
-            <Field label="Required skills" error={errors.requiredSkillIds?.[0]}>
+            <Field label="Must have" error={errors.requiredSkillIds?.[0]}>
               <SkillPicker options={skills} value={required} onChange={setRequired} max={6} label="Add a required skill" />
             </Field>
-            <Field label="Nice to have">
+            <Field label="Bonus skills">
               <SkillPicker options={skills} value={nice} onChange={setNice} max={6} label="Add a nice-to-have skill" />
             </Field>
             <Field label="What they'll do" htmlFor="desc">
@@ -106,7 +106,7 @@ export function PostVacancyButton({
               <Field label="Hours / week" htmlFor="hrs">
                 <Input id="hrs" type="number" min={1} max={80} value={hours} onChange={(e) => setHours(e.target.value)} />
               </Field>
-              <Field label="Slots" htmlFor="slots" hint={`Max ${capacityLeft}`}>
+              <Field label="How many" htmlFor="slots" hint={`Up to ${capacityLeft}`}>
                 <Input id="slots" type="number" min={1} max={capacityLeft} value={slots} onChange={(e) => setSlots(Number(e.target.value))} />
               </Field>
               <Field label="Open to" htmlFor="scope">
@@ -116,11 +116,11 @@ export function PostVacancyButton({
                 </NativeSelect>
               </Field>
             </div>
-            <Field label="Screening question (optional)" htmlFor="q" hint="e.g. Link one project you've shipped.">
+            <Field label="One question for applicants (optional)" htmlFor="q" hint="For example: link one project you've built.">
               <Input id="q" value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={200} />
             </Field>
             <Button type="submit" disabled={pending}>
-              {pending ? "Posting…" : "Post role"}
+              {pending ? "Posting…" : "Post spot"}
             </Button>
           </form>
         </DialogContent>

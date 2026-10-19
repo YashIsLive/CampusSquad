@@ -145,7 +145,7 @@ export const nudgeSoloRegistrants = authedAction(z.object({ eventId: z.uuid() })
   if (event.teamMax < 2) fail("This is a solo event.");
   if (event.endsAt < new Date()) fail("This event has ended.");
   if (event.soloNudgedAt && Date.now() - event.soloNudgedAt.getTime() < NUDGE_COOLDOWN_MS) {
-    fail("You nudged solo registrants recently. Try again in a few hours.");
+    fail("You nudged people without a team recently. Try again in a few hours.");
   }
   const solo = await db
     .select({ userId: schema.registrations.userId })

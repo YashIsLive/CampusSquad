@@ -44,7 +44,7 @@ export default async function MyEventsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:py-10">
-      <h1 className="text-3xl font-extrabold sm:text-4xl">My events</h1>
+      <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">My events</h1>
 
       {hosting.length > 0 && (
         <Section title="Hosting">

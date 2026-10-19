@@ -25,7 +25,7 @@ const orgSchema = z.object({
 
 export const createOrganization = authedAction(orgSchema, async (input, user) => {
   if (!user.collegeVerified || !user.collegeId) {
-    fail("Only verified students can create an organization. Get verified at /verify (college email, student ID or classmate vouches).");
+    fail("Only verified students can add a club. Get verified first: college email, student ID or two classmates.");
   }
   await assertWithinLimit("org", user.id);
   const taken = await db.query.organizations.findFirst({ where: eq(schema.organizations.slug, input.slug) });
@@ -46,7 +46,7 @@ export const createOrganization = authedAction(orgSchema, async (input, user) =>
 export const updateOrganization = authedAction(
   orgSchema.omit({ slug: true }).extend({ orgId: z.uuid() }),
   async ({ orgId, ...input }, user) => {
-    if (!(await isOrgAdmin(user.id, orgId))) fail("Only org admins can edit this organization.");
+    if (!(await isOrgAdmin(user.id, orgId))) fail("Only the club's admins can edit it.");
     const [org] = await db
       .update(schema.organizations)
       .set(input)
@@ -65,7 +65,7 @@ export const addOrgAdmin = authedAction(
     });
     if (me?.role !== "owner") fail("Only the owner can add admins.");
     const target = await db.query.profiles.findFirst({ where: eq(schema.profiles.email, email.toLowerCase()) });
-    if (!target) fail("No CampusSquad account with that email. Ask them to sign up first.");
+    if (!target) fail("No Got Next account with that email. Ask them to sign up first.");
     await db
       .insert(schema.orgMembers)
       .values({ orgId, userId: target.id, role: "admin" })

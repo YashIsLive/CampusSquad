@@ -92,7 +92,7 @@ export async function SuggestedTeammates({
         {suggestions.map((s) => {
           const p = byId.get(s.candidate.userId)!;
           return (
-            <li key={p.id} className="flex flex-col gap-2 rounded-lg border border-rule bg-card p-3">
+            <li key={p.id} className="flex flex-col gap-2 rounded-xl border border-rule bg-card p-3">
               <div className="flex items-center gap-3">
                 <UserAvatar name={p.name} src={p.avatarUrl} className="size-9" />
                 <div className="min-w-0 flex-1">
@@ -101,7 +101,7 @@ export async function SuggestedTeammates({
                   </Link>
                   <p className="truncate text-xs text-muted-foreground">
                     {p.college?.name ?? "No college"}
-                    {s.candidate.source === "looking" && " · looking for a team"}
+                    {s.candidate.source === "looking" && " · free agent"}
                   </p>
                 </div>
                 <Badge variant="secondary" title={`Best fit: ${s.roleTitle}`}>

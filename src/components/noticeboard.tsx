@@ -2,47 +2,37 @@ import type { ReactNode } from "react";
 import { TIME_ZONE } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+/*
+ * Team-sheet primitives shared across pages. (File name kept from the first design so imports
+ * stay stable.)
+ */
+
 const monthFmt = new Intl.DateTimeFormat("en-IN", { timeZone: TIME_ZONE, month: "short" });
 const dayFmt = new Intl.DateTimeFormat("en-IN", { timeZone: TIME_ZONE, day: "numeric" });
 const weekdayFmt = new Intl.DateTimeFormat("en-IN", { timeZone: TIME_ZONE, weekday: "short" });
 
-/** Calendar tear-off: month in signal mono, big day number. */
+/** Fixture date: big condensed day number, month and weekday in small caps. */
 export function DateBlock({ date, className, size = "md" }: { date: Date; className?: string; size?: "sm" | "md" | "lg" }) {
   return (
-    <div
-      className={cn(
-        "flex shrink-0 flex-col items-center overflow-hidden rounded-md border border-ink/80 bg-paper text-center text-ink",
-        size === "sm" && "w-11",
-        size === "md" && "w-14",
-        size === "lg" && "w-20",
-        className,
-      )}
-    >
-      <span className={cn("label-mono w-full bg-ink py-0.5 text-paper", size === "lg" && "py-1")}>{monthFmt.format(date)}</span>
-      <span
-        className={cn(
-          "font-display leading-none font-bold tabular-nums",
-          size === "sm" && "pt-1 text-lg",
-          size === "md" && "pt-1.5 text-2xl",
-          size === "lg" && "pt-2 text-4xl",
-        )}
-      >
+    <div className={cn("flex shrink-0 flex-col items-center text-center leading-none", size === "lg" ? "w-16" : "w-11", className)}>
+      <span className="label-mono text-muted-foreground">{monthFmt.format(date)}</span>
+      <span className={cn("score", size === "sm" && "text-[1.9rem]", size === "md" && "text-[2.3rem]", size === "lg" && "text-[3.4rem]")}>
         {dayFmt.format(date)}
       </span>
-      <span className={cn("label-mono pb-1 text-[0.6rem] text-muted-foreground", size === "lg" && "pb-1.5")}>{weekdayFmt.format(date)}</span>
+      <span className="label-mono text-muted-foreground">{weekdayFmt.format(date)}</span>
     </div>
   );
 }
 
-/** Rubber-stamp label ("Closing soon", "Full", "Checked in"). Rotated, animates in once. */
+/** Flat status tag ("Closing soon", "Full", "Checked in"). */
 export function Stamp({ children, tone = "signal", className }: { children: ReactNode; tone?: "signal" | "ink" | "ok"; className?: string }) {
   return (
     <span
       className={cn(
-        "label-mono inline-block -rotate-[8deg] rounded-sm border-2 px-1.5 py-0.5 font-semibold motion-safe:animate-[stamp-in_420ms_cubic-bezier(0.2,0.7,0.2,1)_both]",
-        tone === "signal" && "border-signal text-signal-ink",
-        tone === "ink" && "border-ink text-ink",
-        tone === "ok" && "border-ok text-ok",
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs leading-5 font-semibold whitespace-nowrap",
+        tone === "signal" && "bg-signal-soft text-signal-ink",
+        tone === "ink" && "bg-ink text-paper",
+        tone === "ok" && "bg-ok/12 text-ok",
         className,
       )}
     >
@@ -51,27 +41,51 @@ export function Stamp({ children, tone = "signal", className }: { children: Reac
   );
 }
 
-/** Push-pin dot for pinned items on the board. */
-export function Pin({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn("absolute top-2 left-1/2 z-10 size-3.5 -translate-x-1/2 rounded-full border-2 border-ink bg-signal shadow-[1px_2px_0_0_rgba(0,0,0,0.35)]", className)}
-    />
-  );
-}
-
-/** Mono metadata row: items separated by thin dots. */
+/** A quiet line of facts separated by dots: "Offline · Pune · Teams of 2–4". */
 export function MetaLine({ items, className }: { items: Array<ReactNode | false | null | undefined>; className?: string }) {
   const shown = items.filter(Boolean);
   return (
-    <p className={cn("label-mono flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-muted-foreground", className)}>
+    <p className={cn("flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground", className)}>
       {shown.map((item, i) => (
         <span key={i} className="flex items-center gap-1.5">
-          {i > 0 && <span aria-hidden="true" className="size-[3px] rounded-full bg-current opacity-60" />}
+          {i > 0 && <span aria-hidden="true">·</span>}
           {item}
         </span>
       ))}
     </p>
+  );
+}
+
+/**
+ * Team spots as dots — filled are taken, lime are open: ●●○○.
+ * The same motif as the logo, so "a spot is open" reads the same everywhere.
+ */
+export function Slots({
+  filled,
+  total,
+  className,
+  size = "sm",
+}: {
+  filled: number;
+  total: number;
+  className?: string;
+  size?: "sm" | "md";
+}) {
+  const shown = Math.min(Math.max(total, 0), 12);
+  const taken = Math.min(filled, shown);
+  return (
+    <span role="img" aria-label={`${taken} of ${total} spots taken`} className={cn("inline-flex items-center gap-1", className)}>
+      {Array.from({ length: shown }, (_, i) => (
+        <span
+          key={i}
+          className={cn(
+            "rounded-full",
+            size === "sm" ? "size-2.5" : "size-3.5",
+            i < taken ? "bg-ink" : "bg-court ring-1 ring-ink/25 ring-inset motion-safe:animate-[slot-fill_320ms_var(--ease-out)_both]",
+          )}
+          style={i >= taken ? { animationDelay: `${(i - taken) * 60}ms` } : undefined}
+        />
+      ))}
+    </span>
   );
 }

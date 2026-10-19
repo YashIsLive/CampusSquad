@@ -83,7 +83,7 @@ export function NativeSelect({ className, ...props }: ComponentProps<"select">) 
 
 export function FormSection({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-rule bg-card p-4 sm:p-5">
+    <section className="flex flex-col gap-4 rounded-xl border border-rule bg-card p-4 sm:p-5">
       <div>
         <h2 className="text-lg font-bold">{title}</h2>
         {description && <p className="text-sm text-muted-foreground">{description}</p>}

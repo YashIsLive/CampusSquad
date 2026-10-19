@@ -27,11 +27,11 @@ export function UserMenu({
         <DropdownMenuItem render={<Link href={`/u/${user.username}`} />}>My profile</DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/onboarding" />}>Edit profile</DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/me/events" />}>My events</DropdownMenuItem>
-        <DropdownMenuItem render={<Link href="/me/applications" />}>Teams & applications</DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/me/applications" />}>My teams</DropdownMenuItem>
         {!user.verified && <DropdownMenuItem render={<Link href="/verify" />}>Get verified</DropdownMenuItem>}
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/events/new" />}>Post an event</DropdownMenuItem>
-        <DropdownMenuItem render={<Link href="/orgs/new" />}>Create organization</DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/orgs/new" />}>Add your club</DropdownMenuItem>
         {user.reviewer && <DropdownMenuItem render={<Link href="/verify/review" />}>Review student IDs</DropdownMenuItem>}
         {user.isAdmin && <DropdownMenuItem render={<Link href="/admin" />}>Admin</DropdownMenuItem>}
         <DropdownMenuSeparator />

@@ -99,7 +99,7 @@ export function CopyLink({ url }: { url: string }) {
       onClick={async () => {
         try {
           if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
-            await navigator.share({ title: "Vouch for me on CampusSquad", url });
+            await navigator.share({ title: "Vouch for me on Got Next", url });
             return;
           }
           await navigator.clipboard.writeText(url);

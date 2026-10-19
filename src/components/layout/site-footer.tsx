@@ -7,9 +7,9 @@ export function SiteFooter() {
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-4 py-6">
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <BrandMark className="size-5" />
-          The campus noticeboard for tech events and teammates.
+          Hackathons near you, and a team to go with.
         </p>
-        <nav aria-label="Footer" className="label-mono flex gap-4 text-muted-foreground">
+        <nav aria-label="Footer" className="flex gap-5 text-sm text-muted-foreground">
           <Link href="/" className="hover:text-foreground">
             Explore
           </Link>
@@ -17,7 +17,7 @@ export function SiteFooter() {
             Host an event
           </Link>
           <Link href="/orgs/new" className="hover:text-foreground">
-            Start a club page
+            Add your club
           </Link>
         </nav>
       </div>

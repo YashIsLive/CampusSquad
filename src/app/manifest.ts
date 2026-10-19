@@ -1,16 +1,16 @@
 import type { MetadataRoute } from "next";
 
-/** Installable PWA: students add CampusSquad to their home screen like an app. */
+/** Installable PWA: students add Got Next to their home screen like an app. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "CampusSquad — campus tech events & teammates",
-    short_name: "CampusSquad",
-    description: "Hackathons, quizzes and coding contests on your campus — and teammates who fit.",
+    name: "Got Next — hackathons near you, and a team to go with",
+    short_name: "Got Next",
+    description: "Find hackathons, coding contests and workshops near your college, and the people to build with.",
     start_url: "/",
     scope: "/",
     display: "standalone",
-    background_color: "#f4f1ea",
-    theme_color: "#1a1714",
+    background_color: "#f3f3f0",
+    theme_color: "#0f0f0e",
     categories: ["education", "social"],
     icons: [
       { src: "/pwa-icon/192", sizes: "192x192", type: "image/png" },
@@ -19,7 +19,7 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: "My events", url: "/me/events" },
-      { name: "Teams & applications", url: "/me/applications" },
+      { name: "My teams", url: "/me/applications" },
     ],
   };
 }

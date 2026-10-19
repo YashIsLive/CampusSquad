@@ -23,9 +23,7 @@ import { googleCalendarUrl } from "@/lib/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
-import { EventArt } from "@/components/event-art";
 import { posterVT, titleVT } from "@/components/event-card";
-import { DateBlock, Stamp } from "@/components/noticeboard";
 import { Breadcrumbs, TabNav } from "@/components/nav-bits";
 import { PageTour } from "@/components/guide/page-tour";
 import { cn } from "@/lib/utils";
@@ -48,6 +46,8 @@ export async function generateMetadata({ params }: PageProps<"/events/[id]">): P
     twitter: { card: "summary_large_image", title: event.title, description },
   };
 }
+
+const fixtureDate = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", weekday: "long", day: "numeric", month: "long" });
 
 const TABS = [
   { key: "overview", label: "Overview" },
@@ -129,59 +129,73 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
 
       <div className="grid gap-8 lg:grid-cols-[1fr_20rem] lg:items-start">
         <div className="flex min-w-0 flex-col gap-6">
-          <ViewTransition name={posterVT(event.id)} share="morph" default="none">
-            <EventArt
-              id={event.id}
-              type={event.type}
-              posterUrl={event.posterUrl}
-              className="aspect-[16/9] rounded-lg border border-ink/10 sm:aspect-[21/9]"
-            >
-              <span className="label-mono absolute top-3 left-3 rounded-sm bg-paper px-2 py-1 text-ink">{EVENT_TYPE_LABEL[event.type]}</span>
-              {closingSoon && (
-                <span className="absolute right-3 bottom-3 rounded-sm bg-paper px-1.5 py-1">
-                  <Stamp>Closing soon</Stamp>
-                </span>
-              )}
-            </EventArt>
-          </ViewTransition>
-
-          <header className="flex gap-4">
-            <DateBlock date={event.startsAt} size="lg" className="hidden sm:flex" />
-            <div className="flex min-w-0 flex-col gap-2">
-              <h1 className="text-3xl leading-tight font-extrabold sm:text-[2.6rem]">
-                <ViewTransition name={titleVT(event.id)} share="morph" default="none">
-                  <span>{event.title}</span>
+          <header className="flex flex-col gap-5" style={{ "--type": `var(--type-${event.type})` } as React.CSSProperties}>
+            <div className="flex gap-5">
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
+                <p className="label-mono flex items-center gap-2">
+                  <span aria-hidden="true" className="size-2.5 rounded-full bg-(--type)" />
+                  {fixtureDate.format(event.startsAt)} · {EVENT_TYPE_LABEL[event.type]}
+                </p>
+                <h1 className="text-4xl leading-[0.98] font-black sm:text-[3.4rem]">
+                  <ViewTransition name={titleVT(event.id)} share="morph" default="none">
+                    <span>{event.title}</span>
+                  </ViewTransition>
+                </h1>
+                <Link
+                  href={`/orgs/${event.org.slug}`}
+                  className="flex w-fit items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                >
+                  by <span className="font-semibold text-foreground underline decoration-court decoration-2 underline-offset-4">{event.org.name}</span>
+                  {event.org.verified && <BadgeCheck className="size-4 text-ok" role="img" aria-label="Verified organization" />}
+                  {event.org.college && <span className="hidden sm:inline">· {event.org.college.name}</span>}
+                </Link>
+                {event.domainTags.length > 0 && (
+                  <ul aria-label="Topics" className="flex flex-wrap gap-1.5">
+                    {event.domainTags.map((d) => (
+                      <li key={d}>
+                        <Badge variant="outline">{domainLabel(d)}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {event.posterUrl && (
+                <ViewTransition name={posterVT(event.id)} share="morph" default="none">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- organizer-uploaded poster of any size */}
+                  <img
+                    src={event.posterUrl}
+                    alt={`Poster for ${event.title}`}
+                    className="hidden aspect-[4/5] w-40 shrink-0 rounded-xl border border-rule object-cover sm:block"
+                  />
                 </ViewTransition>
-              </h1>
-              <Link
-                href={`/orgs/${event.org.slug}`}
-                className="flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-              >
-                by <span className="font-medium text-foreground underline decoration-rule decoration-2 underline-offset-4">{event.org.name}</span>
-                {event.org.verified && <BadgeCheck className="size-4 text-ok" role="img" aria-label="Verified organization" />}
-                {event.org.college && <span className="hidden sm:inline">· {event.org.college.name}</span>}
-              </Link>
-              {event.domainTags.length > 0 && (
-                <ul aria-label="Domains" className="flex flex-wrap gap-1.5 pt-1">
-                  {event.domainTags.map((d) => (
-                    <li key={d}>
-                      <Badge variant="outline">{domainLabel(d)}</Badge>
-                    </li>
-                  ))}
-                </ul>
               )}
             </div>
+
+            {/* Scoreboard: the three numbers people actually decide on. */}
+            <dl className="grid grid-cols-3 overflow-hidden rounded-xl border border-ink">
+              <div className={cn("flex flex-col gap-1 p-3 sm:p-4", closingSoon && "bg-signal-soft")}>
+                <dt className="text-xs text-muted-foreground">{closed ? "Sign-ups" : "Sign-ups close"}</dt>
+                <dd className={cn("score text-2xl sm:text-3xl", closingSoon && "text-signal-ink")}>{closed ? "Closed" : relative(event.regDeadline, now)}</dd>
+              </div>
+              <div className="flex flex-col gap-1 border-l border-ink p-3 sm:p-4">
+                <dt className="text-xs text-muted-foreground">Going</dt>
+                <dd className="score text-2xl sm:text-3xl">{stats.registrations}</dd>
+              </div>
+              <div className={cn("flex flex-col gap-1 border-l border-ink p-3 sm:p-4", isTeamEvent && stats.openRoles > 0 && "bg-court text-[#0f0f0e]")}>
+                <dt className={cn("text-xs", isTeamEvent && stats.openRoles > 0 ? "text-[#0f0f0e]/70" : "text-muted-foreground")}>
+                  {isTeamEvent ? "Open team spots" : "Format"}
+                </dt>
+                <dd className="score text-2xl sm:text-3xl">{isTeamEvent ? stats.openRoles : "Solo"}</dd>
+              </div>
+            </dl>
           </header>
 
-          <dl data-tour="facts" className="grid overflow-hidden rounded-lg border border-rule bg-card sm:grid-cols-2">
+          <dl data-tour="facts" className="grid overflow-hidden rounded-xl border border-rule bg-card sm:grid-cols-2">
             <Fact icon={CalendarDays} label="When">
               {formatDateTime(event.startsAt)} → {formatDateTime(event.endsAt)}
             </Fact>
             <Fact icon={Clock} label="Register by">
-              {formatDateTime(event.regDeadline)}{" "}
-              <span className={cn("label-mono", closingSoon ? "font-semibold text-signal-ink" : "text-muted-foreground")}>
-                {closed ? "closed" : relative(event.regDeadline, now)}
-              </span>
+              {formatDateTime(event.regDeadline)}
             </Fact>
             <Fact icon={MapPin} label="Where">
               {event.mode === "online" ? "Online" : event.venue}
@@ -189,12 +203,12 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
               {event.mode !== "online" && event.city && <span className="text-muted-foreground"> · {event.city}</span>}
             </Fact>
             <Fact icon={Users} label="Who">
-              {isTeamEvent ? `Teams of ${event.teamMin}–${event.teamMax}` : "Solo"} · {SCOPE_LABEL[event.eligibilityScope]}
-              {isTeamEvent && <span className="text-muted-foreground">{event.allowCrossCollege ? " · mixed colleges OK" : " · same-college teams"}</span>}
+              {isTeamEvent ? `Teams of ${event.teamMin}–${event.teamMax}` : "On your own"} · {SCOPE_LABEL[event.eligibilityScope]}
+              {isTeamEvent && <span className="text-muted-foreground">{event.allowCrossCollege ? " · teams can mix colleges" : " · team must be from one college"}</span>}
             </Fact>
             <Fact icon={IndianRupee} label="Fee">
               {event.isFree ? "Free" : event.feeText}
-              {event.beginnerFriendly && <span className="text-muted-foreground"> · beginner-friendly</span>}
+              {event.beginnerFriendly && <span className="text-muted-foreground"> · good for beginners</span>}
             </Fact>
             {event.prizeText && (
               <Fact icon={Trophy} label="Prizes">
@@ -213,7 +227,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
               active: tab === t.key,
               badge:
                 t.key === "teams" && stats.openRoles > 0 ? (
-                  <span className="label-mono rounded-sm bg-signal-soft px-1.5 text-signal-ink">{stats.openRoles} open</span>
+                  <span className="rounded-full bg-court px-2 text-xs font-semibold text-[#0f0f0e]">{stats.openRoles} open</span>
                 ) : undefined,
             }))}
           />
@@ -223,9 +237,9 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
               <div className="flex flex-col gap-6">
                 <p className="max-w-[68ch] text-[0.975rem] leading-relaxed whitespace-pre-line">{event.description}</p>
                 {event.rulesMd && (
-                  <section aria-labelledby="rules" className="rounded-lg border border-rule bg-card p-5">
-                    <h2 id="rules" className="label-mono mb-2 text-muted-foreground">
-                      Rules &amp; details
+                  <section aria-labelledby="rules" className="rounded-xl border border-rule bg-card p-5">
+                    <h2 id="rules" className="mb-2 text-lg font-bold">
+                      Rules and details
                     </h2>
                     <div className="max-w-[68ch] text-sm leading-relaxed [&_h1]:font-display [&_h1]:text-lg [&_h1]:font-bold [&_h2]:font-display [&_h2]:text-base [&_h2]:font-bold [&_li]:ml-5 [&_li]:list-disc [&_li]:py-0.5 [&_p]:my-2">
                       <ReactMarkdown>{event.rulesMd}</ReactMarkdown>
@@ -238,7 +252,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
               (isTeamEvent ? (
                 <TeamsTab event={event} user={user} filters={sp} />
               ) : (
-                <EmptyState art="ticket" title="This one's solo" description="Everyone participates individually — no teams needed." />
+                <EmptyState art="ticket" title="No teams for this one" description="Everyone takes part on their own." />
               ))}
             {tab === "updates" && <UpdatesTab eventId={event.id} />}
           </div>
@@ -258,7 +272,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
             started={now >= event.startsAt}
             stub={{
               date: formatDateTime(event.startsAt),
-              who: isTeamEvent ? `Team of ${event.teamMin}–${event.teamMax}` : "Admit one",
+              who: isTeamEvent ? `Teams of ${event.teamMin}–${event.teamMax}` : "Just you",
               registered: stats.registrations,
               teams: stats.teams,
             }}
@@ -286,17 +300,17 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
           user ? "bottom-[calc(4rem+env(safe-area-inset-bottom))] sm:bottom-0" : "bottom-0 pb-[calc(0.625rem+env(safe-area-inset-bottom))]",
         )}
       >
-        <p className="label-mono min-w-0 truncate">
+        <p className="min-w-0 truncate text-sm font-medium">
           {registration ? (
-            <span className="text-ok">You&apos;re registered</span>
+            <span className="text-ok">You&apos;re in</span>
           ) : closed ? (
-            <span className="text-muted-foreground">Registrations closed</span>
+            <span className="text-muted-foreground">Sign-ups closed</span>
           ) : (
             <span className={closingSoon ? "font-semibold text-signal-ink" : ""}>Closes {relative(event.regDeadline, now)}</span>
           )}
         </p>
         <Button size="sm" variant={registration || closed ? "outline" : "default"} render={<a href="#ticket-heading" />}>
-          {registration ? "View ticket" : closed ? "Details" : "Register"}
+          {registration ? "Your pass" : closed ? "Details" : "Register"}
         </Button>
       </div>
       <div aria-hidden="true" className="h-14 lg:hidden" />
@@ -306,7 +320,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
 
 function Fact({ icon: Icon, label, children }: { icon: typeof Clock; label: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-3 border-b border-dashed border-rule p-4 sm:border-r sm:even:border-r-0">
+    <div className="flex gap-3 border-b border-rule p-4 sm:border-r sm:even:border-r-0">
       <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0">
         <dt className="label-mono text-muted-foreground">{label}</dt>
@@ -327,7 +341,7 @@ async function UpdatesTab({ eventId }: { eventId: string }) {
   return (
     <ul className="flex flex-col gap-3">
       {rows.map((a) => (
-        <li key={a.id} className="rounded-lg border border-rule bg-card p-4">
+        <li key={a.id} className="rounded-xl border border-rule bg-card p-4">
           <p className="text-xs text-muted-foreground">{formatDateTime(a.createdAt)}</p>
           <p className="mt-1 text-sm whitespace-pre-line">{a.body}</p>
         </li>

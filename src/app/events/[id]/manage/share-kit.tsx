@@ -52,7 +52,7 @@ export function ShareKit({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <section className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-4">
+      <section className="flex flex-col gap-3 rounded-xl border border-rule bg-card p-4">
         <div>
           <h2 className="text-xl font-bold">Tracked links</h2>
           <p className="text-sm text-muted-foreground">
@@ -125,7 +125,7 @@ export function ShareKit({
         )}
       </section>
 
-      <section className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-4">
+      <section className="flex flex-col gap-3 rounded-xl border border-rule bg-card p-4">
         <div>
           <h2 className="text-xl font-bold">WhatsApp caption</h2>
           <p className="text-sm text-muted-foreground">Pre-written, uses your first tracked link. Edit freely.</p>

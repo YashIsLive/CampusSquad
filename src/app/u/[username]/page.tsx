@@ -74,16 +74,16 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 motion-safe:animate-page-in sm:py-10">
-      <section aria-label="Profile" className="overflow-hidden rounded-xl border border-ink/25 bg-card">
-        <div className="flex items-center justify-between border-b border-dashed border-rule bg-secondary/60 px-5 py-2.5">
-          <span className="label-mono font-semibold">Campus pass</span>
-          {profile.collegeVerified ? <Stamp tone="ok">Verified</Stamp> : <span className="label-mono text-muted-foreground">Unverified</span>}
+      <section aria-label="Profile" className="overflow-hidden rounded-xl border border-ink bg-card">
+        <div className="flex items-center justify-between border-b border-ink px-5 py-2.5">
+          <span className="label-mono">Player card</span>
+          {profile.collegeVerified ? <Stamp tone="ok">Verified student</Stamp> : <span className="text-xs text-muted-foreground">College not verified yet</span>}
         </div>
         <div className="flex flex-col gap-5 p-5 sm:flex-row">
           <UserAvatar name={profile.name} src={profile.avatarUrl} className="size-24" />
           <div className="min-w-0 flex-1">
-            <h1 className="text-3xl leading-tight font-extrabold sm:text-4xl">{profile.name || profile.username}</h1>
-            <p className="label-mono mt-1 text-muted-foreground">@{profile.username}</p>
+            <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">{profile.name || profile.username}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">@{profile.username}</p>
             <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
               {profile.college && (
                 <div>
@@ -101,8 +101,8 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
                 </div>
               )}
               <div>
-                <dt className="label-mono text-muted-foreground">Reliability</dt>
-                <dd className="text-sm">{Math.round(Number(profile.reliabilityScore))}% show-up</dd>
+                <dt className="label-mono text-muted-foreground">Turns up</dt>
+                <dd className="text-sm">Shows up {Math.round(Number(profile.reliabilityScore))}% of the time</dd>
               </div>
               <div>
                 <dt className="label-mono text-muted-foreground">Teams</dt>
@@ -113,7 +113,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
           </div>
         </div>
         {(profile.githubUrl || profile.linkedinUrl || isMe) && (
-          <div className="flex flex-wrap gap-2 border-t border-dashed border-rule px-5 py-3">
+          <div className="flex flex-wrap gap-2 border-t border-rule px-5 py-3">
             {profile.githubUrl && (
               <Button variant="outline" size="sm" render={<a href={profile.githubUrl} target="_blank" rel="noreferrer" />}>
                 GitHub <ExternalLink />
@@ -134,7 +134,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
       </section>
 
       {canVouch && profile.college && (
-        <section aria-label="Vouch" className="flex flex-col gap-3 rounded-lg border border-dashed border-ink/30 bg-card p-4 sm:flex-row sm:items-center">
+        <section aria-label="Vouch" className="flex flex-col gap-3 rounded-xl bg-court/40 p-4 sm:flex-row sm:items-center">
           <p className="flex-1 text-sm">
             {alreadyVouched ? (
               <>You vouched for {profile.name.split(" ")[0]}. {VOUCHES_NEEDED - vouchCount > 0 && `${VOUCHES_NEEDED - vouchCount} more needed.`}</>
@@ -149,7 +149,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
         </section>
       )}
       {isMe && !profile.collegeVerified && (
-        <section aria-label="Verification" className="flex flex-col gap-3 rounded-lg border border-dashed border-ink/30 bg-card p-4 sm:flex-row sm:items-center">
+        <section aria-label="Verification" className="flex flex-col gap-3 rounded-xl bg-court/40 p-4 sm:flex-row sm:items-center">
           <p className="flex-1 text-sm">
             Your campus isn&apos;t verified yet{profile.collegeId ? ` (${vouchCount} of ${VOUCHES_NEEDED} vouches)` : ""}. Use your student ID or
             ask classmates to vouch.
@@ -199,7 +199,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
           {teams.length === 0 ? (
             <EmptyState compact title="No teams yet" />
           ) : (
-            <ul className="flex flex-col divide-y divide-rule rounded-lg border border-rule bg-card">
+            <ul className="flex flex-col divide-y divide-rule rounded-xl border border-rule bg-card">
               {teams.map((t) => (
                 <li key={t.teamId} className="px-3 py-2.5 text-sm">
                   <span className="font-medium">{t.team.name}</span>
@@ -217,7 +217,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
           {regs.length === 0 ? (
             <EmptyState compact title="No events yet" />
           ) : (
-            <ul className="flex flex-col divide-y divide-rule rounded-lg border border-rule bg-card">
+            <ul className="flex flex-col divide-y divide-rule rounded-xl border border-rule bg-card">
               {regs.map((r) => (
                 <li key={r.id} className="px-3 py-2.5 text-sm">
                   <Link href={`/events/${r.event.id}`} className="font-medium hover:underline">

@@ -52,7 +52,7 @@ export function FinalizeAttendanceButton({
     return <p className="text-sm text-muted-foreground">Attendance finalized {finalizedAt}. Late check-ins still update reliability.</p>;
   }
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-rule bg-card p-4">
+    <div className="flex flex-col gap-2 rounded-xl border border-rule bg-card p-4">
       <h2 className="text-xl font-bold">Finalize attendance</h2>
       <p className="text-sm text-muted-foreground">
         When check-in is over, mark the {pendingCount} registrant{pendingCount === 1 ? "" : "s"} who didn&apos;t show as no-shows. This

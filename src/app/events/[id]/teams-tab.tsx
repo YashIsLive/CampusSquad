@@ -9,7 +9,7 @@ import { matchScore, MIN_LEVEL_HELD } from "@/lib/match-score";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { MatchMeter, SkillChip } from "@/components/match";
-import { MetaLine, Stamp } from "@/components/noticeboard";
+import { MetaLine, Slots, Stamp } from "@/components/noticeboard";
 import { UserAvatar } from "@/components/user-avatar";
 import { ApplyButton } from "./apply-button";
 import { AvailabilityForm } from "./availability-form";
@@ -114,12 +114,12 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
     <div className="flex flex-col gap-6">
       {/* Viewer's own status */}
       {user && !over && (
-        <div className="flex flex-col gap-3 rounded-lg border border-rule bg-secondary/60 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-ink bg-card p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
           {myTeam ? (
             <>
               <p>
                 You&apos;re on <strong>{myTeam.name}</strong>
-                {iLead ? " as leader" : ""} · {myTeam.members.length}/{event.teamMax} members
+                {iLead ? ", and you lead it" : ""} · {myTeam.members.length} of {event.teamMax} spots filled
               </p>
               <div className="flex gap-2">
                 {iLead && (
@@ -128,13 +128,17 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
                   </Button>
                 )}
                 <Button size="sm" render={<Link href={`/teams/${myTeam.id}`} />}>
-                  {iLead ? "Manage team & roles" : "Open team"}
+                  {iLead ? "Manage your team" : "Open team"}
                 </Button>
               </div>
             </>
           ) : (
             <>
-              <p>{myAvailability ? "Your “looking for a team” card is live. Leaders can invite you." : "No team yet? Apply to a role below, or let leaders find you."}</p>
+              <p>
+                {myAvailability
+                  ? "You're listed as a free agent. Team leads can invite you."
+                  : "No team yet? Take an open spot below, or list yourself as a free agent so teams can find you."}
+              </p>
               <AvailabilityForm
                 eventId={event.id}
                 existing={
@@ -158,13 +162,13 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
 
       <section data-tour="roles">
         <h2 className="mb-3 flex items-center gap-2 text-xl font-bold">
-          Open roles <span className="text-sm font-normal text-muted-foreground">{vacancies.length}</span>
+          Open spots <span className="text-sm font-normal text-muted-foreground">{vacancies.length}</span>
         </h2>
         {vacancies.length === 0 ? (
           <EmptyState
             compact
-            title="No open roles match"
-            description={teams.length ? "Try clearing filters, or post a 'looking for a team' card." : "No teams yet — be the first to start one."}
+            title="No open spots match"
+            description={teams.length ? "Try clearing filters, or list yourself as a free agent." : "No teams yet. Be the first to start one."}
           />
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">
@@ -172,12 +176,15 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
               const myApp = myAppByVacancy.get(v.id);
               const memberSkills = [...new Set(team.members.flatMap((m) => m.user.skills.filter((s) => s.level >= 3).map((s) => s.skill.name)))];
               return (
-                <li key={v.id} className="flex flex-col overflow-hidden rounded-lg border border-rule bg-card">
-                  <div className="flex items-center justify-between gap-2 border-b border-dashed border-rule bg-secondary/60 px-4 py-2">
-                    <span className="label-mono font-semibold">Wanted</span>
-                    <Link href={`/teams/${team.id}`} className="label-mono truncate text-muted-foreground hover:text-foreground hover:underline">
+                <li key={v.id} className="flex flex-col overflow-hidden rounded-xl border border-ink bg-card">
+                  <div className="flex items-center justify-between gap-2 border-b border-ink bg-court px-4 py-2 text-[#0f0f0e]">
+                    <Link href={`/teams/${team.id}`} className="truncate text-sm font-bold hover:underline">
                       {team.name}
                     </Link>
+                    <span className="flex shrink-0 items-center gap-2 text-xs font-semibold">
+                      <Slots filled={team.members.length} total={event.teamMax} />
+                      {team.members.length}/{event.teamMax}
+                    </span>
                   </div>
                   <div className="flex flex-1 flex-col gap-3 p-4">
                     <div className="flex items-start justify-between gap-3">
@@ -201,14 +208,13 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
                     <MetaLine
                       items={[
                         v.commitmentHours && `${v.commitmentHours} h/week`,
-                        `${v.slotsOpen} slot${v.slotsOpen === 1 ? "" : "s"} open`,
-                        `Team ${team.members.length}/${event.teamMax}`,
+                        v.slotsOpen > 1 && `${v.slotsOpen} spots`,
                         v.scope === "intra" ? "Same college only" : "Any college",
                       ]}
                     />
                     {memberSkills.length > 0 && (
                       <p className="text-xs text-muted-foreground">
-                        <span className="label-mono">Team has · </span>
+                        <span className="font-semibold">Team already has: </span>
                         {memberSkills.slice(0, 6).join(", ")}
                       </p>
                     )}
@@ -219,7 +225,9 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
                         </Button>
                       ) : myApp && myApp.status !== "withdrawn" ? (
                         <div className="flex flex-wrap items-center gap-2">
-                          <Stamp tone={myApp.status === "accepted" ? "ok" : myApp.status === "rejected" ? "signal" : "ink"}>Applied · {myApp.status}</Stamp>
+                          <Stamp tone={myApp.status === "accepted" ? "ok" : myApp.status === "rejected" ? "signal" : "ink"}>
+                            {myApp.status === "accepted" ? "You're in" : myApp.status === "rejected" ? "Not this time" : `Applied · ${myApp.status}`}
+                          </Stamp>
                           <Link href={`/applications/${myApp.id}`} className="text-xs underline underline-offset-4">
                             Message leader
                           </Link>
@@ -240,10 +248,10 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
 
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-xl font-bold">
-          Looking for a team <span className="text-sm font-normal text-muted-foreground">{lookers.length}</span>
+          Free agents <span className="text-sm font-normal text-muted-foreground">{lookers.length}</span>
         </h2>
         {lookers.length === 0 ? (
-          <EmptyState compact title="Nobody's posted yet" description="Solo participants who post a card show up here for team leaders to invite." />
+          <EmptyState compact title="No free agents yet" description="People at this event who don't have a team show up here, so team leads can invite them." />
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">
             {lookers.map((a) => {
@@ -254,7 +262,7 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
                 crossCollegeAllowed(event, myTeam.leader.collegeId, a.user.collegeId) &&
                 (a.user.collegeId === myTeam.leader.collegeId || (a.scope === "cross" && a.user.openToCrossCollege));
               return (
-                <li key={a.id} className="flex flex-col gap-2 rounded-lg border border-rule bg-card p-4">
+                <li key={a.id} className="flex flex-col gap-2 rounded-xl border border-rule bg-card p-4">
                   <div className="flex items-center gap-3">
                     <UserAvatar name={a.user.name} src={a.user.avatarUrl} className="size-9" />
                     <div className="min-w-0">
@@ -269,7 +277,7 @@ export async function TeamsTab({ event, user, filters }: { event: EventWithOrg; 
                     </div>
                   </div>
                   <p className="text-sm">
-                    Wants: <strong>{a.rolesWanted.join(", ")}</strong>
+                    Can play: <strong>{a.rolesWanted.join(", ")}</strong>
                     {a.hoursPerWeek && <span className="text-muted-foreground"> · {a.hoursPerWeek} h/week</span>}
                   </p>
                   {a.note && <p className="text-sm text-muted-foreground">{a.note}</p>}

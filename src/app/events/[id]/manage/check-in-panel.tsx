@@ -39,7 +39,7 @@ export function CheckInPanel({ eventId, checkedIn, total }: { eventId: string; c
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <section className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-4">
+      <section className="flex flex-col gap-3 rounded-xl border border-rule bg-card p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Scan QR</h2>
           <Badge variant="secondary" className="tabular-nums">
@@ -76,7 +76,7 @@ export function CheckInPanel({ eventId, checkedIn, total }: { eventId: string; c
         )}
       </section>
 
-      <section className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-4">
+      <section className="flex flex-col gap-3 rounded-xl border border-rule bg-card p-4">
         <h2 className="text-xl font-bold">Search by name, email or team</h2>
         <form
           className="flex gap-2"
@@ -90,7 +90,7 @@ export function CheckInPanel({ eventId, checkedIn, total }: { eventId: string; c
             });
           }}
         >
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search registrants" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search people" />
           <Button type="submit" variant="outline" disabled={pending} aria-label="Search">
             <Search />
           </Button>
@@ -215,7 +215,7 @@ function Scanner({ onCode, paused }: { onCode: (code: string) => void; paused: b
             {error ?? "Camera is off"}
           </div>
         )}
-        {on && <div className="pointer-events-none absolute inset-[18%] rounded-lg border border-rule bg-card-2 border-white/70" />}
+        {on && <div className="pointer-events-none absolute inset-[18%] rounded-xl border border-rule bg-card-2 border-white/70" />}
       </div>
       <canvas ref={canvasRef} className="hidden" />
       <Button variant={on ? "outline" : "default"} onClick={() => { setError(null); setOn((v) => !v); }}>

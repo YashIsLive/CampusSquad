@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/empty-state";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { InviteResponse, WithdrawButton } from "./controls";
 
-export const metadata: Metadata = { title: "Teams & applications" };
+export const metadata: Metadata = { title: "My teams" };
 
 const STATUS_VARIANT = {
   pending: "secondary",
@@ -67,11 +67,11 @@ export default async function MyApplicationsPage() {
       {/* Applicants see accept/reject the moment the leader decides. */}
       <RealtimeRefresh channel={`my-apps:${user.id}`} table="applications" filter={`applicant_id=eq.${user.id}`} events="UPDATE" />
       <RealtimeRefresh channel={`my-app-notes:${user.id}`} table="notifications" filter={`user_id=eq.${user.id}`} />
-      <h1 className="text-3xl font-extrabold sm:text-4xl">Teams & applications</h1>
+      <h1 className="text-4xl font-black sm:text-5xl">Your teams</h1>
 
       {pendingInvites.length > 0 && (
         <section>
-          <h2 className="mb-3 text-xl font-bold">Invites</h2>
+          <h2 className="mb-3 text-xl font-bold">Teams that want you</h2>
           <ul className="flex flex-col gap-2">
             {pendingInvites.map((i) => (
               <li key={i.id} className="flex flex-col gap-2 rounded-lg border border-ink bg-signal-soft/40 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -93,7 +93,7 @@ export default async function MyApplicationsPage() {
       )}
 
       <section>
-        <h2 className="mb-3 text-xl font-bold">My teams</h2>
+        <h2 className="mb-3 text-xl font-bold">Teams you&apos;re on</h2>
         {memberships.length === 0 ? (
           <EmptyState compact title="You're not on any team yet" action={<Button render={<Link href="/" />}>Find an event</Button>} />
         ) : (
@@ -102,7 +102,7 @@ export default async function MyApplicationsPage() {
               const size = m.team.members.length;
               return (
                 <li key={m.teamId}>
-                  <Link href={`/teams/${m.teamId}`} className="flex items-center justify-between gap-2 rounded-lg border border-rule bg-card p-4 hover:bg-muted/50">
+                  <Link href={`/teams/${m.teamId}`} className="flex items-center justify-between gap-2 rounded-xl border border-rule bg-card p-4 hover:bg-muted/50">
                     <div>
                       <p className="font-medium">
                         {m.team.name} {m.team.leaderId === user.id && <Badge variant="secondary">Leader</Badge>}
@@ -123,13 +123,13 @@ export default async function MyApplicationsPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-xl font-bold">My applications</h2>
+        <h2 className="mb-3 text-xl font-bold">Spots you applied for</h2>
         {applications.length === 0 ? (
-          <EmptyState compact title="No applications yet" description="Open any team event and check the Teams tab for open roles." />
+          <EmptyState compact title="No applications yet" description="Open any team event and look at its open spots." />
         ) : (
           <ul className="flex flex-col gap-2">
             {applications.map((a) => (
-              <li key={a.id} className="flex flex-col gap-2 rounded-lg border border-rule bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+              <li key={a.id} className="flex flex-col gap-2 rounded-xl border border-rule bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="font-medium">
                     {a.vacancy.roleTitle} <span className="font-normal text-muted-foreground">at {a.vacancy.team.name}</span>

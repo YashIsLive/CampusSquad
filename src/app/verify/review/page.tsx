@@ -35,7 +35,7 @@ export default async function ReviewPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:py-10">
       <header>
-        <h1 className="text-3xl font-extrabold sm:text-4xl">Student ID review</h1>
+        <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Student ID review</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Approve when the name matches the profile and the card is from the college shown. Photos are deleted once you decide.
           {colleges !== "all" && " You see requests for colleges where you run a verified club."}
@@ -47,7 +47,7 @@ export default async function ReviewPage() {
       ) : (
         <ul className="flex flex-col gap-4">
           {visible.map((r, i) => (
-            <li key={r.id} className="grid gap-4 rounded-lg border border-rule bg-card p-4 sm:grid-cols-[1fr_16rem]">
+            <li key={r.id} className="grid gap-4 rounded-xl border border-rule bg-card p-4 sm:grid-cols-[1fr_16rem]">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <UserAvatar name={r.user.name} src={r.user.avatarUrl} className="size-10" />

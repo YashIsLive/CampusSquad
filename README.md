@@ -2,12 +2,12 @@
 
 <img src="docs/screenshots/logo.png" alt="" width="72" height="72">
 
-# CampusSquad
+# Got Next
 
-**Find the hackathon. Find the team. Show up.**
+**Who's got next?**
 
 Campus tech events (hackathons, coding contests, quizzes, workshops, CTFs) in one feed,<br>
-plus a team board where squads post open roles and students apply with their skills.
+plus a team board where squads post open spots and students apply with their skills.
 
 [![CI](https://github.com/YashIsLive/CampusSquad/actions/workflows/ci.yml/badge.svg)](https://github.com/YashIsLive/CampusSquad/actions/workflows/ci.yml)
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
@@ -20,8 +20,8 @@ plus a team board where squads post open roles and students apply with their ski
 <br>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/feed-dark.png">
-  <img src="docs/screenshots/feed-light.png" alt="The CampusSquad feed: scope switch (My campus, Near Pune, All India), event type filters, a 'last call' strip of events closing within 48 hours, and event cards grouped by week." width="900">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/landing-dark.png">
+  <img src="docs/screenshots/landing-light.png" alt="The Got Next landing page: the headline 'Who's got next?', live counts of events and open team spots, and a real team sheet with one open spot marked 'I've got it'." width="900">
 </picture>
 
 </div>
@@ -32,7 +32,9 @@ Campus events live in scattered WhatsApp forwards and Instagram stories. Registr
 students who'd make a great team never meet because they're in different branches or colleges. Organizers can't tell
 which poster or group actually brought people in.
 
-CampusSquad gives each campus one feed, matches students to teams by skill, and gives organizers a real dashboard.
+Got Next gives each campus one list of events, shows every team's open spots so students can fill them, and gives organizers a real dashboard.
+
+The name comes from pickup games: whoever says *"got next"* plays the next game. Here, a team is a row of spots (●●●○), and the open one is yours if you've got it. The whole design follows that idea; see [DESIGN.md](DESIGN.md).
 
 ## What it does
 
@@ -61,16 +63,16 @@ CampusSquad gives each campus one feed, matches students to teams by skill, and 
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/team-board-dark.png">
-  <img src="docs/screenshots/team-board-light.png" alt="The team board: open roles with required skills, the viewer's match percentage, and Apply buttons.">
+  <img src="docs/screenshots/team-board-light.png" alt="The team board: open spots with required skills, the viewer's match percentage, and Apply buttons.">
 </picture>
 
 </td>
 <td width="50%" valign="top">
 
 ### Team board
-- Teams post **open roles** with required and nice-to-have skills, hours/week and college rules
-- Every role shows **your match score**, computed from your skill levels
-- Solo students post a "looking for a team" card that leaders can invite from
+- Teams post **open spots** with required and nice-to-have skills, hours/week and college rules
+- Every open spot shows **your match score**, computed from your skill levels
+- Students without a team list themselves as **free agents**, and team leads invite them
 - Apply with a screening answer; leaders shortlist or accept, and **message applicants, who can reply** in a live conversation
 - Accepting is **one database transaction**, so a team can never go over its size limit
 
@@ -82,7 +84,7 @@ CampusSquad gives each campus one feed, matches students to teams by skill, and 
 ### Team room
 - **Live** chat and a shared checklist (Supabase Realtime)
 - Deadlines at a glance
-- **Suggested teammates**: solo registrants ranked against your open roles
+- **Suggested teammates**: solo registrants ranked against your open spots
 - After the event, teammates endorse each other's skills on their profiles
 
 </td>
@@ -90,7 +92,7 @@ CampusSquad gives each campus one feed, matches students to teams by skill, and 
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/team-room-dark.png">
-  <img src="docs/screenshots/team-room-light.png" alt="A team room with members, open roles, suggested teammates, deadlines, a checklist and team chat.">
+  <img src="docs/screenshots/team-room-light.png" alt="A team room with members, open spots, suggested teammates, deadlines, a checklist and team chat.">
 </picture>
 
 </td>
@@ -216,7 +218,7 @@ With `E2E_TEST_LOGIN=1`, the sign-in page lists a **demo cast** you can sign in 
 | Who | What to try |
 | --- | --- |
 | **Riya Kulkarni**, organizer and admin | the event dashboard, share kit, check-in, `/admin` |
-| **Aarav Deshmukh**, solo student | the feed, applying to roles, the "looking for a team" card |
+| **Aarav Deshmukh**, free agent | the feed, applying for spots, listing yourself as a free agent |
 | **Neha Joshi**, team leader | reviewing applications, the team room, suggested teammates |
 | **Dev Agarwal**, team leader at another college | cross-college teams |
 | **Meera Nair**, applicant | application status updates arriving live |
@@ -242,8 +244,8 @@ npm run test:e2e     # Playwright: 25 end-to-end tests, including axe accessibil
 | --- | --- |
 | `tests/*.test.ts` | match score, eligibility, reminders, reliability, GitHub skill mapping, teammate ranking, feed grouping; the accept-application transaction and database integrity rules; **API lockdown** (someone holding the public anon key can't read emails, make themselves admin or tamper with data) |
 | `e2e/auth.spec.ts` | redirect to sign-in and back, wrong password, password rules, instant sign-up, duplicate emails, expired links |
-| `e2e/student.spec.ts` | feed scopes and filters, the <kbd>/</kbd> shortcut, save, register, ticket, cancel, start a team, post a role |
-| `e2e/happy-path.spec.ts` | apply to a role → leader accepts → applicant sees it |
+| `e2e/student.spec.ts` | feed scopes and filters, the <kbd>/</kbd> shortcut, save, register, ticket, cancel, start a team, add an open spot |
+| `e2e/happy-path.spec.ts` | apply for a spot → team lead accepts → applicant sees it |
 | `e2e/teams-realtime.spec.ts` | **live** chat and checklist between two browsers; invite → accept → join |
 | `e2e/organizer.spec.ts` | post an event and notify followers, tracked links, CSV export, announcements, check-in, admin approval |
 | `e2e/guide.spec.ts` | the first-run checklist and page tours |
@@ -264,7 +266,7 @@ The rules that matter are enforced **in Postgres**, not only in the UI:
 | One team per student per event | unique index on `team_members(event_id, user_id)` |
 | Team size never exceeds the limit | `team_members_guard` trigger (locks the team row) |
 | Cross-college teams only where the event allows | `team_members_guard` and `vacancies_guard` triggers |
-| One application per role per student | unique index on `applications(vacancy_id, applicant_id)` |
+| One application per spot per student | unique index on `applications(vacancy_id, applicant_id)` |
 | Endorsements only between teammates, after the event | `endorsements_guard` trigger |
 
 Every table has row-level security, and the Supabase REST API is locked down

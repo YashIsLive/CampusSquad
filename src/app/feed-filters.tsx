@@ -164,7 +164,7 @@ export function FeedFilters() {
       </div>
 
       {panelOpen && (
-        <div id="more-filters" className="hidden rounded-lg border border-rule bg-card p-3 motion-safe:animate-rise sm:block">
+        <div id="more-filters" className="hidden rounded-xl border border-rule bg-card p-3 motion-safe:animate-rise sm:block">
           {fields}
         </div>
       )}

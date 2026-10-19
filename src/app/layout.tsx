@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -10,22 +10,22 @@ import { getCurrentUser } from "@/lib/auth";
 import { siteUrl } from "@/lib/format";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+// One family at many widths: wide for headlines, condensed for dates and numbers, normal for reading.
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: ["wdth"] });
+// Only for codes people read out or type (check-in codes).
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-const display = Bricolage_Grotesque({ variable: "--font-display", subsets: ["latin"], weight: ["500", "700", "800"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
-  title: { default: "CampusSquad — campus tech events & teammates", template: "%s · CampusSquad" },
-  description:
-    "Every hackathon, quiz and coding contest on your campus and nearby — and the right teammates one application away.",
-  openGraph: { siteName: "CampusSquad", type: "website" },
+  title: { default: "Got Next — hackathons near you, and a team to go with", template: "%s · Got Next" },
+  description: "Find hackathons, coding contests and workshops near your college, and the people to build with.",
+  openGraph: { siteName: "Got Next", type: "website" },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f1ea" },
-    { media: "(prefers-color-scheme: dark)", color: "#15130f" },
+    { media: "(prefers-color-scheme: light)", color: "#f3f3f0" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0e0d" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -34,7 +34,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const user = await getCurrentUser();
   return (
-    <html lang="en-IN" className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}>
+    <html lang="en-IN" className={`${archivo.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">
         <a
           href="#main"

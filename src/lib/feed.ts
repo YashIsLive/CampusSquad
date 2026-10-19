@@ -85,7 +85,12 @@ export async function getFeed(user: CurrentUser | null, filters: FeedFilters, no
   }
 
   const rows = await db
-    .select({ event: e, org: { name: schema.organizations.name, slug: schema.organizations.slug } })
+    .select({
+      event: e,
+      org: { name: schema.organizations.name, slug: schema.organizations.slug },
+      // Spots teams are still trying to fill at this event (shown as open dots on the card).
+      openSpots: sql<number>`(select coalesce(sum(v.slots_open), 0)::int from vacancies v join teams t on t.id = v.team_id where t.event_id = ${e.id} and v.status = 'open')`,
+    })
     .from(e)
     .innerJoin(schema.organizations, eq(schema.organizations.id, e.orgId))
     .where(and(...conditions.filter((c): c is SQL => Boolean(c))))
@@ -93,7 +98,7 @@ export async function getFeed(user: CurrentUser | null, filters: FeedFilters, no
     .orderBy(sql`(${e.regDeadline} < ${now.toISOString()}::timestamptz or not ${e.registrationsOpen})`, asc(e.regDeadline))
     .limit(60);
 
-  const events = rows.map((r) => ({ ...r.event, org: r.org }));
+  const events = rows.map((r) => ({ ...r.event, org: r.org, openSpots: r.openSpots }));
   const closingSoon = events.filter(
     (ev) => ev.registrationsOpen && ev.regDeadline >= now && ev.regDeadline.getTime() - now.getTime() <= 48 * 3600e3,
   );

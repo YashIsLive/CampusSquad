@@ -78,7 +78,7 @@ export function ApplicationThread({
   };
 
   return (
-    <section aria-label={`Conversation with ${other.name}`} className="flex flex-col rounded-lg border border-rule bg-card">
+    <section aria-label={`Conversation with ${other.name}`} className="flex flex-col rounded-xl border border-rule bg-card">
       <ol ref={listRef} className="flex max-h-[60vh] min-h-48 flex-col gap-3 overflow-y-auto p-4" aria-live="polite">
         {messages.length === 0 && (
           <li className="m-auto max-w-xs text-center text-sm text-muted-foreground">

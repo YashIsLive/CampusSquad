@@ -13,7 +13,7 @@ export async function sendEmail({ to, subject, text }: { to: string; subject: st
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: process.env.EMAIL_FROM ?? "CampusSquad <onboarding@resend.dev>", to, subject, text }),
+    body: JSON.stringify({ from: process.env.EMAIL_FROM ?? "Got Next <onboarding@resend.dev>", to, subject, text }),
   });
   if (!res.ok) console.error("sendEmail failed", res.status, await res.text().catch(() => ""));
   return { sent: res.ok };

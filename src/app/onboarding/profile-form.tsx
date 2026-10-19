@@ -138,7 +138,7 @@ export function ProfileForm({
         </Field>
       </FormSection>
 
-      <FormSection title="College" description="Verified students get a badge and can create organizations.">
+      <FormSection title="College" description="Verified students get a badge and can add their club.">
         <Field label="College" htmlFor="college">
           <NativeSelect id="college" value={form.collegeChoice} onChange={(e) => set("collegeChoice", e.target.value)}>
             <option value="">Select your college</option>
@@ -229,7 +229,7 @@ export function ProfileForm({
         </label>
       </FormSection>
 
-      <div className="sticky bottom-16 flex justify-end gap-2 rounded-lg border border-rule bg-card bg-background/95 p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
+      <div className="sticky bottom-16 flex justify-end gap-2 rounded-xl border border-rule bg-card bg-background/95 p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
         <Button type="submit" size="lg" disabled={pending}>
           {pending ? "Saving…" : "Save profile"}
         </Button>

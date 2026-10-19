@@ -1,4 +1,4 @@
-/** GitHub repo language → CampusSquad skill name(s). Unknown languages are ignored. */
+/** GitHub repo language → Got Next skill name(s). Unknown languages are ignored. */
 const LANGUAGE_TO_SKILLS: Record<string, string[]> = {
   TypeScript: ["TypeScript"],
   JavaScript: ["JavaScript"],

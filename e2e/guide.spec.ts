@@ -18,7 +18,7 @@ test("a brand-new student gets the checklist and an automatic tour, once", async
     await expect(checklist.getByRole("link", { name: /Find a club/ })).toBeVisible();
 
     // The tour offers itself with an intro, then walks through the page.
-    const intro = page.getByRole("dialog", { name: "Welcome to CampusSquad" });
+    const intro = page.getByRole("dialog", { name: "Welcome to Got Next" });
     await expect(intro).toBeVisible();
     await intro.getByRole("button", { name: "Show me around" }).click();
     const tour = page.getByRole("dialog", { name: "Start with your campus" });

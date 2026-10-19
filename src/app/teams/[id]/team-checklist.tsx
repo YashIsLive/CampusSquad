@@ -24,7 +24,7 @@ export function TeamChecklist({ teamId, initial }: { teamId: string; initial: Ta
   const done = tasks.filter((t) => t.done).length;
 
   return (
-    <section data-tour="checklist" className="rounded-lg border border-rule bg-card p-4">
+    <section data-tour="checklist" className="rounded-xl border border-rule bg-card p-4">
       <RealtimeRefresh channel={`team-tasks:${teamId}`} table="team_tasks" filter={`team_id=eq.${teamId}`} />
       <h2 className="mb-2 flex items-center justify-between text-lg font-bold">
         Checklist

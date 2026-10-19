@@ -14,7 +14,7 @@ import { Stamp } from "@/components/noticeboard";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { CancelIdCard, CopyLink, IdCardUpload } from "./verify-controls";
 
-export const metadata: Metadata = { title: "Verify your campus" };
+export const metadata: Metadata = { title: "Prove your college" };
 
 const VIA_LABEL = { email: "college email", id_card: "student ID card", vouch: "classmate vouches", admin: "an admin" } as const;
 
@@ -38,14 +38,14 @@ export default async function VerifyPage() {
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6 sm:py-10">
       <RealtimeRefresh channel={`verify:${user.id}`} table="notifications" filter={`user_id=eq.${user.id}`} events="INSERT" />
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold sm:text-4xl">Verify your campus</h1>
+        <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Prove your college</h1>
         <p className="text-muted-foreground">
           The badge tells teams you really study where you say you do. You need it for campus-only events and to start a club page.
         </p>
       </header>
 
       {!college ? (
-        <section className="rounded-lg border border-rule bg-card p-5">
+        <section className="rounded-xl border border-rule bg-card p-5">
           <p className="font-medium">First, pick your college.</p>
           <p className="mt-1 text-sm text-muted-foreground">Verification is always for a specific college.</p>
           <Button className="mt-3" render={<Link href="/onboarding?next=/verify" />}>
@@ -155,7 +155,7 @@ export default async function VerifyPage() {
 
 function Method({ icon, title, tag, children }: { icon: React.ReactNode; title: string; tag?: string; children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-rule bg-card p-5 text-sm">
+    <section className="flex flex-col gap-3 rounded-xl border border-rule bg-card p-5 text-sm">
       <h2 className="flex items-center gap-2 text-lg font-bold [&_svg]:size-5">
         {icon} {title}
         {tag && <span className="label-mono ml-auto text-muted-foreground">{tag}</span>}

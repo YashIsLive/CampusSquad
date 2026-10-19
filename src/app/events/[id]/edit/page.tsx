@@ -16,7 +16,7 @@ export default async function EditEventPage({ params }: PageProps<"/events/[id]/
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:py-10">
-      <h1 className="text-3xl font-extrabold sm:text-4xl">Edit event</h1>
+      <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Edit event</h1>
       <EventForm
         userId={user.id}
         orgs={orgs}

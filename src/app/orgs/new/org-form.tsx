@@ -40,7 +40,7 @@ export function OrgForm({ userId, collegeName }: { userId: string; collegeName: 
             toast.error(res.error);
             return;
           }
-          toast.success("Organization created");
+          toast.success("Club added");
           router.push(`/orgs/${res.data.slug}`);
         });
       }}
@@ -57,7 +57,7 @@ export function OrgForm({ userId, collegeName }: { userId: string; collegeName: 
           required
         />
       </Field>
-      <Field label="URL" htmlFor="slug" hint={`campussquad/orgs/${slug || "your-club"}`} error={errors.slug?.[0]}>
+      <Field label="URL" htmlFor="slug" hint={`gotnext/orgs/${slug || "your-club"}`} error={errors.slug?.[0]}>
         <Input
           id="slug"
           value={slug}
@@ -82,7 +82,7 @@ export function OrgForm({ userId, collegeName }: { userId: string; collegeName: 
         <ImageUpload bucket="logos" userId={userId} value={logoUrl} onChange={setLogoUrl} aspect="aspect-square" label="Upload logo" />
       </Field>
       <Button type="submit" size="lg" disabled={pending} className="self-end">
-        {pending ? "Creating…" : "Create organization"}
+        {pending ? "Creating…" : "Add club"}
       </Button>
     </form>
   );

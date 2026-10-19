@@ -25,7 +25,7 @@ const optionalText = (max: number) =>
 
 const eventSchema = z
   .object({
-    orgId: z.uuid("Pick an organization."),
+    orgId: z.uuid("Pick the club that's hosting."),
     title: z.string().trim().min(5, "Title is too short.").max(120),
     description: z.string().trim().min(20, "Add a short description (20+ characters).").max(5000),
     type: z.enum(schema.eventType.enumValues),
@@ -59,12 +59,12 @@ const eventSchema = z
 export type EventInput = z.input<typeof eventSchema>;
 
 async function orgForEvent(orgId: string, userId: string) {
-  if (!(await isOrgAdmin(userId, orgId))) fail("Only admins of this organization can manage its events.");
+  if (!(await isOrgAdmin(userId, orgId))) fail("Only the club's admins can manage its events.");
   const org = await db.query.organizations.findFirst({
     where: eq(schema.organizations.id, orgId),
     with: { college: true },
   });
-  if (!org) fail("Organization not found.");
+  if (!org) fail("Club not found.");
   return org;
 }
 
@@ -72,7 +72,7 @@ export const createEvent = authedAction(eventSchema, async ({ publish, ...input 
   const org = await orgForEvent(input.orgId, user.id);
   await assertWithinLimit("event", user.id);
   if (input.eligibilityScope !== "india" && !org.college) {
-    fail("This organization isn't tied to a college, so the event must be open to all India.");
+    fail("This club isn't tied to a college, so the event has to be open to everyone in India.");
   }
   const [event] = await db
     .insert(schema.events)

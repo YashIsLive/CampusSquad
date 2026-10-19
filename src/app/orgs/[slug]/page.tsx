@@ -70,7 +70,7 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
           )}
         </div>
         <div className="flex-1">
-          <h1 className="flex flex-wrap items-center gap-2 text-3xl font-extrabold sm:text-4xl">
+          <h1 className="flex flex-wrap items-center gap-2 text-4xl leading-[0.95] font-black sm:text-5xl">
             {org.name}
             {org.verified && <BadgeCheck className="size-5 text-signal-ink" role="img" aria-label="Verified organization" />}
           </h1>
@@ -122,7 +122,7 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
           <ul className="flex flex-wrap gap-3">
             {org.members.map((m) => (
               <li key={m.userId}>
-                <Link href={`/u/${m.user.username}`} className="flex items-center gap-2 rounded-lg border border-rule bg-card px-3 py-2 text-sm hover:bg-muted">
+                <Link href={`/u/${m.user.username}`} className="flex items-center gap-2 rounded-xl border border-rule bg-card px-3 py-2 text-sm hover:bg-muted">
                   <UserAvatar name={m.user.name} src={m.user.avatarUrl} className="size-6" />
                   {m.user.name} <span className="text-muted-foreground">· {m.role}</span>
                 </Link>

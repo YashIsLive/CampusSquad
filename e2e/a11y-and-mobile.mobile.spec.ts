@@ -16,7 +16,7 @@ test.describe("phone layout", () => {
 
     await page.getByRole("link", { name: "COEP AI Hackathon 2026" }).first().click();
     // Pooja is already on a team for this event, so the bar offers her ticket.
-    const bar = page.getByRole("link", { name: /^(Register|View ticket)$/ }).last();
+    const bar = page.getByRole("link", { name: /^(Register|Your pass)$/ }).last();
     await expect(bar).toBeVisible();
     await bar.click();
     await expect(page.locator("#ticket-heading")).toBeInViewport();

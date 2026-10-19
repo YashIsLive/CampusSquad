@@ -30,6 +30,6 @@ export function assertProductionEnv(env: Record<string, string | undefined> = pr
   }
 
   if (problems.length) {
-    throw new Error(`CampusSquad configuration problems:\n  - ${problems.join("\n  - ")}\nSee README → Deploy.`);
+    throw new Error(`Got Next configuration problems:\n  - ${problems.join("\n  - ")}\nSee README → Deploy.`);
   }
 }

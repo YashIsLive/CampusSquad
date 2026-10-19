@@ -100,7 +100,7 @@ export const removeMember = authedAction(
 const vacancySchema = z
   .object({
     teamId: z.uuid(),
-    roleTitle: z.string().trim().min(2, "Add a role title.").max(60),
+    roleTitle: z.string().trim().min(2, "Say who you need, like \"Backend developer\".").max(60),
     description: z.string().trim().max(500).transform((v) => v || null),
     requiredSkillIds: skillIds,
     niceSkillIds: skillIds,
@@ -119,7 +119,7 @@ export const postVacancy = authedAction(vacancySchema, async (input, user) => {
   }
   const capacity = team.event.teamMax - (await teamSize(db, team.id)) - (await openSlots(db, team.id));
   if (input.slots > capacity) {
-    fail(capacity <= 0 ? "Your open roles already cover the max team size." : `Only ${capacity} more slot(s) fit within the max team size.`);
+    fail(capacity <= 0 ? "Your open spots already fill the team." : `Only ${capacity} more slot(s) fit within the max team size.`);
   }
   const nice = input.niceSkillIds.filter((id) => !input.requiredSkillIds.includes(id));
   await db.transaction(async (tx) => {
@@ -147,7 +147,7 @@ export const postVacancy = authedAction(vacancySchema, async (input, user) => {
 
 export const closeVacancy = authedAction(z.object({ vacancyId: z.uuid() }), async ({ vacancyId }, user) => {
   const vacancy = await db.query.vacancies.findFirst({ where: eq(schema.vacancies.id, vacancyId) });
-  if (!vacancy) fail("Role not found.");
+  if (!vacancy) fail("That spot doesn't exist anymore.");
   const team = await loadTeamAsLeader(vacancy.teamId, user);
   await db.transaction(async (tx) => {
     await tx.update(schema.vacancies).set({ status: "closed" }).where(eq(schema.vacancies.id, vacancyId));
@@ -183,7 +183,7 @@ export const applyToVacancy = authedAction(
       where: eq(schema.vacancies.id, vacancyId),
       with: { skills: true },
     });
-    if (!vacancy || vacancy.status !== "open") fail("This role is no longer open.");
+    if (!vacancy || vacancy.status !== "open") fail("This spot has been filled or closed.");
     const team = await loadTeam(vacancy.teamId);
     assertEventNotOver(team.event);
     if (team.leaderId === user.id) fail("You can't apply to your own team.");
@@ -196,7 +196,7 @@ export const applyToVacancy = authedAction(
     if (onTeam) fail("You're already on a team for this event.");
 
     const sameCollege = user.collegeId !== null && user.collegeId === team.leader.collegeId;
-    if (vacancy.scope === "intra" && !sameCollege) fail("This role is open to students from the team's college only.");
+    if (vacancy.scope === "intra" && !sameCollege) fail("This spot is only for students from the team's college.");
     if (!crossCollegeAllowed(team.event, team.leader.collegeId, user.collegeId)) {
       fail("This event requires all team members to be from the same college.");
     }
@@ -214,7 +214,7 @@ export const applyToVacancy = authedAction(
       columns: { id: true, status: true },
     });
     if (previous && previous.status !== "withdrawn") {
-      fail(previous.status === "rejected" ? "The leader already decided on your application for this role." : "You've already applied for this role.");
+      fail(previous.status === "rejected" ? "The team lead already decided on your application for this spot." : "You've already applied for this spot.");
     }
 
     await db.transaction(async (tx) => {
@@ -310,7 +310,7 @@ export const acceptApplication = authedAction(z.object({ applicationId: z.uuid()
 export const postAvailability = authedAction(
   z.object({
     eventId: z.uuid(),
-    rolesWanted: z.array(z.string().trim().min(2).max(40)).min(1, "Add at least one role.").max(5),
+    rolesWanted: z.array(z.string().trim().min(2).max(40)).min(1, "Add at least one thing you can do.").max(5),
     note: z.string().trim().max(400).transform((v) => v || null),
     scope: z.enum(schema.teamScope.enumValues),
     hoursPerWeek: z.number().int().min(1).max(80).nullable(),

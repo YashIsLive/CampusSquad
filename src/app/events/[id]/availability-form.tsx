@@ -24,7 +24,7 @@ export function AvailabilityForm({ eventId, existing, allowCross }: { eventId: s
   return (
     <div className="flex gap-2">
       <Button size="sm" data-tour="looking" onClick={() => setOpen(true)}>
-        {existing ? "Edit my card" : "I'm looking for a team"}
+        {existing ? "Edit my free-agent card" : "List me as a free agent"}
       </Button>
       {existing && (
         <Button
@@ -35,7 +35,7 @@ export function AvailabilityForm({ eventId, existing, allowCross }: { eventId: s
             startTransition(async () => {
               const res = await closeAvailability({ eventId });
               if (!res.ok) return void toast.error(res.error);
-              toast.success("Card removed");
+              toast.success("You're no longer listed");
               router.refresh();
             })
           }
@@ -46,8 +46,8 @@ export function AvailabilityForm({ eventId, existing, allowCross }: { eventId: s
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Looking for a team</DialogTitle>
-            <DialogDescription>Team leaders browse these cards and send invites. Posting also registers you for the event.</DialogDescription>
+            <DialogTitle>Be a free agent</DialogTitle>
+            <DialogDescription>Team leads at this event see your card and can invite you. This also signs you up for the event.</DialogDescription>
           </DialogHeader>
           <form
             className="flex flex-col gap-3"
@@ -62,7 +62,7 @@ export function AvailabilityForm({ eventId, existing, allowCross }: { eventId: s
                   hoursPerWeek: hours ? Number(hours) : null,
                 });
                 if (!res.ok) return void toast.error(res.error);
-                toast.success("Your card is live");
+                toast.success("You're listed as a free agent");
                 setOpen(false);
                 router.refresh();
               });

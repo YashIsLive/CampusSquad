@@ -30,7 +30,7 @@ export async function SiteHeader({ user }: { user: CurrentUser | null }) {
   return (
     <header className="sticky top-0 z-40 border-b border-rule bg-paper/95 backdrop-blur-sm" style={{ viewTransitionName: "site-header" }}>
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-6 px-4">
-        <Link href="/" className="shrink-0 rounded-md" aria-label="CampusSquad home">
+        <Link href="/" className="shrink-0 rounded-md" aria-label="Got Next home">
           <Wordmark />
         </Link>
         {user && <NavLinks />}

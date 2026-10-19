@@ -128,7 +128,7 @@ export const suggestSkillsFromGithub = authedAction(
     const res = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner&sort=pushed`, {
       headers: {
         Accept: "application/vnd.github+json",
-        "User-Agent": "CampusSquad",
+        "User-Agent": "GotNext",
         ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
       },
       cache: "no-store",

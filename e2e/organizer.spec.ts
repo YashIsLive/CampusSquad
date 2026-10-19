@@ -40,8 +40,8 @@ test.describe("organizer", () => {
     await riya.page.reload();
     await expect(riya.page.getByRole("listitem").filter({ hasText: label })).toContainText("1 clicks");
 
-    // Registrants CSV.
-    await riya.page.getByRole("navigation", { name: "Manage sections" }).getByRole("link", { name: "Registrants" }).click();
+    // People list + CSV.
+    await riya.page.getByRole("navigation", { name: "Manage sections" }).getByRole("link", { name: "People" }).click();
     const [download] = await Promise.all([riya.page.waitForEvent("download"), riya.page.getByRole("link", { name: "Export CSV" }).click()]);
     expect(download.suggestedFilename()).toMatch(/registrants\.csv$/);
 
