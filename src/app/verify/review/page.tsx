@@ -10,6 +10,7 @@ import { idCardViewUrl, reviewableColleges } from "@/lib/verification";
 import { EmptyState } from "@/components/empty-state";
 import { UserAvatar } from "@/components/user-avatar";
 import { ReviewButtons } from "./review-buttons";
+import { BackButton } from "@/components/back-button";
 
 export const metadata: Metadata = { title: "Review student IDs", robots: { index: false } };
 
@@ -36,6 +37,7 @@ export default async function ReviewPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:py-10">
+      <BackButton fallback="/admin" />
       <header>
         <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Student ID review</h1>
         <p className="mt-1 text-sm text-muted-foreground">

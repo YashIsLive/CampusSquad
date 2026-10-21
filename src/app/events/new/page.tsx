@@ -6,6 +6,7 @@ import { toLocalInput } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { EventForm } from "@/components/event-form";
+import { BackButton } from "@/components/back-button";
 
 export const metadata: Metadata = { title: "Post an event" };
 
@@ -32,6 +33,7 @@ export default async function NewEventPage({ searchParams }: PageProps<"/events/
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:py-10">
+      <BackButton fallback="/" className="mb-5" />
       <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Post an event</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Takes about 5 minutes. You&apos;ll get a share kit (links + QR) once it&apos;s published.

@@ -4,6 +4,7 @@ import { isOrgAdmin, requireUser } from "@/lib/auth";
 import { getAdminOrgs, getEventWithOrg } from "@/lib/queries";
 import { toLocalInput } from "@/lib/format";
 import { EventForm } from "@/components/event-form";
+import { BackButton } from "@/components/back-button";
 
 export const metadata: Metadata = { title: "Edit event" };
 
@@ -16,6 +17,7 @@ export default async function EditEventPage({ params }: PageProps<"/events/[id]/
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:py-10">
+      <BackButton fallback={`/events/${id}/manage`} className="mb-5" />
       <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Edit event</h1>
       <EventForm
         userId={user.id}

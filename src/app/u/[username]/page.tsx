@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Stamp } from "@/components/noticeboard";
 import { VOUCHES_NEEDED, countValidVouches } from "@/lib/verification";
 import { VouchButton } from "./vouch-button";
+import { BackButton } from "@/components/back-button";
 
 const LEVEL = ["", "Beginner", "Basic", "Comfy", "Strong", "Expert"];
 
@@ -75,6 +76,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 motion-safe:animate-page-in sm:py-10">
+      <BackButton fallback="/" className="-mb-3" />
       <section aria-label="Profile" className="overflow-hidden rounded-xl border border-ink bg-card">
         <div className="flex items-center justify-between border-b border-ink px-5 py-2.5">
           <span className="label-mono">Player card</span>

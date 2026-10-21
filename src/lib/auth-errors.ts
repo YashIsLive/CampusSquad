@@ -20,7 +20,9 @@ export function authErrorMessage(err: AuthLikeError | string | null | undefined)
   if (code === "email_address_invalid" || msg.includes("email address") && msg.includes("invalid")) {
     return "That email address doesn't look deliverable. Check it for typos.";
   }
-  if (code === "invalid_credentials" || msg.includes("invalid login credentials")) return "Wrong email or password.";
+  if (code === "invalid_credentials" || msg.includes("invalid login credentials")) {
+    return "That email and password don't match. Forgot it? Use “Forgot password?”, or sign in with an email link instead.";
+  }
   if (code === "email_not_confirmed" || msg.includes("email not confirmed")) {
     return "Confirm your email first — check your inbox for the link, or use “Email me a link” instead.";
   }

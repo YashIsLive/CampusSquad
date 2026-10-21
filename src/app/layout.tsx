@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { NavProgress } from "@/components/layout/nav-progress";
+import { NavHistory } from "@/components/layout/nav-history";
 import { ViewTransitionShim } from "@/components/view-transition-shim";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
@@ -46,6 +47,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <ViewTransitionShim />
         <Suspense>
           <NavProgress />
+          <NavHistory />
         </Suspense>
         <SiteHeader user={user} />
         <main id="main" tabIndex={-1} className="flex flex-1 flex-col outline-none">

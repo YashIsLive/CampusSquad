@@ -17,7 +17,7 @@ test.describe("sign-in and sign-up", () => {
     await page.getByLabel("Email").fill("riya@coep.seed.test");
     await page.getByLabel("Password", { exact: true }).fill("not-the-password-1");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page.getByRole("main").getByRole("alert")).toHaveText("Wrong email or password.");
+    await expect(page.getByRole("main").getByRole("alert")).toContainText("That email and password don't match");
   });
 
   test("password rules are explained before sending", async ({ page }) => {

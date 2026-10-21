@@ -11,6 +11,7 @@ import { EventCard } from "@/components/event-card";
 import { UserAvatar } from "@/components/user-avatar";
 import { FollowButton } from "./follow-button";
 import { OrgAdmins } from "./org-admins";
+import { BackButton } from "@/components/back-button";
 
 async function getOrg(slug: string) {
   return db.query.organizations.findFirst({
@@ -60,6 +61,7 @@ export default async function OrgPage({ params }: PageProps<"/orgs/[slug]">) {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-6 sm:py-10">
+      <BackButton fallback="/" />
       <section className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl border bg-muted text-2xl font-semibold">
           {org.logoUrl ? (

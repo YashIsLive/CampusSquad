@@ -3,6 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { needsConsent, requireUser } from "@/lib/auth";
 import { ProfileForm } from "./profile-form";
+import { BackButton } from "@/components/back-button";
 
 export const metadata: Metadata = { title: "Your profile" };
 
@@ -21,6 +22,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:py-10">
+      {!firstTime && <BackButton fallback={`/u/${user.username}`} className="mb-5" />}
       <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">{firstTime ? "Set up your profile" : "Edit profile"}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         {firstTime

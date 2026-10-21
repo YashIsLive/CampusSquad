@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { admin } from "./helpers";
+import { admin, signInAs } from "./helpers";
 
 test("a student can download their data and delete their account", async ({ browser }) => {
   const email = `leaver-${Date.now()}@personal.seed.test`;
@@ -45,4 +45,53 @@ test("privacy policy and terms are public", async ({ page }) => {
   await expect(page.getByText(/delete the photo as soon as it.s been reviewed/)).toBeVisible();
   await page.goto("/terms");
   await expect(page.getByRole("heading", { level: 1, name: "Terms" })).toBeVisible();
+});
+
+test("a student can change their password from Account and privacy", async ({ browser }) => {
+  const email = `pwchange-${Date.now()}@personal.seed.test`;
+  const { data, error } = await admin().auth.admin.createUser({ email, password: "Old-pass-123", email_confirm: true });
+  if (error) throw error;
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  try {
+    // Sign in with the old password (seed.test addresses skip the new-device email step).
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill("Old-pass-123");
+    await page.getByRole("button", { name: "Sign in" }).last().click();
+    await expect(page).toHaveURL(/onboarding/);
+
+    await page.goto("/account");
+    await page.getByLabel("Current password").fill("wrong-pass-123");
+    await page.getByLabel("New password").fill("New-pass-4567");
+    await page.getByRole("button", { name: "Change password" }).click();
+    await expect(page.getByText("Your current password isn't right.")).toBeVisible();
+
+    await page.getByLabel("Current password").fill("Old-pass-123");
+    await page.getByRole("button", { name: "Change password" }).click();
+    await expect(page.getByText("Password changed")).toBeVisible();
+
+    // The new password works; the old one doesn't.
+    const anon = admin();
+    const { error: newErr } = await anon.auth.signInWithPassword({ email, password: "New-pass-4567" });
+    expect(newErr).toBeNull();
+  } finally {
+    await context.close();
+    await admin().auth.admin.deleteUser(data.user.id);
+  }
+});
+
+test("Back returns to the previous page, or to a sensible parent when opened directly", async ({ browser }) => {
+  const { page, context } = await signInAs(browser, "aarav", "/?scope=india");
+  await page.getByRole("heading", { name: "COEP AI Hackathon 2026" }).getByRole("link").click();
+  await expect(page).toHaveURL(/\/events\//);
+  const eventUrl = page.url();
+  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await expect(page).toHaveURL(/\/\?scope=india/);
+
+  // Opened straight from a link: Back stays on the site and goes to the club.
+  await page.goto(eventUrl);
+  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await expect(page).toHaveURL(/\/orgs\//);
+  await context.close();
 });

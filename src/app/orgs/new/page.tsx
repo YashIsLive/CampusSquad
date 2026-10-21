@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { OrgForm } from "./org-form";
+import { BackButton } from "@/components/back-button";
 
 export const metadata: Metadata = { title: "Add your club" };
 
@@ -12,6 +13,7 @@ export default async function NewOrgPage() {
 
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-6 sm:py-10">
+      <BackButton fallback="/" className="mb-5" />
       <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Add your club</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         A club, department or community that hosts events. You&apos;ll be its owner and can add admins.

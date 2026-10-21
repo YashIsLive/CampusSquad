@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/empty-state";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { cn } from "@/lib/utils";
 import { MarkAllRead } from "./mark-all-read";
+import { BackButton } from "@/components/back-button";
 
 export const metadata: Metadata = { title: "Notifications" };
 
@@ -42,6 +43,7 @@ export default async function NotificationsPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-6 sm:py-10">
       <RealtimeRefresh channel={`notif-page:${user.id}`} table="notifications" filter={`user_id=eq.${user.id}`} events="INSERT" />
+      <BackButton fallback="/" />
       <div className="flex items-center justify-between">
         <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Notifications</h1>
         {unread > 0 && <MarkAllRead />}

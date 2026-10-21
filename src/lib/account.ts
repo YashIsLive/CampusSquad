@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, gt, inArray, ne } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -98,4 +98,12 @@ export async function exportAccountData(userId: string) {
     followedClubs: follows.map((f) => f.org.name),
     verificationRequests: verification,
   };
+}
+
+/** Whether the account has a password at all (Google and email-link accounts may not). */
+export async function accountHasPassword(userId: string) {
+  const rows = await db.execute<{ has: boolean }>(
+    sql`select coalesce(encrypted_password, '') <> '' as has from auth.users where id = ${userId}`,
+  );
+  return rows[0]?.has === true;
 }

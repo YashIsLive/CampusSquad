@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { CollegeReview, OrgVerifyToggle, PersonActions, ReportActions, TakeDownButton } from "./admin-controls";
 import { relative } from "@/lib/format";
+import { BackButton } from "@/components/back-button";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
 
@@ -50,6 +51,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:py-10">
+      <BackButton fallback="/" />
       <header>
         <p className="text-sm text-muted-foreground">Platform admin</p>
         <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Admin</h1>

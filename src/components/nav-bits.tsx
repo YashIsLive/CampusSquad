@@ -1,21 +1,31 @@
 import Link from "next/link";
 import { ViewTransition, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { BackButton } from "@/components/back-button";
 import { cn } from "@/lib/utils";
 
 /** "Explore / COEP AI Club / COEP AI Hackathon" — orientation on deep pages. Last item is the current page. */
 export function Breadcrumbs({ items, className }: { items: Array<{ href?: string; label: string }>; className?: string }) {
+  // The back button returns to wherever you came from, or to the direct parent if you arrived from outside.
+  const parent = [...items].reverse().find((item, i) => i > 0 && item.href)?.href ?? "/";
   return (
-    <nav aria-label="Breadcrumb" className={cn("min-w-0", className)}>
+    <div className={cn("flex min-w-0 items-center gap-3", className)}>
+      <BackButton fallback={parent} />
+      <Crumbs items={items} />
+    </div>
+  );
+}
+
+function Crumbs({ items }: { items: Array<{ href?: string; label: string }> }) {
+  return (
+    <nav aria-label="Breadcrumb" className="hidden min-w-0 sm:block">
       <ol className="label-mono flex min-w-0 items-center gap-1 text-muted-foreground">
         {items.map((item, i) => {
           const last = i === items.length - 1;
-          const parent = i === items.length - 2;
           return (
             // On phones only the direct parent shows, as a back link; the page title is right below anyway.
-            <li key={i} className={cn("min-w-0 items-center gap-1", parent ? "flex" : "hidden sm:flex", last && "truncate")}>
-              {i > 0 && <ChevronRight aria-hidden="true" className={cn("size-3 shrink-0 opacity-60", parent && "hidden sm:block")} />}
-              {parent && <ChevronLeft aria-hidden="true" className="size-3.5 shrink-0 sm:hidden" />}
+            <li key={i} className={cn("flex min-w-0 items-center gap-1", last && "truncate")}>
+              {i > 0 && <ChevronRight aria-hidden="true" className="size-3 shrink-0 opacity-60" />}
               {item.href && !last ? (
                 <Link href={item.href} className="truncate rounded-sm py-1 hover:text-foreground hover:underline">
                   {item.label}

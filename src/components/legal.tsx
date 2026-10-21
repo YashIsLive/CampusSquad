@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BackButton } from "@/components/back-button";
 
 /** Where people reach us about privacy, data requests and complaints. Set NEXT_PUBLIC_CONTACT_EMAIL. */
 export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "privacy@gotnext.example";
@@ -28,6 +29,7 @@ export function GrievanceOfficer() {
 export function LegalPage({ title, updated, intro, children }: { title: string; updated: string; intro: ReactNode; children: ReactNode }) {
   return (
     <article className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6 sm:py-10">
+      <BackButton fallback="/" />
       <header>
         <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">{title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">Last updated {updated}</p>

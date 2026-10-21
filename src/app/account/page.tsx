@@ -2,18 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Download } from "lucide-react";
 import { requireUser } from "@/lib/auth";
-import { deletionBlockers } from "@/lib/account";
+import { accountHasPassword, deletionBlockers } from "@/lib/account";
+import { PasswordForm } from "./password-form";
 import { Button } from "@/components/ui/button";
 import { DeleteAccount } from "./delete-account";
+import { BackButton } from "@/components/back-button";
 
 export const metadata: Metadata = { title: "Account and privacy" };
 
 export default async function AccountPage() {
   const user = await requireUser({ next: "/account", allowUnonboarded: true });
-  const blockers = await deletionBlockers(user.id);
+  const [blockers, hasPassword] = await Promise.all([deletionBlockers(user.id), accountHasPassword(user.id)]);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6 sm:py-10">
+      <BackButton fallback="/" />
       <header>
         <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Account and privacy</h1>
         <p className="mt-2 text-muted-foreground">
@@ -31,6 +34,14 @@ export default async function AccountPage() {
         <Button variant="outline" className="w-fit" render={<Link href="/onboarding" />}>
           Edit profile
         </Button>
+      </section>
+
+      <section className="flex flex-col gap-3 rounded-2xl border border-rule bg-card p-5">
+        <h2 className="text-lg font-bold">Password</h2>
+        <p className="text-sm text-muted-foreground">
+          {hasPassword ? "Change the password you sign in with." : "You sign in with Google or an email link. Add a password if you'd like one too."}
+        </p>
+        <PasswordForm hasPassword={hasPassword} email={user.email} />
       </section>
 
       <section className="flex flex-col gap-3 rounded-2xl border border-rule bg-card p-5">

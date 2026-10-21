@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Stamp } from "@/components/noticeboard";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { CancelIdCard, CopyLink, IdCardUpload } from "./verify-controls";
+import { BackButton } from "@/components/back-button";
 
 export const metadata: Metadata = { title: "Prove your college" };
 
@@ -37,6 +38,7 @@ export default async function VerifyPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6 sm:py-10">
       <RealtimeRefresh channel={`verify:${user.id}`} table="notifications" filter={`user_id=eq.${user.id}`} events="INSERT" />
+      <BackButton fallback="/account" />
       <header className="flex flex-col gap-2">
         <h1 className="text-4xl leading-[0.95] font-black sm:text-5xl">Prove your college</h1>
         <p className="text-muted-foreground">

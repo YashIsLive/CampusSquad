@@ -6,13 +6,14 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authErrorMessage, safeNext } from "@/lib/auth-errors";
 import { siteUrl } from "@/lib/format";
-import { destinationAfterSignIn, markEmailProven } from "@/lib/auth";
+import { destinationAfterSignIn, getCurrentUser, markEmailProven } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allowSignup, clientIp } from "@/lib/signup-guard";
 import { emailAuthEnabled, isUndeliverable } from "@/lib/auth-config";
 import { isTrustedDevice, trustThisDevice } from "@/lib/trusted-device";
 import { TURNSTILE_FAILED, verifyTurnstile } from "@/lib/turnstile";
 import { SIGNUPS_PAUSED_MESSAGE, signupsPaused } from "@/lib/switches";
+import { newPassword } from "@/lib/password";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -34,11 +35,7 @@ async function confirmUrl(next?: string) {
 }
 
 const email = z.email("Enter a valid email address.").transform((v) => v.trim().toLowerCase());
-const password = z
-  .string()
-  .min(10, "Use at least 10 characters.")
-  .max(72, "Passwords can be at most 72 characters.")
-  .refine((v) => /[a-zA-Z]/.test(v) && /\d/.test(v), "Use at least one letter and one number.");
+const password = newPassword;
 
 function firstIssue(err: z.ZodError) {
   return err.issues[0]?.message ?? "Please check what you entered.";
@@ -202,6 +199,18 @@ export async function signInWithGoogle(next?: string) {
   });
   if (error || !data.url) redirect(`/login?error=${encodeURIComponent(error ? authErrorMessage(error) : "Google sign-in isn't set up yet.")}`);
   redirect(data.url);
+}
+
+/** Signed-in "I forgot my password": a reset link to your own address (no bot check needed; you're signed in). */
+export async function sendMyPasswordReset(): Promise<Result> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Please sign in first." };
+  if (!emailAuthEnabled()) return { ok: false, error: "Email isn't set up yet, so reset links can't be sent." };
+  if (isUndeliverable(user.email)) return { ok: false, error: "That's a demo address and can't receive email." };
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: await confirmUrl("/auth/reset-password") });
+  if (error) return { ok: false, error: authErrorMessage(error) };
+  return { ok: true };
 }
 
 export async function signOut() {
