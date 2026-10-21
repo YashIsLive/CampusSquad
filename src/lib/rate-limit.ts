@@ -13,6 +13,7 @@ const LIMITS = {
   invite: { table: "invites", column: "invited_by", max: 30, window: "1 hour", message: "Too many invites in the last hour. Try again later." },
   message: { table: "messages", column: "sender_id", max: 30, window: "1 minute", message: "You're sending messages very fast. Wait a moment." },
   applicationMessage: { table: "application_messages", column: "sender_id", max: 20, window: "1 minute", message: "You're sending messages very fast. Wait a moment." },
+  report: { table: "reports", column: "reporter_id", max: 10, window: "1 day", message: "You've sent 10 reports today. If something urgent is happening, email us." },
   vouch: { table: "vouches", column: "voucher_id", max: 10, window: "30 days", message: "You've vouched for 10 people this month — that's the limit. Ask an admin if more classmates need help." },
   verificationRequest: { table: "verification_requests", column: "user_id", max: 3, window: "1 day", message: "You've sent 3 ID cards today. Wait for a reviewer before trying again." },
   announcement: { table: "announcements", column: "author_id", max: 10, window: "1 hour", message: "That's a lot of announcements in an hour. Try again later." },

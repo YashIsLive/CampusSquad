@@ -11,6 +11,7 @@ test("a student can download their data and delete their account", async ({ brow
     await page.goto(`/auth/confirm?token_hash=${data.properties.hashed_token}&type=signup`);
     await page.getByLabel("Full name").fill("Leaver Tester");
     await page.getByLabel("College", { exact: true }).selectOption({ label: "COEP Technological University — Pune" });
+    await page.getByLabel(/I.m 18 or older/).check();
     await page.getByRole("button", { name: "Save profile" }).click();
     await expect(page).not.toHaveURL(/onboarding/);
 

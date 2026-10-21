@@ -9,6 +9,7 @@ test("a brand-new student gets the checklist and an automatic tour, once", async
     await page.goto(`/auth/confirm?token_hash=${data.properties.hashed_token}&type=signup`);
     await page.getByLabel("Full name").fill("Guide Tester");
     await page.getByLabel("College", { exact: true }).selectOption({ label: "COEP Technological University — Pune" });
+    await page.getByLabel(/I.m 18 or older/).check();
     await page.getByRole("button", { name: "Save profile" }).click();
 
     // Checklist: progress is real, the next step is linked.

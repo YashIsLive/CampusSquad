@@ -22,6 +22,7 @@ export function ProfileForm({
   email,
   emailVerified,
   verifiedCollegeId,
+  needsConsent,
   next,
   colleges,
   skills,
@@ -33,6 +34,8 @@ export function ProfileForm({
   emailVerified: boolean;
   /** The college the user is already verified at (by any method), if any. */
   verifiedCollegeId: string | null;
+  /** Show the 18+/terms tick box (first time, or after the terms change). */
+  needsConsent: boolean;
   next: string | null;
   colleges: College[];
   skills: SkillOption[];
@@ -59,6 +62,7 @@ export function ProfileForm({
     year: initial.year?.toString() ?? "",
   });
   const [newCollege, setNewCollege] = useState({ name: "", city: "", state: "" });
+  const [consent, setConsent] = useState(false);
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const chosen = colleges.find((c) => c.id === form.collegeChoice);
@@ -82,6 +86,7 @@ export function ProfileForm({
         openToCrossCollege: form.openToCrossCollege,
         skills: form.skills,
         avatarUrl: form.avatarUrl,
+        consent: needsConsent ? consent : undefined,
       });
       if (!res.ok) {
         setErrors(res.fieldErrors ?? {});
@@ -228,6 +233,29 @@ export function ProfileForm({
           <Switch checked={form.openToCrossCollege} onCheckedChange={(v) => set("openToCrossCollege", v)} />
         </label>
       </FormSection>
+
+      {needsConsent && (
+        <label className="flex items-start gap-3 rounded-xl border border-ink bg-card p-4 text-sm">
+          <input
+            type="checkbox"
+            required
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-[var(--ink)]"
+          />
+          <span>
+            I&apos;m 18 or older, and I agree to the{" "}
+            <a href="/terms" target="_blank" className="underline decoration-court decoration-2 underline-offset-4">
+              terms
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" target="_blank" className="underline decoration-court decoration-2 underline-offset-4">
+              privacy policy
+            </a>
+            .
+          </span>
+        </label>
+      )}
 
       <div className="sticky bottom-16 flex justify-end gap-2 rounded-xl border border-rule bg-card bg-background/95 p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
         <Button type="submit" size="lg" disabled={pending}>

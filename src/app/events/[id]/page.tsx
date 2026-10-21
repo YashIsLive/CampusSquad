@@ -22,6 +22,7 @@ import {
 import { googleCalendarUrl } from "@/lib/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ReportButton } from "@/components/report-button";
 import { EmptyState } from "@/components/empty-state";
 import { posterVT, titleVT } from "@/components/event-card";
 import { Breadcrumbs, TabNav } from "@/components/nav-bits";
@@ -295,6 +296,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
               <Settings /> Manage event
             </Button>
           )}
+          {user && !admin && <ReportButton targetType="event" targetId={event.id} what="this event" className="self-start text-muted-foreground" />}
         </aside>
       </div>
     </div>

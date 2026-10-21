@@ -30,7 +30,8 @@ export async function SiteHeader({ user }: { user: CurrentUser | null }) {
       const [todo] = await db.execute<{ n: number }>(sql`select
         (select count(*) from colleges where not verified)
         + (select count(*) from verification_requests where status = 'pending')
-        + (select count(*) from organizations where not verified) as n`);
+        + (select count(*) from organizations where not verified)
+        + (select count(*) from reports where status = 'open') as n`);
       adminTodo = Number(todo?.n ?? 0);
     }
   }

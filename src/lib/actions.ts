@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { AppError, toUserMessage } from "@/lib/errors";
-import { getCurrentUser, type CurrentUser } from "@/lib/auth";
+import { getCurrentUser, needsConsent, type CurrentUser } from "@/lib/auth";
 
 export type ActionResult<T = null> =
   | { ok: true; data: T }
@@ -31,6 +31,9 @@ export function authedAction<S extends z.ZodType, T>(
     if (!user) return { ok: false, error: "Please sign in first." };
     if (!opts.allowUnonboarded && !user.onboardedAt) {
       return { ok: false, error: "Finish your profile first." };
+    }
+    if (!opts.allowUnonboarded && needsConsent(user)) {
+      return { ok: false, error: "Please accept the updated terms first (reload the page)." };
     }
     try {
       return { ok: true, data: await handler(parsed.data, user) };

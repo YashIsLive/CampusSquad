@@ -10,6 +10,7 @@ import { loadApplicationThread, threadMessages } from "@/lib/threads";
 import { Breadcrumbs } from "@/components/nav-bits";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ReportButton } from "@/components/report-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { ApplicationThread } from "./application-thread";
 
@@ -111,7 +112,8 @@ export default async function ApplicationThreadPage({ params }: PageProps<"/appl
         closed={closed}
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <ReportButton targetType="conversation" targetId={id} what="this conversation" className="order-last ml-auto text-muted-foreground" />
         {isLeader ? (
           <Button variant="outline" render={<Link href={`/teams/${team.id}/applications`} />}>
             Back to all applications

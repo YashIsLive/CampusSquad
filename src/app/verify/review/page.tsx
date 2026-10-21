@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
+import { requireAdminPageAal } from "@/lib/mfa";
 import { relative } from "@/lib/format";
 import { idCardViewUrl, reviewableColleges } from "@/lib/verification";
 import { EmptyState } from "@/components/empty-state";
@@ -16,6 +17,7 @@ export default async function ReviewPage() {
   const user = await requireUser({ next: "/verify/review" });
   const colleges = await reviewableColleges(user);
   if (colleges !== "all" && colleges.length === 0) notFound();
+  await requireAdminPageAal("/verify/review");
 
   const requests = await db.query.verificationRequests.findMany({
     where: and(

@@ -34,6 +34,14 @@ export default async function AccountPage() {
       </section>
 
       <section className="flex flex-col gap-3 rounded-2xl border border-rule bg-card p-5">
+        <h2 className="text-lg font-bold">Two-step sign-in</h2>
+        <p className="text-sm text-muted-foreground">Ask for a code from an authenticator app when you sign in, so a stolen password isn&apos;t enough.</p>
+        <Button variant="outline" className="w-fit" render={<Link href="/account/security" />}>
+          Manage two-step sign-in
+        </Button>
+      </section>
+
+      <section className="flex flex-col gap-3 rounded-2xl border border-rule bg-card p-5">
         <h2 className="text-lg font-bold">Download your data</h2>
         <p className="text-sm text-muted-foreground">
           A file with everything we hold about you: profile, skills, events, teams, applications and the messages you&apos;ve sent.

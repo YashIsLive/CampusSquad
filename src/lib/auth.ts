@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { TERMS_VERSION } from "@/lib/legal-version";
 
 export type CurrentUser = NonNullable<Awaited<ReturnType<typeof loadProfile>>>;
 
@@ -23,11 +24,28 @@ export const getCurrentUser = cache(async () => {
   return (await loadProfile(userId)) ?? null;
 });
 
-/** For pages: redirect to login (and to onboarding unless `allowUnonboarded`). */
+/** True until the person has accepted the current terms and confirmed they're 18+. */
+export function needsConsent(user: CurrentUser) {
+  return !user.termsAcceptedAt || user.termsVersion !== TERMS_VERSION || !user.adultConfirmedAt;
+}
+
+/**
+ * For pages: redirect to login, then to onboarding (unless `allowUnonboarded`), then to the
+ * one-time consent page for accounts made before consent was recorded (or after the terms changed).
+ */
 export async function requireUser(opts: { next?: string; allowUnonboarded?: boolean } = {}) {
   const user = await getCurrentUser();
   if (!user) redirect(`/login${opts.next ? `?next=${encodeURIComponent(opts.next)}` : ""}`);
   if (!opts.allowUnonboarded && !user.onboardedAt) redirect("/onboarding");
+  // Two-step sign-in is on for this account but no code was entered this session.
+  const supabase = await createSupabaseServerClient();
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+    redirect(`/auth/mfa${opts.next ? `?next=${encodeURIComponent(opts.next)}` : ""}`);
+  }
+  if (!opts.allowUnonboarded && user.onboardedAt && needsConsent(user)) {
+    redirect(`/consent${opts.next ? `?next=${encodeURIComponent(opts.next)}` : ""}`);
+  }
   return user;
 }
 

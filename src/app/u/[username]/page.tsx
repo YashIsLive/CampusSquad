@@ -7,6 +7,7 @@ import { db, schema } from "@/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDate, EVENT_TYPE_LABEL } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { ReportButton } from "@/components/report-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { EmptyState } from "@/components/empty-state";
 import { Stamp } from "@/components/noticeboard";
@@ -112,7 +113,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
             {profile.bio && <p className="mt-4 max-w-prose border-l-2 border-ink/30 pl-3 text-sm">{profile.bio}</p>}
           </div>
         </div>
-        {(profile.githubUrl || profile.linkedinUrl || isMe) && (
+        {(profile.githubUrl || profile.linkedinUrl || isMe || viewer) && (
           <div className="flex flex-wrap gap-2 border-t border-rule px-5 py-3">
             {profile.githubUrl && (
               <Button variant="outline" size="sm" render={<a href={profile.githubUrl} target="_blank" rel="noreferrer" />}>
@@ -123,6 +124,9 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
               <Button variant="outline" size="sm" render={<a href={profile.linkedinUrl} target="_blank" rel="noreferrer" />}>
                 LinkedIn <ExternalLink />
               </Button>
+            )}
+            {viewer && !isMe && (
+              <ReportButton targetType="profile" targetId={profile.id} what={`${(profile.name || profile.username).split(" ")[0]}'s profile`} className="ml-auto text-muted-foreground" />
             )}
             {isMe && (
               <Button size="sm" variant="ink" className="ml-auto" render={<Link href="/onboarding" />}>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { asc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
-import { requireUser } from "@/lib/auth";
+import { needsConsent, requireUser } from "@/lib/auth";
 import { ProfileForm } from "./profile-form";
 
 export const metadata: Metadata = { title: "Your profile" };
@@ -32,6 +32,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
         email={user.email}
         emailVerified={user.emailVerified}
         verifiedCollegeId={user.collegeVerified ? user.collegeId : null}
+        needsConsent={needsConsent(user)}
         next={next}
         colleges={colleges.map((c) => ({ id: c.id, name: c.name, city: c.city, emailDomain: c.emailDomain }))}
         skills={skills.map((s) => ({ id: s.id, name: s.name, category: s.category }))}

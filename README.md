@@ -142,6 +142,7 @@ sheet, a sticky register bar, link previews for every event, and an **installabl
 - **Clubs and communities** with admins and followers, who get notified when a new event goes live
 - **First-run guide:** a checklist driven by what you've actually done, plus spotlight tours of each page
 - **Skill suggestions** pulled from a student's public GitHub repos
+- **Safety:** two-step sign-in (required for admins), a bot check on sign-in, and a **Report** button on events, profiles, teams and conversations with an admin queue
 - **Your data, your call:** download everything we hold, or delete your account, from **Account and privacy**; plain-language [privacy policy](src/app/privacy/page.tsx) and terms
 - **Accessible:** keyboard navigable, reduced-motion aware, axe-checked to WCAG 2.1 AA in CI
 
@@ -199,6 +200,10 @@ npm run phone   # builds, then serves on http://<your-computer's-IP>:3001
 | `NEXT_PUBLIC_SITE_URL` | your URL (`http://localhost:3000` locally) | share links, link previews, email links |
 | `AUTH_EMAIL_ENABLED` | `1` once custom SMTP is set up ([guide](docs/AUTH_SETUP.md)) | email sign-in links/codes, confirmation emails, new-device codes |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | an inbox you read | shown on /privacy and /terms for data requests; required on a real deployment |
+| `NEXT_PUBLIC_GRIEVANCE_OFFICER`, `NEXT_PUBLIC_LEGAL_ENTITY` | a named person; your legal name and address | shown on /privacy and /terms (IT Rules 2021, DPDP); required on a real deployment |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare dashboard → Turnstile | bot check on sign-up and sign-in; off when empty, required on a real deployment |
+| `NEXT_PUBLIC_SENTRY_DSN` (+ `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` for source maps) | sentry.io → project settings | error tracking with personal data scrubbed; off when empty |
+| `ADMIN_MFA` | `1` to require two-step sign-in for admins in development (always required in production) | testing admin MFA locally |
 | `AUTH_DEVICE_SECRET` | optional, any long random string | signs "remember this device" cookies; change it to make every browser confirm again |
 | `RESEND_API_KEY`, `EMAIL_FROM` | optional, [resend.com](https://resend.com) | announcement and reminder emails (skipped if unset) |
 | `CRON_SECRET` | any random string | protects `/api/cron/deadline-reminders` |

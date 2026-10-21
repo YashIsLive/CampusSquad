@@ -78,6 +78,20 @@
       "when": 1792602903481,
       "tag": "0010_public_bucket_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792605401145,
+      "tag": "0011_consent_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792605532762,
+      "tag": "0012_report_notifications",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CONTACT_EMAIL, LegalPage, LegalSection } from "@/components/legal";
+import { GrievanceOfficer, LEGAL_ENTITY, LegalPage, LegalSection } from "@/components/legal";
 
 export const metadata: Metadata = { title: "Terms" };
 
@@ -11,6 +11,10 @@ export default function TermsPage() {
       updated="19 October 2026"
       intro={<p>The short version: be real, be decent, and remember that events are run by their organizers, not by us.</p>}
     >
+      <LegalSection title="Who we are">
+        <p>Got Next is run by {LEGAL_ENTITY}. &ldquo;We&rdquo; on this page means them.</p>
+      </LegalSection>
+
       <LegalSection title="Who can use Got Next">
         <p>College students and the clubs and communities that run tech events, aged 18 or over. One account per person.</p>
       </LegalSection>
@@ -28,6 +32,10 @@ export default function TermsPage() {
         <p>
           No harassment, hate, spam or scams, in messages, team chats, event pages or anywhere else. Don&apos;t post anything you
           don&apos;t have the right to share. We can remove content and suspend or delete accounts that break these rules.
+        </p>
+        <p>
+          See something wrong? Use the <strong>Report</strong> button on any event, profile, team or conversation. An admin looks at every
+          report within 24 hours.
         </p>
       </LegalSection>
 
@@ -72,10 +80,8 @@ export default function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Contact">
-        <p>
-          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-        </p>
+      <LegalSection title="Complaints and contact">
+        <GrievanceOfficer />
       </LegalSection>
     </LegalPage>
   );

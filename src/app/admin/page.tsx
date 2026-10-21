@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, asc, count, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, inArray, or, sql } from "drizzle-orm";
 import { ArrowRight, BadgeCheck, Search } from "lucide-react";
 import { db, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
+import { requireAdminPageAal } from "@/lib/mfa";
 import { formatShort } from "@/lib/format";
 import { EmptyState } from "@/components/empty-state";
 import { TabNav } from "@/components/nav-bits";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
-import { CollegeReview, OrgVerifyToggle, PersonActions, TakeDownButton } from "./admin-controls";
+import { CollegeReview, OrgVerifyToggle, PersonActions, ReportActions, TakeDownButton } from "./admin-controls";
+import { relative } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
 
 const SECTIONS = [
   { key: "overview", label: "Overview" },
+  { key: "reports", label: "Reports" },
   { key: "colleges", label: "Colleges" },
   { key: "clubs", label: "Clubs" },
   { key: "people", label: "People" },
@@ -29,6 +32,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   const user = await requireUser({ next: "/admin" });
   if (!user.isAdmin) notFound();
   const sp = await searchParams;
+  await requireAdminPageAal(`/admin${typeof sp.section === "string" ? `?section=${sp.section}` : ""}`);
   const section: Section = SECTIONS.find((s) => s.key === sp.section)?.key ?? "overview";
   const q = typeof sp.q === "string" ? sp.q.trim().slice(0, 80) : "";
 
@@ -37,6 +41,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
       colleges: sql<number>`(select count(*)::int from colleges where not verified)`,
       ids: sql<number>`(select count(*)::int from verification_requests where status = 'pending')`,
       clubs: sql<number>`(select count(*)::int from organizations where not verified)`,
+      reports: sql<number>`(select count(*)::int from reports where status = 'open')`,
     })
     .from(sql`(select 1) as _`);
 
@@ -57,11 +62,13 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
           href: href(s.key),
           label: s.label,
           active: section === s.key,
-          badge: s.key === "colleges" ? badge(todo.colleges) : s.key === "clubs" ? badge(todo.clubs) : undefined,
+          badge:
+            s.key === "colleges" ? badge(todo.colleges) : s.key === "clubs" ? badge(todo.clubs) : s.key === "reports" ? badge(todo.reports) : undefined,
         }))}
       />
 
       {section === "overview" && <Overview todo={todo} />}
+      {section === "reports" && <Reports />}
       {section === "colleges" && <Colleges />}
       {section === "clubs" && <Clubs q={q} />}
       {section === "people" && <People q={q} me={user.id} />}
@@ -70,7 +77,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   );
 }
 
-async function Overview({ todo }: { todo: { colleges: number; ids: number; clubs: number } }) {
+async function Overview({ todo }: { todo: { colleges: number; ids: number; clubs: number; reports: number } }) {
   const [[stats], recent] = await Promise.all([
     db
       .select({
@@ -92,6 +99,7 @@ async function Overview({ todo }: { todo: { colleges: number; ids: number; clubs
   ]);
 
   const tasks = [
+    { n: todo.reports, label: "reports to look at (within 24 hours)", href: "/admin?section=reports" },
     { n: todo.colleges, label: "college requests to approve", href: "/admin?section=colleges" },
     { n: todo.ids, label: "student IDs to check", href: "/verify/review" },
     { n: todo.clubs, label: "clubs without a verified badge", href: "/admin?section=clubs" },
@@ -363,6 +371,115 @@ async function Events({ q }: { q: string }) {
             </li>
           ))}
         </ul>
+      )}
+    </div>
+  );
+}
+
+const REASON_LABEL = {
+  spam: "Spam or a scam",
+  fake: "Fake or impersonation",
+  harassment: "Harassment or bullying",
+  inappropriate: "Inappropriate or offensive",
+  other: "Something else",
+} as const;
+
+/** Reports queue: oldest open first (the 24-hour clock), then the last few closed ones. */
+async function Reports() {
+  const [open, closed] = await Promise.all([
+    db.query.reports.findMany({
+      where: eq(schema.reports.status, "open"),
+      with: { reporter: { columns: { name: true, username: true } } },
+      orderBy: asc(schema.reports.createdAt),
+      limit: 50,
+    }),
+    db.query.reports.findMany({
+      where: sql`${schema.reports.status} <> 'open'`,
+      orderBy: desc(schema.reports.resolvedAt),
+      limit: 10,
+    }),
+  ]);
+
+  // Where each report points, and for conversations, the messages themselves.
+  const profileIds = open.filter((r) => r.targetType === "profile").map((r) => r.targetId);
+  const convoIds = open.filter((r) => r.targetType === "conversation").map((r) => r.targetId);
+  const [profiles, convos] = await Promise.all([
+    profileIds.length
+      ? db.select({ id: schema.profiles.id, username: schema.profiles.username }).from(schema.profiles).where(inArray(schema.profiles.id, profileIds))
+      : [],
+    convoIds.length
+      ? db.query.applicationMessages.findMany({
+          where: inArray(schema.applicationMessages.applicationId, convoIds),
+          with: { sender: { columns: { name: true } } },
+          orderBy: asc(schema.applicationMessages.createdAt),
+        })
+      : [],
+  ]);
+  const usernameOf = new Map(profiles.map((p) => [p.id, p.username]));
+  const hrefFor = (type: string, id: string) =>
+    type === "event" ? `/events/${id}` : type === "team" ? `/teams/${id}` : type === "profile" && usernameOf.get(id) ? `/u/${usernameOf.get(id)}` : null;
+
+  return (
+    <div className="flex flex-col gap-8">
+      <section>
+        <h2 className="text-xl font-bold">Open</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Look at each report within 24 hours. Use Events to take an event down; the reporter is told when you close a report, but never
+          who you are.
+        </p>
+        {open.length === 0 ? (
+          <EmptyState compact title="No open reports" />
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {open.map((r) => {
+              const href = hrefFor(r.targetType, r.targetId);
+              const messages = convos.filter((m) => m.applicationId === r.targetId).slice(-20);
+              return (
+                <li key={r.id} className="grid gap-4 rounded-2xl border border-ink bg-card p-4 sm:grid-cols-[1fr_18rem]">
+                  <div className="flex min-w-0 flex-col gap-2 text-sm">
+                    <p className="font-semibold">{href ? <Link href={href} className="underline decoration-court decoration-2 underline-offset-4">{r.targetLabel}</Link> : r.targetLabel}</p>
+                    <p>
+                      <span className="rounded-full bg-signal-soft px-2 py-0.5 text-xs font-semibold text-signal-ink">{REASON_LABEL[r.reason]}</span>
+                      <span className="ml-2 text-muted-foreground">
+                        {relative(r.createdAt)} · by {r.reporter ? `${r.reporter.name || r.reporter.username}` : "a deleted account"}
+                      </span>
+                    </p>
+                    {r.details && <p className="rounded-md bg-secondary p-3 whitespace-pre-wrap">{r.details}</p>}
+                    {messages.length > 0 && (
+                      <details className="rounded-md border border-rule p-3">
+                        <summary className="cursor-pointer font-medium">Show the conversation ({messages.length} messages)</summary>
+                        <ol className="mt-2 flex flex-col gap-1.5">
+                          {messages.map((m) => (
+                            <li key={m.id}>
+                              <strong>{m.sender.name}:</strong> <span className="whitespace-pre-wrap">{m.body}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </details>
+                    )}
+                  </div>
+                  <ReportActions reportId={r.id} />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+      {closed.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-xl font-bold">Recently closed</h2>
+          <ul className="divide-y divide-rule rounded-2xl border border-rule bg-card">
+            {closed.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                <span className="min-w-0 truncate">{r.targetLabel}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  {r.status === "resolved" ? "acted on" : "no action"}
+                  {r.resolvedAt ? ` · ${relative(r.resolvedAt)}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

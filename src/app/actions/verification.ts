@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
 import { assertWithinLimit } from "@/lib/rate-limit";
+import { requireAdminAal } from "@/lib/mfa";
 import {
   VOUCHES_NEEDED,
   canReviewCollege,
@@ -71,6 +72,8 @@ export const reviewIdCard = authedAction(
       with: { college: { columns: { name: true } } },
     });
     if (!req || !(await canReviewCollege(user, req.collegeId))) fail("Request not found.");
+    // ID photos are sensitive: reviewers confirm with their authenticator app (in production).
+    await requireAdminAal(user, { adminOnly: false });
     if (req.status !== "pending") fail(`This request was already ${req.status}.`);
     if (req.userId === user.id) fail("You can't review your own request.");
     if (!approve && !note) fail("Tell the student what to fix (e.g. \"photo is blurry\").");

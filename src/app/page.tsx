@@ -3,7 +3,8 @@ import { ViewTransition } from "react";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { ArrowRight } from "lucide-react";
 import { db, schema } from "@/db";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, needsConsent } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { getFeed, parseFeedFilters, type FeedScope } from "@/lib/feed";
 import { groupByWhen } from "@/lib/group-events";
 import { relative } from "@/lib/format";
@@ -23,6 +24,7 @@ import { PageTour } from "@/components/guide/page-tour";
 export default async function Home({ searchParams }: PageProps<"/">) {
   const sp = await searchParams;
   const user = await getCurrentUser();
+  if (user?.onboardedAt && needsConsent(user)) redirect("/consent");
   const filters = parseFeedFilters(sp);
   const [{ scope, events, closingSoon }, spots, skillCount] = await Promise.all([
     getFeed(user, filters),

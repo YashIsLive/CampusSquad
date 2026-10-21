@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import { assertProductionEnv } from "./src/env";
 
 assertProductionEnv();
@@ -19,7 +20,9 @@ const supabaseWs = supabaseHost ? `wss://${supabaseHost}` : "wss://*.supabase.co
  */
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://challenges.cloudflare.com`,
+  // Cloudflare Turnstile (bot check on sign-in) runs in an iframe.
+  "frame-src https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${supabase} https://avatars.githubusercontent.com https://lh3.googleusercontent.com`,
   "font-src 'self' data:",
@@ -78,4 +81,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Error tracking. Events go through our own /monitoring route (no CSP change, not blocked by ad
+// blockers). Source maps upload only when SENTRY_AUTH_TOKEN is set (in CI/Vercel).
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  tunnelRoute: "/monitoring",
+  silent: !process.env.CI,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+  telemetry: false,
+});

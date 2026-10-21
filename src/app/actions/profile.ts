@@ -8,6 +8,8 @@ import { authedAction, fail } from "@/lib/actions";
 import { emailMatchesDomain } from "@/lib/college";
 import { githubUsername, skillsFromRepos } from "@/lib/github";
 import { imageUrl, normalizeGithubUrl, optionalGithubUrl, optionalLinkedinUrl } from "@/lib/links";
+import { TERMS_VERSION } from "@/lib/legal-version";
+import { needsConsent } from "@/lib/auth";
 
 const profileSchema = z
   .object({
@@ -35,6 +37,8 @@ const profileSchema = z
       .array(z.object({ skillId: z.uuid(), level: z.number().int().min(1).max(5) }))
       .max(25, "Pick up to 25 skills."),
     avatarUrl: imageUrl.nullable().optional(),
+    /** "I'm 18 or older and agree to the terms and privacy policy" — required until recorded. */
+    consent: z.boolean().optional(),
   })
   .refine((v) => !(v.collegeId && v.newCollege), { message: "Pick a college or request a new one, not both." });
 
@@ -48,6 +52,10 @@ export const saveProfile = authedAction(
       columns: { id: true },
     });
     if (clash) fail("That username is taken.");
+    const consentMissing = needsConsent(user);
+    if (consentMissing && !input.consent) {
+      fail("Please confirm you're 18 or older and agree to the terms and privacy policy.");
+    }
 
     await db.transaction(async (tx) => {
       let collegeId = input.collegeId;
@@ -89,6 +97,7 @@ export const saveProfile = authedAction(
           openToCrossCollege: input.openToCrossCollege,
           ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
           onboardedAt: user.onboardedAt ?? new Date(),
+          ...(consentMissing ? { termsVersion: TERMS_VERSION, termsAcceptedAt: new Date(), adultConfirmedAt: new Date() } : {}),
         })
         .where(eq(schema.profiles.id, user.id));
 

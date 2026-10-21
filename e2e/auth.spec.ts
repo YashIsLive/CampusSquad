@@ -83,6 +83,7 @@ test.describe("sign-in and sign-up", () => {
         await skills.fill(s);
         await skills.press("Enter");
       }
+      await page.getByLabel(/I.m 18 or older/).check();
       await page.getByRole("button", { name: "Save profile" }).click();
       await expect(page).toHaveURL(/\/me\/events$/);
     } finally {

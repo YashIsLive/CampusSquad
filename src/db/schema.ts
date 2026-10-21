@@ -84,6 +84,7 @@ export const notificationType = pgEnum("notification_type", [
   "event_reminder",
   "application_message",
   "verification",
+  "report",
 ]);
 export const reminderKind = pgEnum("reminder_kind", ["h72", "h24", "h2"]);
 
@@ -123,6 +124,10 @@ export const profiles = pgTable(
     reliabilityScore: numeric("reliability_score", { precision: 5, scale: 2 }).notNull().default("100"),
     isAdmin: boolean("is_admin").notNull().default(false),
     onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
+    /** Consent record (DPDP): which terms/privacy version they accepted, when, and their 18+ confirmation. */
+    termsVersion: text("terms_version"),
+    termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+    adultConfirmedAt: timestamp("adult_confirmed_at", { withTimezone: true }),
     /** First-run guide progress: which page tours were seen, and whether the checklist was hidden. */
     guide: jsonb("guide").$type<GuideState>().notNull().default({}),
     createdAt: createdAt(),
@@ -547,6 +552,33 @@ export const vouches = pgTable(
   ],
 );
 
+/** Someone flagged an event, profile, team or conversation for admins to look at. */
+export const reports = pgTable(
+  "reports",
+  {
+    id: id(),
+    reporterId: uuid("reporter_id").references(() => profiles.id, { onDelete: "set null" }),
+    targetType: text("target_type").$type<"event" | "profile" | "team" | "conversation">().notNull(),
+    targetId: uuid("target_id").notNull(),
+    /** Snapshot of what was reported (title or name), so the report still reads well if the target is deleted. */
+    targetLabel: text("target_label").notNull(),
+    reason: text("reason").$type<"spam" | "fake" | "harassment" | "inappropriate" | "other">().notNull(),
+    details: text("details"),
+    status: text("status").$type<"open" | "resolved" | "dismissed">().notNull().default("open"),
+    resolution: text("resolution"),
+    resolvedBy: uuid("resolved_by").references(() => profiles.id, { onDelete: "set null" }),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("reports_status_created_idx").on(t.status, t.createdAt),
+    index("reports_reporter_idx").on(t.reporterId, t.createdAt),
+    check("reports_target_type_check", sql`${t.targetType} IN ('event', 'profile', 'team', 'conversation')`),
+    check("reports_reason_check", sql`${t.reason} IN ('spam', 'fake', 'harassment', 'inappropriate', 'other')`),
+    check("reports_status_check", sql`${t.status} IN ('open', 'resolved', 'dismissed')`),
+  ],
+);
+
 export const teamTasks = pgTable("team_tasks", {
   id: id(),
   teamId: uuid("team_id")
@@ -746,6 +778,10 @@ export const applicationMessagesRelations = relations(applicationMessages, ({ on
 export const verificationRequestsRelations = relations(verificationRequests, ({ one }) => ({
   user: one(profiles, { fields: [verificationRequests.userId], references: [profiles.id] }),
   college: one(colleges, { fields: [verificationRequests.collegeId], references: [colleges.id] }),
+}));
+
+export const reportsRelations = relations(reports, ({ one }) => ({
+  reporter: one(profiles, { fields: [reports.reporterId], references: [profiles.id] }),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({

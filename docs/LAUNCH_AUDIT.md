@@ -15,17 +15,20 @@ against the code on 21 October 2026.
 
 Fix these before real students sign up. Everything else can follow in the first weeks.
 
-| # | Item | Section |
-| --- | --- | --- |
-| 1 | Separate production Supabase project, on a plan with **daily backups**, in the **Mumbai** region | 1.3, 1.5 |
-| 2 | **MFA for admin accounts** (admins can see emails and verify students) | 1.2 |
-| 3 | **CAPTCHA** (Cloudflare Turnstile, built into Supabase Auth) on sign-up and sign-in | 1.2, 1.4 |
-| 4 | **Error tracking** (Sentry) and an **uptime monitor** on `/api/health` | 1.5 |
-| 5 | **Grievance officer** named and published (IT Rules 2021), plus a **report button** for content and profiles | 2.1 |
-| 6 | **Age confirmation** at sign-up (18+), as a tick box rather than text | 2.2 |
-| 7 | A written **incident and breach response** plan, including DPDP breach notification | 1.5, 2.3 |
-| 8 | **Legal review** of the privacy policy and terms; name the legal entity that runs Got Next | 2.1 |
-| 9 | Production environment: `E2E_TEST_LOGIN` **unset**, `NEXT_PUBLIC_SITE_URL` https, all secrets fresh | 1.1, 1.3 |
+| # | Item | Section | Status |
+| --- | --- | --- | --- |
+| 1 | Separate production Supabase project, on a plan with **daily backups**, in the **Mumbai** region | 1.3, 1.5 | ❌ you: dashboard |
+| 2 | **MFA for admin accounts** (admins can see emails and verify students) | 1.2 | ✅ built; required for admins and ID reviewers in production |
+| 3 | **CAPTCHA** (Cloudflare Turnstile) on sign-up and sign-in | 1.2, 1.4 | ✅ built; ❌ you: create the Turnstile keys |
+| 4 | **Error tracking** (Sentry) and an **uptime monitor** on `/api/health` | 1.5 | ✅ Sentry built; ❌ you: create the project (DSN) and the uptime monitor |
+| 5 | **Grievance officer** named and published (IT Rules 2021), plus a **report button** for content and profiles | 2.1 | ✅ built; ❌ you: name the officer (env) |
+| 6 | **Age confirmation** at sign-up (18+), as a tick box rather than text | 2.2 | ✅ built |
+| 7 | A written **incident and breach response** plan, including DPDP breach notification | 1.5, 2.3 | ❌ you: write it |
+| 8 | **Legal review** of the privacy policy and terms; name the legal entity that runs Got Next | 2.1 | ❌ you: lawyer; set `NEXT_PUBLIC_LEGAL_ENTITY` |
+| 9 | Production environment: `E2E_TEST_LOGIN` **unset**, `NEXT_PUBLIC_SITE_URL` https, all secrets fresh | 1.1, 1.3 | ❌ you: on deploy (the app refuses to start if these are wrong) |
+
+The app now **refuses to start** on a real (https) deployment until the contact email, grievance officer,
+legal entity and Turnstile keys are set, so none of these can be forgotten.
 
 ---
 
@@ -52,11 +55,11 @@ Fix these before real students sign up. Everything else can follow in the first 
 | --- | --- | --- | --- |
 | **Password storage** | Passwords are hashed with a slow, salted algorithm; never stored or logged in plain text. | If the database ever leaks, hashed passwords protect users who reuse them elsewhere. | ✅ Supabase Auth stores bcrypt hashes; the app never sees or stores passwords. |
 | **Password policy** | Minimum length; known-breached passwords rejected. | Weak and reused passwords are the easiest way into accounts. | ⚠️ At least 8 characters with a letter and a number. ❌ In Supabase, raise the minimum to 10+ and turn on **leaked-password protection** (Pro plan). |
-| **Brute force and bots** | Repeated sign-in and sign-up attempts are throttled; bots are challenged. | Without it, attackers can guess passwords or mass-create fake accounts. | ✅ Supabase rate-limits auth endpoints. ⚠️ Instant sign-up has a per-network limit, but it's held in server memory, so it's weak on serverless (each instance counts separately). ❌ Add **Cloudflare Turnstile** (Supabase Auth supports it natively) to sign-up, sign-in and password reset. |
+| **Brute force and bots** | Repeated sign-in and sign-up attempts are throttled; bots are challenged. | Without it, attackers can guess passwords or mass-create fake accounts. | ✅ Supabase rate-limits auth endpoints. ✅ **Cloudflare Turnstile** on sign-up, sign-in, email links and password reset, checked on the server (`src/lib/turnstile.ts`, tested against Cloudflare's test keys). Required on production deploys. ⚠️ Turnstile protects the app's forms; Supabase's own auth API is still reachable with the public key, limited by Supabase's rate limits. |
 | **Email verification** | New accounts prove they own their address before it counts for anything. | Stops people impersonating a college with an address they don't own. | ✅ Sign-up confirms by email code or link; campus verification only trusts proven addresses (fixed twice this cycle: seed relink and admin approval). |
 | **Sessions** | Session cookies are `HttpOnly` and `Secure`, expire, refresh safely, and end on sign-out. | Stolen session cookies are as good as a password. | ✅ `@supabase/ssr` cookies, rotating refresh tokens, server-side session checks on every request. ⚠️ In Supabase, check the JWT expiry (1 hour is fine) and that **refresh-token reuse detection** is on. ❌ A "sign out on all devices" button. |
 | **New-device check** | A password alone isn't enough on an unknown browser. | Limits damage from leaked passwords. | ✅ With email on, a password on a new browser requires a one-time email code; the browser is then trusted for 30 days (signed, `HttpOnly` cookie; tested). |
-| **Multi-factor authentication** | At least privileged accounts use MFA. | Admin accounts can see emails, verify students and take events down; one phished admin is a full breach. | ❌ Turn on Supabase **TOTP MFA** and require it for platform admins (check `aal2` before admin actions). Optional for everyone else. |
+| **Multi-factor authentication** | At least privileged accounts use MFA. | Admin accounts can see emails, verify students and take events down; one phished admin is a full breach. | ✅ Two-step sign-in with an authenticator app (Supabase TOTP MFA): anyone can turn it on (Account and privacy); once on, every sign-in asks for a code. **Required** for platform admins and student-ID reviewers in production: admin pages and actions check for a confirmed second step (`src/lib/mfa.ts`). Verified end to end: set up, challenged on next sign-in, turned off. |
 | **Least privilege** | Admin rights are granted deliberately, limited and logged. | Limits how much one compromised account can do. | ✅ Admin is a database flag set by an admin or the `make-admin` script; admins can't remove their own access; club admins can only review IDs for their own college. ⚠️ Admin actions aren't written to an audit log yet (see 1.5). |
 | **Account enumeration** | Error messages don't confirm which emails have accounts. | Attackers use it to target known accounts. | ✅ Password reset gives the same answer either way. ⚠️ Sign-up says "account already exists": an accepted trade-off for usability; CAPTCHA reduces the risk. |
 
@@ -86,13 +89,13 @@ Fix these before real students sign up. Everything else can follow in the first 
 
 | Check | What to verify | Why before launch | Status |
 | --- | --- | --- | --- |
-| **Error tracking** | Server and browser errors are reported with context (no personal data). | Without it, you hear about bugs from angry students, or never. | ❌ Add Sentry (free tier). Scrub emails and message bodies from reports. |
+| **Error tracking** | Server and browser errors are reported with context (no personal data). | Without it, you hear about bugs from angry students, or never. | ✅ Sentry on server, edge and browser; off until `NEXT_PUBLIC_SENTRY_DSN` is set. Emails, IPs, cookies, auth headers, request bodies, sign-in tokens and entry codes are scrubbed before sending (tested). Events go through the site's own `/monitoring` route. No session replay. ❌ You: create the Sentry project and set the DSN. |
 | **Uptime monitoring** | Something checks the site every few minutes and alerts you. | Lets you fix an outage before the event's registration deadline passes. | ❌ Point an uptime monitor (Better Stack, UptimeRobot) at `/api/health`, which reports database reachability. |
 | **Logging** | Enough logs to investigate an incident; no passwords, codes or ID photos in them. | You can't respond to what you can't see; logging secrets creates a new leak. | ⚠️ Vercel function logs only (short retention on free plans). The app doesn't log personal data. ❌ Consider a log drain if you need more than a few days. |
 | **Admin audit trail** | Who verified, unverified, promoted or took down what, and when. | Needed to investigate misuse by an admin and to answer user complaints. | ⚠️ ID reviews record the reviewer. ❌ Other admin actions (make admin, take down event, verify student) aren't logged; add an `admin_actions` table. |
 | **Incident response plan** | A one-page plan: who decides, how to contain (rotate keys, disable sign-ups, take the site down), who to tell, and how fast. | In a breach there's no time to work this out, and the law sets deadlines (2.3). | ❌ Write it. Include rotating the Supabase keys and `AUTH_DEVICE_SECRET` (signs out every remembered device), and the DPDP breach notification steps. |
 | **Recovery drill** | Restore from backup and redeploy from scratch at least once. | Untested backups often turn out not to work. | ❌ Do it once on a scratch project before launch. |
-| **Security review** | An independent look before scale. | Fresh eyes find what the builder can't. | ⚠️ Automated: RLS/API attack tests, axe, e2e. ❌ Before any large rollout, a short external review or a bug-report address (`security.txt`). |
+| **Security review** | An independent look before scale. | Fresh eyes find what the builder can't. | ⚠️ Automated: RLS/API attack tests, axe, e2e. ✅ `/.well-known/security.txt` tells researchers where to report. ❌ Before any large rollout, a short external review. |
 
 ---
 
@@ -115,19 +118,19 @@ Fix these before real students sign up. Everything else can follow in the first 
 
 | Check | What to verify | Why before launch | Status |
 | --- | --- | --- | --- |
-| **Privacy policy (DPDP notice)** | In plain language: what's collected, why, who sees it, how long it's kept, rights, how to withdraw consent, how to complain (including to the Data Protection Board). | DPDP requires this notice to accompany or precede any request for consent. | ✅ `/privacy` covers all of these and matches the actual behaviour. ❌ Add the **legal name and address** of whoever runs Got Next (the data fiduciary). ❌ Lawyer review. |
+| **Privacy policy (DPDP notice)** | In plain language: what's collected, why, who sees it, how long it's kept, rights, how to withdraw consent, how to complain (including to the Data Protection Board). | DPDP requires this notice to accompany or precede any request for consent. | ✅ `/privacy` covers all of these and matches the actual behaviour, including a "Who we are" section and the right to nominate. ❌ You: set `NEXT_PUBLIC_LEGAL_ENTITY` (legal name and address). ❌ Lawyer review. |
 | **Terms of service** | Who can use it, rules of conduct, what the platform isn't responsible for, how accounts can be removed, governing law. | Sets expectations, limits liability, and is required for intermediaries. | ✅ `/terms`. ❌ Lawyer review; add the legal entity. |
 | **Cookie notice** | Lists the cookies used and why. A consent banner is only needed for non-essential cookies (analytics, ads). | Cookie banners where none are needed annoy users; missing consent where it *is* needed is a violation. | ✅ Got Next sets only strictly necessary cookies (sign-in and the remembered device), described in the privacy policy, so **no banner is needed**. ❌ If you ever add analytics or ads, add consent first. |
-| **Grievance officer** | A named grievance officer with contact details on the site; complaints acknowledged within 24 hours and resolved within 15 days. | A requirement for intermediaries under the IT Rules 2021, and the route DPDP expects for complaints. | ❌ Name one (it can be you for a pilot), publish name and email on `/privacy` and `/terms`, and set `NEXT_PUBLIC_CONTACT_EMAIL` to an inbox you read daily. |
-| **Content rules and takedown** | Users can report events, profiles and messages; you have a process and a deadline to act. | Intermediaries lose legal protection if they don't act on reports; harassment between students is a real risk. | ⚠️ Admins can take events down. ❌ Add a **Report** button (event, profile, message) feeding the admin panel, and community guidelines (the "Be decent" section of the terms is a start). |
+| **Grievance officer** | A named grievance officer with contact details on the site; complaints acknowledged within 24 hours and resolved within 15 days. | A requirement for intermediaries under the IT Rules 2021, and the route DPDP expects for complaints. | ✅ Shown on `/privacy` and `/terms` with the 24-hour / 15-day timelines. ❌ You: set `NEXT_PUBLIC_GRIEVANCE_OFFICER` (a named person; it can be you for a pilot) and `NEXT_PUBLIC_CONTACT_EMAIL` (an inbox you read daily). |
+| **Content rules and takedown** | Users can report events, profiles and messages; you have a process and a deadline to act. | Intermediaries lose legal protection if they don't act on reports; harassment between students is a real risk. | ✅ **Report** on events, profiles, teams and conversations. The reporter gets an acknowledgement; admins get a Reports queue (oldest first, with the reported conversation shown inline) and close each report with a note the reporter sees. Admins can take events down. ⚠️ There's no account suspension yet; delete or contact the person for now. |
 
 ### 2.2 Consent
 
 | Check | What to verify | Why before launch | Status |
 | --- | --- | --- | --- |
-| **Consent at sign-up** | Consent is informed (linked notice), specific, and given by a clear action. | DPDP consent must be "free, specific, informed, unconditional and unambiguous with a clear affirmative action". | ✅ A notice with links sits next to every sign-in and sign-up button. ⚠️ For stronger evidence, record the policy version and time each user accepted it. |
+| **Consent at sign-up** | Consent is informed (linked notice), specific, and given by a clear action. | DPDP consent must be "free, specific, informed, unconditional and unambiguous with a clear affirmative action". | ✅ A required tick box in profile setup ("I'm 18 or older, and I agree to the terms and privacy policy"), which every sign-up path goes through; the server refuses without it (tested). The accepted **version and time** are stored per person. Existing accounts are asked once on `/consent`, and everyone is asked again when `TERMS_VERSION` changes. |
 | **Sensitive extras** | Separate, explicit consent for anything beyond the basics. | Bundled consent for unrelated purposes isn't valid. | ✅ ID photo upload is disabled until a specific consent box is ticked. |
-| **Age** | Users confirm they're 18 or over; under-18s are kept out unless you obtain verifiable parental consent. | DPDP requires **verifiable parental consent** for anyone under 18 and bans tracking or targeting them. Some first-year students are 17. | ⚠️ Policy and terms state 18+. ❌ Add an "I'm 18 or older" tick box at sign-up, and decide how to handle 17-year-old first-years (exclude them, or build a parental consent flow). |
+| **Age** | Users confirm they're 18 or over; under-18s are kept out unless you obtain verifiable parental consent. | DPDP requires **verifiable parental consent** for anyone under 18 and bans tracking or targeting them. Some first-year students are 17. | ✅ 18+ confirmation is part of the required consent box and recorded with a timestamp. ❌ Decide how to handle 17-year-old first-years: keep them out (current behaviour), or build a parental consent flow. |
 | **Withdrawing consent** | As easy to withdraw as to give. | A DPDP requirement. | ✅ Delete account from **Account and privacy**. ❌ Add an opt-out for non-essential emails (reminders, "new event from a club you follow"); sign-in codes stay. |
 | **No marketing without opt-in** | No promotional email unless the person asked for it. | Unsolicited marketing breaks consent rules and hurts email deliverability. | ✅ Got Next sends only service email. |
 

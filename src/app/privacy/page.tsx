@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CONTACT_EMAIL, LegalPage, LegalSection } from "@/components/legal";
+import { GrievanceOfficer, LEGAL_ENTITY, LegalPage, LegalSection } from "@/components/legal";
 
 export const metadata: Metadata = { title: "Privacy policy" };
 
@@ -16,6 +16,13 @@ export default function PrivacyPage() {
         </p>
       }
     >
+      <LegalSection title="Who we are">
+        <p>
+          Got Next is run by {LEGAL_ENTITY}. We decide how your personal data is used (under India&apos;s data protection law, we&apos;re the
+          &ldquo;data fiduciary&rdquo;).
+        </p>
+      </LegalSection>
+
       <LegalSection title="What we collect">
         <ul>
           <li>
@@ -108,10 +115,15 @@ export default function PrivacyPage() {
             <strong>Delete it:</strong> delete your account from <Link href="/account">Account and privacy</Link>.
           </li>
           <li>
-            <strong>Complain:</strong> write to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. We reply within 7 days. If
-            you&apos;re not satisfied, you can go to the Data Protection Board of India.
+            <strong>Nominate someone</strong> to use these rights for you if you die or can&apos;t act yourself: email us their name and
+            how to reach them.
+          </li>
+          <li>
+            <strong>Complain:</strong> to our grievance officer (below). If you&apos;re not satisfied with the answer, you can go to the
+            Data Protection Board of India.
           </li>
         </ul>
+        <GrievanceOfficer />
       </LegalSection>
 
       <LegalSection title="Age">

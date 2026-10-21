@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { rejectCollege, setAdmin, setOrgVerified, setStudentVerified, takeDownEvent, verifyCollege } from "@/app/actions/admin";
+import { closeReport } from "@/app/actions/reports";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -152,5 +153,32 @@ export function TakeDownButton({ eventId, title }: { eventId: string; title: str
     >
       Take down
     </Button>
+  );
+}
+
+/** Close a report: "Acted on it" (resolved) or "No action" (dismissed), with an optional note the reporter sees. */
+export function ReportActions({ reportId }: { reportId: string }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [note, setNote] = useState("");
+  const close = (outcome: "resolved" | "dismissed") =>
+    startTransition(async () => {
+      const res = await closeReport({ reportId, outcome, note });
+      if (!res.ok) return void toast.error(res.error);
+      toast.success(outcome === "resolved" ? "Marked as acted on; the reporter has been told" : "Dismissed; the reporter has been told");
+      router.refresh();
+    });
+  return (
+    <div className="flex flex-col gap-2">
+      <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note to the reporter (optional)" maxLength={500} aria-label="Note to the reporter" />
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" disabled={pending} onClick={() => close("resolved")}>
+          Acted on it
+        </Button>
+        <Button size="sm" variant="outline" disabled={pending} onClick={() => close("dismissed")}>
+          No action needed
+        </Button>
+      </div>
+    </div>
   );
 }

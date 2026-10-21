@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { ArrowLeft, MailCheck, ShieldCheck } from "lucide-react";
 import {
   sendMagicLink,
@@ -15,6 +15,7 @@ import { Field } from "@/components/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { PasswordInput } from "./password-input";
+import { Turnstile, turnstileOn, type TurnstileHandle } from "@/components/turnstile";
 
 type Mode = "link" | "signin" | "signup" | "forgot";
 const RESEND_SECONDS = 60;
@@ -44,6 +45,15 @@ export function AuthPanel({
   const [code, setCode] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const [pending, startTransition] = useTransition();
+  // Bot check token (single-use): reset after every request that spends it.
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const turnstile = useRef<TurnstileHandle>(null);
+  const spend = () => {
+    const t = captcha;
+    turnstile.current?.reset();
+    return t;
+  };
+  const waitingForCheck = turnstileOn && !captcha;
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -62,26 +72,26 @@ export function AuthPanel({
     setError(null);
     startTransition(async () => {
       if (mode === "link") {
-        const res = await sendMagicLink({ email, next });
+        const res = await sendMagicLink({ email, next, captchaToken: spend() });
         if (!res.ok) return setError(res.error);
         setSent("link");
         setCooldown(RESEND_SECONDS);
       } else if (mode === "signin") {
-        const res = await signInWithPassword({ email, password, next });
+        const res = await signInWithPassword({ email, password, next, captchaToken: spend() });
         if (res && !res.ok) return setError(res.error);
         if (res?.ok && res.deviceCheck) {
           setSent("device");
           setCooldown(RESEND_SECONDS);
         }
       } else if (mode === "signup") {
-        const res = await signUpWithPassword({ email, password, next: next === "/" ? "/onboarding" : next });
+        const res = await signUpWithPassword({ email, password, next: next === "/" ? "/onboarding" : next, captchaToken: spend() });
         if (res && !res.ok) return setError(res.error);
         if (res?.ok && res.needsConfirmation) {
           setSent("signup");
           setCooldown(RESEND_SECONDS);
         }
       } else {
-        const res = await sendPasswordReset({ email });
+        const res = await sendPasswordReset({ email, captchaToken: spend() });
         if (!res.ok) return setError(res.error);
         setSent("reset");
         setCooldown(RESEND_SECONDS);
@@ -92,7 +102,8 @@ export function AuthPanel({
   const resend = () =>
     startTransition(async () => {
       setError(null);
-      const res = sent === "reset" ? await sendPasswordReset({ email }) : await sendMagicLink({ email, next });
+      const captchaToken = spend();
+      const res = sent === "reset" ? await sendPasswordReset({ email, captchaToken }) : await sendMagicLink({ email, next, captchaToken });
       if (!res.ok) return setError(res.error);
       setCooldown(RESEND_SECONDS);
     });
@@ -165,7 +176,7 @@ export function AuthPanel({
           <button type="button" onClick={() => switchMode(mode)} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="size-4" /> Use a different email
           </button>
-          <Button type="button" variant="link" size="sm" disabled={pending || cooldown > 0} onClick={resend} className="px-0">
+          <Button type="button" variant="link" size="sm" disabled={pending || cooldown > 0 || waitingForCheck} onClick={resend} className="px-0">
             {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend email"}
           </Button>
         </div>
@@ -266,7 +277,8 @@ export function AuthPanel({
           </p>
         )}
 
-        <Button type="submit" size="lg" disabled={pending}>
+        <Turnstile ref={turnstile} onToken={setCaptcha} />
+        <Button type="submit" size="lg" disabled={pending || waitingForCheck}>
           {pending
             ? "One moment…"
             : mode === "link"

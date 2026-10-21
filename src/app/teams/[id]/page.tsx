@@ -10,6 +10,7 @@ import { isUuid } from "@/lib/queries";
 import { formatDateTime, relative } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ReportButton } from "@/components/report-button";
 import { EmptyState } from "@/components/empty-state";
 import { TeamSheet } from "@/components/team-sheet";
 import { MemberActions, TeamSettings, VacancyActions } from "./team-controls";
@@ -104,6 +105,11 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
           {!team.isOpen && <Badge variant="outline">Not recruiting</Badge>}
         </div>
         {team.ideaPitch && <p className="max-w-2xl text-sm">{team.ideaPitch}</p>}
+        {user && !isLeader && (
+          <div>
+            <ReportButton targetType="team" targetId={team.id} what="this team" className="-ml-2 text-muted-foreground" />
+          </div>
+        )}
         {isLeader && !over && (
           <div className="flex flex-wrap gap-2 pt-1">
             <Button size="sm" data-tour="review" render={<Link href={`/teams/${team.id}/applications`} />}>

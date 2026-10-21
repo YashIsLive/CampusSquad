@@ -231,6 +231,9 @@ async function main() {
         // Seed accounts are "existing users": page tours already seen (replay via the ? menu).
         guide: { tours: { feed: SEED_TIME, event: SEED_TIME, team: SEED_TIME, manage: SEED_TIME } },
         onboardedAt: new Date(),
+        termsVersion: "2026-10-19",
+        termsAcceptedAt: new Date(),
+        adultConfirmedAt: new Date(),
       })
       .where(sql`${s.profiles.id} = ${id}`);
     await db.insert(s.userSkills).values(

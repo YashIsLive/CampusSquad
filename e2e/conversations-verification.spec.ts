@@ -12,6 +12,7 @@ async function newUnverifiedStudent(browser: Browser, label: string) {
   await page.getByLabel("Full name").fill(`${label} Tester`);
   const username = await page.getByLabel("Username").inputValue();
   await page.getByLabel("College", { exact: true }).selectOption({ label: "COEP Technological University — Pune" });
+  await page.getByLabel(/I.m 18 or older/).check();
   await page.getByRole("button", { name: "Save profile" }).click();
   await expect(page).not.toHaveURL(/onboarding/);
   return { context, page, username, userId: data.user.id };

@@ -11,6 +11,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allowSignup, clientIp } from "@/lib/signup-guard";
 import { emailAuthEnabled, isUndeliverable } from "@/lib/auth-config";
 import { isTrustedDevice, trustThisDevice } from "@/lib/trusted-device";
+import { TURNSTILE_FAILED, verifyTurnstile } from "@/lib/turnstile";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -44,8 +45,9 @@ function firstIssue(err: z.ZodError) {
 
 // ---------- Email link / code ----------
 
-export async function sendMagicLink(input: { email: string; next?: string }): Promise<Result> {
+export async function sendMagicLink(input: { email: string; next?: string; captchaToken?: string | null }): Promise<Result> {
   if (!emailAuthEnabled()) return { ok: false, error: "Email sign-in isn't available yet. Use Google or a password." };
+  if (!(await verifyTurnstile(input.captchaToken))) return { ok: false, error: TURNSTILE_FAILED };
   const parsed = z.object({ email, next: z.string().optional() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   if (isUndeliverable(parsed.data.email)) return { ok: false, error: "That's a demo address and can't receive email. Use the password or demo sign-in." };
@@ -76,9 +78,15 @@ export async function verifyEmailCode(input: { email: string; code: string; next
 
 // ---------- Password ----------
 
-export async function signUpWithPassword(input: { email: string; password: string; next?: string }): Promise<Result & { needsConfirmation?: boolean }> {
+export async function signUpWithPassword(input: {
+  email: string;
+  password: string;
+  next?: string;
+  captchaToken?: string | null;
+}): Promise<Result & { needsConfirmation?: boolean }> {
   const parsed = z.object({ email, password, next: z.string().optional() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
+  if (!(await verifyTurnstile(input.captchaToken))) return { ok: false, error: TURNSTILE_FAILED };
   const next = parsed.data.next ?? "/onboarding";
 
   if (emailAuthEnabled() && !isUndeliverable(parsed.data.email)) {
@@ -126,9 +134,15 @@ export async function signUpWithPassword(input: { email: string; password: strin
  * that's all it takes. On a new browser — when email is set up — the password is checked, then a
  * one-time code is emailed and the session only starts once it's entered (`deviceCheck`).
  */
-export async function signInWithPassword(input: { email: string; password: string; next?: string }): Promise<Result & { deviceCheck?: boolean }> {
+export async function signInWithPassword(input: {
+  email: string;
+  password: string;
+  next?: string;
+  captchaToken?: string | null;
+}): Promise<Result & { deviceCheck?: boolean }> {
   const parsed = z.object({ email, password: z.string().min(1, "Enter your password."), next: z.string().optional() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
+  if (!(await verifyTurnstile(input.captchaToken))) return { ok: false, error: TURNSTILE_FAILED };
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
   if (error) return { ok: false, error: authErrorMessage(error) };
@@ -148,8 +162,9 @@ export async function signInWithPassword(input: { email: string; password: strin
   redirect(await destinationAfterSignIn(safeNext(parsed.data.next)));
 }
 
-export async function sendPasswordReset(input: { email: string }): Promise<Result> {
+export async function sendPasswordReset(input: { email: string; captchaToken?: string | null }): Promise<Result> {
   if (!emailAuthEnabled()) return { ok: false, error: "Email sign-in isn't available yet. Use Google or a password." };
+  if (!(await verifyTurnstile(input.captchaToken))) return { ok: false, error: TURNSTILE_FAILED };
   const parsed = z.object({ email }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   if (isUndeliverable(parsed.data.email)) return { ok: true }; // same answer as for unknown addresses
