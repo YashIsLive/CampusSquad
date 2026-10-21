@@ -14,6 +14,7 @@ import {
   deleteIdCard,
   grantCampusVerification,
   notifyReviewers,
+  sweepIdCards,
 } from "@/lib/verification";
 
 /** Student submits the ID card they just uploaded to `id-cards/<their id>/…`. */
@@ -39,6 +40,8 @@ export const submitIdCard = authedAction(
       await tx.insert(schema.verificationRequests).values({ userId: user.id, collegeId: user.collegeId!, idCardPath: path });
     });
     await deleteIdCard(previous?.idCardPath ?? null);
+    // Any other photo in their folder (earlier tries) goes too; only the one under review is kept.
+    await sweepIdCards(user.id);
     await notifyReviewers(user.collegeId!, user.id);
     revalidatePath("/verify");
     return null;
@@ -55,6 +58,7 @@ export const cancelIdCardRequest = authedAction(z.object({}), async (_input, use
     .set({ status: "cancelled", idCardPath: null, decidedAt: new Date() })
     .where(eq(schema.verificationRequests.id, pending.id));
   await deleteIdCard(pending.idCardPath);
+  await sweepIdCards(user.id);
   revalidatePath("/verify");
   return null;
 });

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { CollegeReview, OrgVerifyToggle, PersonActions, ReportActions, TakeDownButton } from "./admin-controls";
 import { relative } from "@/lib/format";
+import { isFreeEmailDomain } from "@/lib/college";
 import { BackButton } from "@/components/back-button";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
@@ -219,7 +220,7 @@ async function Colleges() {
             {pending.map((c) => (
               <li key={c.id}>
                 <CollegeReview
-                  college={{ id: c.id, name: c.name, city: c.city, state: c.state, students: c.students, suggestedDomain: c.sampleEmail?.split("@")[1] ?? "" }}
+                  college={{ id: c.id, name: c.name, city: c.city, state: c.state, students: c.students, suggestedDomain: suggestDomain(c.sampleEmail) }}
                 />
               </li>
             ))}
@@ -485,4 +486,10 @@ async function Reports() {
       )}
     </div>
   );
+}
+
+/** Pre-fill the domain from a requester's email, unless it's Gmail or another personal provider. */
+function suggestDomain(email: string | null) {
+  const d = email?.split("@")[1]?.toLowerCase() ?? "";
+  return d && !isFreeEmailDomain(d) ? d : "";
 }

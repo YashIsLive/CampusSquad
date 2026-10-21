@@ -6,18 +6,24 @@ import { z } from "zod";
 import { db, schema } from "@/db";
 import { authedAction, fail } from "@/lib/actions";
 import type { CurrentUser } from "@/lib/auth";
-import { emailMatchesDomain } from "@/lib/college";
+import { emailMatchesDomain, isFreeEmailDomain } from "@/lib/college";
 import { requireAdminAal } from "@/lib/mfa";
 
 function assertAdmin(user: CurrentUser) {
   return requireAdminAal(user);
 }
 
+/** The college's own student email domain, or empty when students don't get one. Never Gmail & co. */
 const domain = z
   .string()
   .trim()
   .toLowerCase()
-  .regex(/^[a-z0-9-]+(\.[a-z0-9-]+)+$/, "Enter a domain like coeptech.ac.in (no @).");
+  .transform((v) => v.replace(/^@/, "") || null)
+  .refine((v) => v === null || /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(v), "Enter a domain like coeptech.ac.in (no @), or leave it empty.")
+  .refine(
+    (v) => v === null || !isFreeEmailDomain(v),
+    "That's a personal email provider, not the college's. Leave it empty if students don't get college email; they can verify with their student ID.",
+  );
 
 /** Approve a student-requested college: set its email domain and verify matching students. */
 export const verifyCollege = authedAction(
@@ -30,10 +36,12 @@ export const verifyCollege = authedAction(
   }),
   async ({ collegeId, emailDomain, ...rest }, user) => {
     await assertAdmin(user);
-    const clash = await db.query.colleges.findFirst({
-      where: and(eq(schema.colleges.emailDomain, emailDomain), ne(schema.colleges.id, collegeId)),
-    });
-    if (clash) fail(`${clash.name} already uses @${emailDomain}. Reject this request and ask students to pick it instead.`);
+    if (emailDomain) {
+      const clash = await db.query.colleges.findFirst({
+        where: and(eq(schema.colleges.emailDomain, emailDomain), ne(schema.colleges.id, collegeId)),
+      });
+      if (clash) fail(`${clash.name} already uses @${emailDomain}. Reject this request and ask students to pick it instead.`);
+    }
 
     const verified = await db.transaction(async (tx) => {
       await tx.update(schema.colleges).set({ ...rest, emailDomain, verified: true }).where(eq(schema.colleges.id, collegeId));
@@ -42,7 +50,7 @@ export const verifyCollege = authedAction(
         .from(schema.profiles)
         // Only addresses the student has proven they own (not instant password sign-ups).
         .where(and(eq(schema.profiles.collegeId, collegeId), eq(schema.profiles.emailVerified, true)));
-      const matching = members.filter((m) => emailMatchesDomain(m.email, emailDomain));
+      const matching = emailDomain ? members.filter((m) => emailMatchesDomain(m.email, emailDomain)) : [];
       for (const m of matching) {
         await tx.update(schema.profiles).set({ collegeVerified: true }).where(eq(schema.profiles.id, m.id));
       }

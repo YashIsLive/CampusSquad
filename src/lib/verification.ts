@@ -121,3 +121,33 @@ export async function notifyReviewers(collegeId: string, exceptUserId: string) {
     if (updated.length === 0) await db.insert(schema.notifications).values({ userId: r.id, type: "verification", payload });
   }
 }
+
+/**
+ * Deletes student ID photos that no pending request points to: replaced uploads, uploads whose
+ * request never got filed, requests cancelled because the student got verified another way.
+ * Files younger than an hour are left alone, so an upload in progress isn't caught.
+ * `userId` limits the sweep to one student's folder (used right after they submit).
+ */
+export async function sweepIdCards(userId?: string) {
+  const storage = createSupabaseAdminClient().storage.from(ID_CARD_BUCKET);
+  const pending = await db
+    .select({ path: schema.verificationRequests.idCardPath })
+    .from(schema.verificationRequests)
+    .where(and(eq(schema.verificationRequests.status, "pending"), sql`${schema.verificationRequests.idCardPath} is not null`));
+  const keep = new Set(pending.map((p) => p.path));
+  const folders = userId ? [userId] : ((await storage.list("", { limit: 1000 })).data ?? []).map((f) => f.name);
+  const hourAgo = Date.now() - 3600 * 1000;
+  let removed = 0;
+  for (const folder of folders) {
+    const { data: files } = await storage.list(folder, { limit: 100 });
+    const stale = (files ?? [])
+      .map((f) => ({ path: `${folder}/${f.name}`, created: f.created_at ? Date.parse(f.created_at) : 0 }))
+      .filter((f) => !keep.has(f.path) && (userId || f.created < hourAgo))
+      .map((f) => f.path);
+    if (stale.length) {
+      await storage.remove(stale);
+      removed += stale.length;
+    }
+  }
+  return removed;
+}

@@ -32,6 +32,8 @@ export default async function ReviewPage() {
     orderBy: asc(schema.verificationRequests.createdAt),
     limit: 50,
   });
+  // Nobody reviews their own ID; say so rather than hiding it silently.
+  const mine = requests.find((r) => r.userId === user.id);
   const visible = requests.filter((r) => r.userId !== user.id);
   const urls = await Promise.all(visible.map((r) => idCardViewUrl(r.idCardPath)));
 
@@ -46,8 +48,18 @@ export default async function ReviewPage() {
         </p>
       </header>
 
+      {mine && (
+        <p role="status" className="rounded-xl border border-ink bg-card px-4 py-3 text-sm">
+          <strong>Your own ID</strong> (sent {relative(mine.createdAt)}) is waiting too. It isn&apos;t shown here because nobody can approve
+          their own: another admin, or an admin of a verified club at {mine.college.name}, has to review it.
+        </p>
+      )}
+
       {visible.length === 0 ? (
-        <EmptyState title="Nothing to review" description="New requests show up here and in your notifications." />
+        <EmptyState
+          title={mine ? "Nothing else to review" : "Nothing to review"}
+          description="New requests show up here and in your notifications."
+        />
       ) : (
         <ul className="flex flex-col gap-4">
           {visible.map((r, i) => (

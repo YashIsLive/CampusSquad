@@ -39,8 +39,12 @@ export function CollegeReview({
         <Field label="Name" htmlFor={`${college.id}-name`}>
           <Input id={`${college.id}-name`} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} required />
         </Field>
-        <Field label="Email domain" htmlFor={`${college.id}-domain`} hint="Students with this domain (or a subdomain) get verified.">
-          <Input id={`${college.id}-domain`} value={v.emailDomain} onChange={(e) => setV({ ...v, emailDomain: e.target.value })} placeholder="college.ac.in" required />
+        <Field
+          label="Student email domain (optional)"
+          htmlFor={`${college.id}-domain`}
+          hint="Only the college's own domain, from its official website. Leave empty if students don't get college email: they'll verify with their ID or classmates instead."
+        >
+          <Input id={`${college.id}-domain`} value={v.emailDomain} onChange={(e) => setV({ ...v, emailDomain: e.target.value })} placeholder="college.ac.in" />
         </Field>
         <Field label="City" htmlFor={`${college.id}-city`}>
           <Input id={`${college.id}-city`} value={v.city} onChange={(e) => setV({ ...v, city: e.target.value })} required />

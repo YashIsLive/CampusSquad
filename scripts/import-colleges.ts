@@ -12,6 +12,7 @@
 import { readFileSync } from "node:fs";
 import { config } from "dotenv";
 import postgres from "postgres";
+import { isFreeEmailDomain } from "../src/lib/college";
 
 const args = process.argv.slice(2);
 const file = args.find((a) => a.endsWith(".json"));
@@ -28,6 +29,7 @@ type College = { name: string; city: string; state: string; emailDomain: string 
   for (const c of colleges) {
     if (!c.name?.trim() || !c.city?.trim() || !c.state?.trim()) throw new Error(`Each college needs name, city and state: ${JSON.stringify(c)}`);
     if (c.emailDomain && !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(c.emailDomain)) throw new Error(`"${c.emailDomain}" isn't a domain like college.ac.in`);
+    if (c.emailDomain && isFreeEmailDomain(c.emailDomain)) throw new Error(`"${c.emailDomain}" is a personal email provider, not ${c.name}'s domain. Use null.`);
   }
 
   const sql = postgres(url, { max: 1 });
