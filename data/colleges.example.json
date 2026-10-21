@@ -1,0 +1,14 @@
+[
+  {
+    "name": "COEP Technological University",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "emailDomain": "coeptech.ac.in"
+  },
+  {
+    "name": "Pune Institute of Computer Technology",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "emailDomain": null
+  }
+]

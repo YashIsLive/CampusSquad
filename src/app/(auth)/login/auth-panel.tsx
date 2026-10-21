@@ -248,7 +248,7 @@ export function AuthPanel({
             <Field
               label="Password"
               htmlFor="password"
-              hint={mode === "signup" ? "At least 8 characters, with a letter and a number." : undefined}
+              hint={mode === "signup" ? "At least 10 characters, with a letter and a number." : undefined}
             >
               <PasswordInput
                 id="password"

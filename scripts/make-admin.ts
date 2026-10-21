@@ -2,9 +2,10 @@
  * Grant (or revoke) the admin flag. Usage:
  *   npm run make-admin -- you@example.com
  *   npm run make-admin -- you@example.com --revoke
+ *   npm run make-admin:prod -- you@example.com      (production, reads .env.production.local)
  */
 import { config } from "dotenv";
-config({ path: ".env.local", quiet: true });
+config({ path: (process.env.npm_lifecycle_event ?? "").endsWith(":prod") ? ".env.production.local" : ".env.local", quiet: true });
 
 import postgres from "postgres";
 

@@ -292,6 +292,8 @@ browser can only subscribe to its own live updates. Schema: [`src/db/schema.ts`]
 
 ## Deploy
 
+**Going live for real? Follow [docs/GO_LIVE.md](docs/GO_LIVE.md)** (every step, in order) and keep [docs/INCIDENT_RESPONSE.md](docs/INCIDENT_RESPONSE.md) handy. `npm run check:launch` tells you what's still missing.
+
 1. Import the repo in Vercel. CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) typechecks, lints, tests,
    builds and audits every push.
 2. Add the environment variables. Set `NEXT_PUBLIC_SITE_URL` to your https URL and add a `CRON_SECRET`. **Don't** set

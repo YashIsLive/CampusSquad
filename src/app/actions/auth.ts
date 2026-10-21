@@ -12,6 +12,7 @@ import { allowSignup, clientIp } from "@/lib/signup-guard";
 import { emailAuthEnabled, isUndeliverable } from "@/lib/auth-config";
 import { isTrustedDevice, trustThisDevice } from "@/lib/trusted-device";
 import { TURNSTILE_FAILED, verifyTurnstile } from "@/lib/turnstile";
+import { SIGNUPS_PAUSED_MESSAGE, signupsPaused } from "@/lib/switches";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -35,7 +36,7 @@ async function confirmUrl(next?: string) {
 const email = z.email("Enter a valid email address.").transform((v) => v.trim().toLowerCase());
 const password = z
   .string()
-  .min(8, "Use at least 8 characters.")
+  .min(10, "Use at least 10 characters.")
   .max(72, "Passwords can be at most 72 characters.")
   .refine((v) => /[a-zA-Z]/.test(v) && /\d/.test(v), "Use at least one letter and one number.");
 
@@ -54,7 +55,8 @@ export async function sendMagicLink(input: { email: string; next?: string; captc
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithOtp({
     email: parsed.data.email,
-    options: { emailRedirectTo: await confirmUrl(parsed.data.next), shouldCreateUser: true },
+    // While sign-ups are paused, links only go to existing accounts.
+    options: { emailRedirectTo: await confirmUrl(parsed.data.next), shouldCreateUser: !signupsPaused() },
   });
   if (error) return { ok: false, error: authErrorMessage(error) };
   return { ok: true };
@@ -87,6 +89,7 @@ export async function signUpWithPassword(input: {
   const parsed = z.object({ email, password, next: z.string().optional() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   if (!(await verifyTurnstile(input.captchaToken))) return { ok: false, error: TURNSTILE_FAILED };
+  if (signupsPaused()) return { ok: false, error: SIGNUPS_PAUSED_MESSAGE };
   const next = parsed.data.next ?? "/onboarding";
 
   if (emailAuthEnabled() && !isUndeliverable(parsed.data.email)) {

@@ -29,7 +29,7 @@ export function PasswordInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
-        minLength={autoComplete === "new-password" ? 8 : undefined}
+        minLength={autoComplete === "new-password" ? 10 : undefined}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
         className="h-11 pr-11"

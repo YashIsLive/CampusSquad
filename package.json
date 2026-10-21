@@ -15,7 +15,13 @@
     "db:studio": "drizzle-kit studio",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "make-admin": "tsx scripts/make-admin.ts"
+    "make-admin": "tsx scripts/make-admin.ts",
+    "db:migrate:prod": "drizzle-kit migrate",
+    "make-admin:prod": "tsx scripts/make-admin.ts",
+    "supabase:configure": "tsx scripts/configure-supabase.ts",
+    "colleges:import": "tsx scripts/import-colleges.ts",
+    "check:launch": "tsx scripts/check-launch.ts",
+    "secret": "node -e \"console.log(require('crypto').randomBytes(36).toString('base64url'))\""
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

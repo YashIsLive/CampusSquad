@@ -22,7 +22,7 @@ export function ResetPasswordForm() {
         });
       }}
     >
-      <Field label="New password" htmlFor="new-password" hint="At least 8 characters, with a letter and a number." error={error ?? undefined}>
+      <Field label="New password" htmlFor="new-password" hint="At least 10 characters, with a letter and a number." error={error ?? undefined}>
         <PasswordInput id="new-password" autoComplete="new-password" value={password} onChange={setPassword} invalid={Boolean(error)} />
       </Field>
       <Button type="submit" size="lg" disabled={pending}>

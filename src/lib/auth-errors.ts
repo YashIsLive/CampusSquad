@@ -25,7 +25,7 @@ export function authErrorMessage(err: AuthLikeError | string | null | undefined)
     return "Confirm your email first — check your inbox for the link, or use “Email me a link” instead.";
   }
   if (code === "user_already_exists" || msg.includes("already registered")) return "An account with this email already exists. Sign in instead.";
-  if (code === "weak_password" || msg.includes("password should")) return "Pick a stronger password: at least 8 characters with letters and numbers.";
+  if (code === "weak_password" || msg.includes("password should")) return "Pick a stronger password: at least 10 characters with letters and numbers.";
   if (code === "otp_expired" || msg.includes("expired")) return "That link or code has expired. Request a new one.";
   if (msg.includes("token has expired or is invalid") || code === "otp_invalid") return "That code isn't right, or it has expired.";
   if (msg.includes("code verifier") || msg.includes("pkce") || code === "bad_code_verifier") {

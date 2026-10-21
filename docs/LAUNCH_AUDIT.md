@@ -23,9 +23,11 @@ Fix these before real students sign up. Everything else can follow in the first 
 | 4 | **Error tracking** (Sentry) and an **uptime monitor** on `/api/health` | 1.5 | ✅ Sentry built; ❌ you: create the project (DSN) and the uptime monitor |
 | 5 | **Grievance officer** named and published (IT Rules 2021), plus a **report button** for content and profiles | 2.1 | ✅ built; ❌ you: name the officer (env) |
 | 6 | **Age confirmation** at sign-up (18+), as a tick box rather than text | 2.2 | ✅ built |
-| 7 | A written **incident and breach response** plan, including DPDP breach notification | 1.5, 2.3 | ❌ you: write it |
+| 7 | A written **incident and breach response** plan, including DPDP breach notification | 1.5, 2.3 | ✅ [docs/INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md); ❌ you: fill in the contacts and practise once |
 | 8 | **Legal review** of the privacy policy and terms; name the legal entity that runs Got Next | 2.1 | ❌ you: lawyer; set `NEXT_PUBLIC_LEGAL_ENTITY` |
 | 9 | Production environment: `E2E_TEST_LOGIN` **unset**, `NEXT_PUBLIC_SITE_URL` https, all secrets fresh | 1.1, 1.3 | ❌ you: on deploy (the app refuses to start if these are wrong) |
+
+**How to do the rest:** [docs/GO_LIVE.md](GO_LIVE.md) walks through every remaining step, and `npm run check:launch` tells you what's still missing.
 
 The app now **refuses to start** on a real (https) deployment until the contact email, grievance officer,
 legal entity and Turnstile keys are set, so none of these can be forgotten.
@@ -91,9 +93,9 @@ legal entity and Turnstile keys are set, so none of these can be forgotten.
 | --- | --- | --- | --- |
 | **Error tracking** | Server and browser errors are reported with context (no personal data). | Without it, you hear about bugs from angry students, or never. | ✅ Sentry on server, edge and browser; off until `NEXT_PUBLIC_SENTRY_DSN` is set. Emails, IPs, cookies, auth headers, request bodies, sign-in tokens and entry codes are scrubbed before sending (tested). Events go through the site's own `/monitoring` route. No session replay. ❌ You: create the Sentry project and set the DSN. |
 | **Uptime monitoring** | Something checks the site every few minutes and alerts you. | Lets you fix an outage before the event's registration deadline passes. | ❌ Point an uptime monitor (Better Stack, UptimeRobot) at `/api/health`, which reports database reachability. |
-| **Logging** | Enough logs to investigate an incident; no passwords, codes or ID photos in them. | You can't respond to what you can't see; logging secrets creates a new leak. | ⚠️ Vercel function logs only (short retention on free plans). The app doesn't log personal data. ❌ Consider a log drain if you need more than a few days. |
+| **Logging** | Enough logs to investigate an incident; no passwords, codes or ID photos in them. | You can't respond to what you can't see; CERT-In expects logs kept for 180 days. | ⚠️ Vercel function logs only (short retention). The app doesn't log personal data. ❌ Add a log drain with 180-day retention as you grow (GO_LIVE step 9.8). |
 | **Admin audit trail** | Who verified, unverified, promoted or took down what, and when. | Needed to investigate misuse by an admin and to answer user complaints. | ⚠️ ID reviews record the reviewer. ❌ Other admin actions (make admin, take down event, verify student) aren't logged; add an `admin_actions` table. |
-| **Incident response plan** | A one-page plan: who decides, how to contain (rotate keys, disable sign-ups, take the site down), who to tell, and how fast. | In a breach there's no time to work this out, and the law sets deadlines (2.3). | ❌ Write it. Include rotating the Supabase keys and `AUTH_DEVICE_SECRET` (signs out every remembered device), and the DPDP breach notification steps. |
+| **Incident response plan** | A plan: who decides, how to contain (rotate keys, disable sign-ups, take the site down), who to tell, and how fast. | In a breach there's no time to work this out, and the law sets deadlines (2.3). | ✅ [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md): severities, playbooks, key rotation, CERT-In (6 h) and DPDP (72 h) notification, templates. ✅ Emergency switches built and tested: `MAINTENANCE_MODE`, `SIGNUPS_PAUSED`. ❌ You: fill in contacts, practise once. |
 | **Recovery drill** | Restore from backup and redeploy from scratch at least once. | Untested backups often turn out not to work. | ❌ Do it once on a scratch project before launch. |
 | **Security review** | An independent look before scale. | Fresh eyes find what the builder can't. | ⚠️ Automated: RLS/API attack tests, axe, e2e. ✅ `/.well-known/security.txt` tells researchers where to report. ❌ Before any large rollout, a short external review. |
 
