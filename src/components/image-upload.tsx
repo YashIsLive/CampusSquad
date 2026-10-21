@@ -7,6 +7,8 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
 const MAX_BYTES = 5 * 1024 * 1024;
+// Must match the storage buckets (migration 0010). No SVG: it can carry script.
+const TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 /**
  * Uploads straight to Supabase Storage under `<bucket>/<uid>/…` (storage RLS only allows a user's own folder)
@@ -31,7 +33,7 @@ export function ImageUpload({
   const [uploading, setUploading] = useState(false);
 
   async function upload(file: File) {
-    if (!file.type.startsWith("image/")) return toast.error("Pick an image file.");
+    if (!TYPES.includes(file.type)) return toast.error("Use a JPG, PNG, WebP or GIF image.");
     if (file.size > MAX_BYTES) return toast.error("Image must be under 5 MB.");
     setUploading(true);
     try {
@@ -77,12 +79,12 @@ export function ImageUpload({
             <X /> Remove
           </Button>
         )}
-        <p className="text-xs text-muted-foreground">PNG or JPG, up to 5 MB.</p>
+        <p className="text-xs text-muted-foreground">JPG, PNG, WebP or GIF, up to 5 MB.</p>
       </div>
       <input
         ref={input}
         type="file"
-        accept="image/*"
+        accept={TYPES.join(",")}
         className="hidden"
         aria-hidden="true"
         tabIndex={-1}

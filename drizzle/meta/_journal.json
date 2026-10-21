@@ -71,6 +71,13 @@
       "when": 1792413029057,
       "tag": "0009_account_deletion",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792602903481,
+      "tag": "0010_public_bucket_limits",
+      "breakpoints": true
     }
   ]
 }
